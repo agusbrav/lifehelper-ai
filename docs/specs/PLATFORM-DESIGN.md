@@ -24,7 +24,7 @@ lifehelper-ai/
 │   ├── ui/                         # Shared component library (buttons, cards, layouts)
 │   └── modules/
 │       ├── _registry/              # Module manifest index - single place to register modules
-│       ├── expenses/               # Splitwise-like module
+│       ├── expenses/               # Shared expense tracking module
 │       ├── plans/                  # Date/friend plan ideas with maps
 │       └── shopping/               # Shared shopping lists
 ├── turbo.json

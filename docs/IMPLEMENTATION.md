@@ -64,7 +64,7 @@ Keep this file updated as work progresses. Mark items `[x]` when done, add notes
 ## Phase 7 - First Module
 
 > **Decision pending:** choose which module to build first.
-> Candidates: `expenses` (splitwise-like), `plans` (map-based), `shopping` (shared lists).
+> Candidates: `expenses` (shared expense tracking), `plans` (map-based), `shopping` (shared lists).
 > See [`docs/specs/modules/`](specs/modules/) for individual module specs.
 
 - [ ] Choose first module

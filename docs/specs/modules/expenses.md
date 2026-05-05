@@ -10,6 +10,8 @@
 
 Shared expense tracking across recurring or one-off friend groups. Users create expense groups, log expenses with flexible per-expense splits, and the module calculates who owes what. Groups are shareable via link; participants join as registered users or guests.
 
+**UI Direction:** Clean, balance-first layout. The primary view surfaces who owes what and settlement suggestions upfront rather than burying them under a transaction list. Simple, fast expense entry is the priority.
+
 ---
 
 ## Core Concepts
