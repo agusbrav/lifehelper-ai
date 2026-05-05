@@ -1,14 +1,16 @@
+'use client'
 import Link from 'next/link'
+import { usePathname } from 'next/navigation'
 import { ThemeToggle } from './theme-toggle'
 
 type Pocket = { id: string; name: string }
 
-type SidebarProps = {
-  pockets: Pocket[]
-  currentPocketId?: string
-}
+export function Sidebar({ pockets }: { pockets: Pocket[] }) {
+  const pathname = usePathname()
+  const currentPocketId = pathname.startsWith('/m/')
+    ? pathname.split('/')[2]
+    : undefined
 
-export function Sidebar({ pockets, currentPocketId }: SidebarProps) {
   return (
     <nav className="flex flex-col items-center w-14 shrink-0 border-r border-zinc-200 dark:border-zinc-800 bg-[var(--sidebar-bg)] py-3 gap-1">
       <Link

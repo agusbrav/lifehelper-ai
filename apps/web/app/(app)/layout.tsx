@@ -28,7 +28,7 @@ export default async function AppLayout({ children }: { children: React.ReactNod
         <main className="flex-1 overflow-y-auto">
           {children}
         </main>
-        <ChatRail context="dashboard" />
+        <ChatRail />
       </div>
     </div>
   )

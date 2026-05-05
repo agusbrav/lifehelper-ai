@@ -1,14 +1,13 @@
 'use client'
 import { useState } from 'react'
+import { usePathname } from 'next/navigation'
 
 type ChatMessage = { role: 'user' | 'assistant'; text: string }
 
-type ChatRailProps = {
-  context: 'dashboard' | 'pocket'
-  pocketId?: string
-}
+export function ChatRail() {
+  const pathname = usePathname()
+  const context = pathname.startsWith('/m/') ? 'pocket' : 'dashboard'
 
-export function ChatRail({ context }: ChatRailProps) {
   const [open, setOpen] = useState(true)
   const [input, setInput] = useState('')
   const [messages, setMessages] = useState<ChatMessage[]>([])
@@ -36,7 +35,7 @@ export function ChatRail({ context }: ChatRailProps) {
       </button>
 
       {open && (
-        <div className="flex flex-col" style={{ height: '180px' }}>
+        <div className="flex flex-col h-[180px]">
           <div className="flex-1 overflow-y-auto px-4 py-2 flex flex-col gap-2">
             {messages.length === 0 && (
               <p className="text-xs text-zinc-400 mt-auto">
@@ -60,6 +59,8 @@ export function ChatRail({ context }: ChatRailProps) {
           </div>
           <div className="flex items-center gap-2 px-3 py-2 border-t border-zinc-100 dark:border-zinc-800">
             <input
+              type="text"
+              aria-label="Chat input"
               value={input}
               onChange={e => setInput(e.target.value)}
               onKeyDown={e => e.key === 'Enter' && handleSend()}
