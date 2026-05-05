@@ -34,9 +34,10 @@ model Session {
 }
 
 model ModuleRegistry {
-  id      String @id
-  name    String
-  version String @default("0.1.0")
+  id          String       @id
+  name        String
+  version     String       @default("0.1.0")
+  userModules UserModule[]
 
   @@map("module_registry")
 }
@@ -44,7 +45,8 @@ model ModuleRegistry {
 model UserModule {
   userId    String
   moduleId  String
-  enabledAt DateTime @default(now())
+  enabledAt DateTime       @default(now())
+  module    ModuleRegistry @relation(fields: [moduleId], references: [id])
 
   @@id([userId, moduleId])
   @@map("user_modules")
