@@ -20,7 +20,7 @@ lifehelper-ai/
 ├── apps/
 │   └── web/                        # Next.js shell (auth, dashboard, module routing)
 ├── packages/
-│   ├── core/                       # Auth logic, DB client, shared types, context registry, skills runner, merge-schemas script
+│   ├── core/                       # Auth logic, DB client, shared types, context registry, chat handler, merge-schemas script
 │   ├── ui/                         # Shared component library (buttons, cards, layouts)
 │   └── modules/
 │       ├── _registry/              # Module manifest index - single place to register modules
@@ -75,7 +75,7 @@ Email + password via `bcrypt`. On login a server-side session is created and a `
 
 ### Module Manifest
 
-Every module exports a typed manifest that declares its identity, what context it exposes, what it consumes, what tier of interaction it supports, and the skills it offers to the user:
+Every module exports a typed manifest that declares its identity, what context it exposes, what it consumes, what tier of interaction it supports, and the internal tool definitions it registers with Claude:
 
 ```ts
 // packages/modules/expenses/manifest.ts
@@ -86,20 +86,26 @@ export const manifest = {
   exposesContext: true,
   consumesContext: ['plans'],
   interactionTier: 2,
-  skills: [
+  // Internal Claude tool definitions - not shown to users
+  tools: [
     {
-      id: 'summarize-spending',
-      name: 'Summarize my spending',
-      description: 'Get a breakdown of where money went this month',
-      consumesContext: [],          // uses only own module data
+      id: 'create_expense',
+      consumesContext: [],
     },
     {
-      id: 'budget-plan',
-      name: 'Suggest a budget-friendly plan',
-      description: 'Uses your expenses + upcoming plans to suggest a budget',
-      consumesContext: ['plans'],   // pulls Tier 1 summary from plans module
+      id: 'update_member_name',
+      consumesContext: [],
+    },
+    {
+      id: 'mark_settled',
+      consumesContext: [],
+    },
+    {
+      id: 'suggest_budget_plan',
+      consumesContext: ['plans'],   // pulls Tier 1 summary from plans pocket
     },
   ],
+  systemPrompt: 'expenses/system-prompt.md',  // pocket-specific Claude instructions
 } satisfies ModuleManifest
 ```
 
@@ -121,23 +127,26 @@ The registry enforces that the requesting user has both the source and consuming
 
 A `suggestions` service in `core` can pull summaries from multiple modules and send them to Claude to generate cross-module insights when a Tier 2 relationship exists.
 
-### Module Skills
+### Module Skills (Internal Tool Definitions)
 
-Skills are user-triggered AI actions declared in a module's manifest. They are distinct from automatic Tier 2 suggestions - the user explicitly invokes a skill and gets a streamed response.
+Skills are internal per-pocket definitions that shape how Claude processes user commands. They are not visible to users - the chat rail is the sole interface. Skills consist of:
+
+1. **Claude tool definitions** - typed function signatures Claude can call (e.g. `create_expense`, `update_member_name`, `mark_settled`). Claude decides which tool to invoke based on the user's message.
+2. **System prompt fragments** - pocket-specific instructions that establish context, constraints, and formatting rules (e.g. "amounts are always stored in cents", "always confirm a settlement before marking it").
 
 **Execution flow:**
-1. User clicks a skill in the module UI (rendered from the manifest's `skills` array)
-2. Shell calls `POST /api/skills/{moduleId}/{skillId}` with optional user input
-3. The skill handler in `core` assembles context: module-specific data from DB + summaries from any `consumesContext` modules via the Context Registry
-4. The assembled context is sent to Claude API; the response is streamed back to the UI
+1. User sends a message in the chat rail (text, voice, or image)
+2. Shell calls `POST /api/chat/{moduleId}` with the message and current pocket context
+3. The chat handler in `core` assembles: current module data + Tier 1 summaries from `consumesContext` modules + pocket's system prompt fragment + pocket's tool definitions
+4. Claude API processes the message with the assembled context and tools; calls tool(s) as needed
+5. Tool calls execute against the DB; Claude generates a brief contextual response
+6. Response streams back to the chat rail; the pocket UI updates live
 
 **Skill scopes:**
-- **Module-scoped** - skill only uses data from its own module (`consumesContext: []`)
-- **Cross-module** - skill declares `consumesContext` and receives Tier 1 summaries from those modules before calling Claude
+- **Pocket-scoped** - tools and context use only data from this pocket (`consumesContext: []`)
+- **Cross-pocket** - tools declare `consumesContext` and receive Tier 1 summaries from those pockets before Claude responds
 
-**UI surface:** Each module page has a "Skills" panel (collapsible). Skills are listed by name with a short description. Selecting one opens an inline chat-like interface showing the streamed response and optionally accepting a free-text prompt from the user.
-
-**Guest access to skills:** Guests can use skills scoped to the shared instance they have access to. Cross-module skills are not available to guests (they have no other modules enabled).
+**Guest access:** Guests can trigger pocket-scoped tools via the chat rail within the shared instance. Cross-pocket context is not assembled for guests (they have no other pockets enabled).
 
 ---
 
@@ -208,7 +217,7 @@ Guest restrictions:
 | Database | PostgreSQL |
 | ORM | Prisma (with per-module schema fragments, merged at build) |
 | Auth | bcrypt + server-side sessions + HttpOnly cookies |
-| AI | Claude API (Anthropic SDK) - module skills + cross-module suggestions |
+| AI | Claude API (Anthropic SDK) - chat handler with per-pocket tool definitions |
 | Deployment (local) | `pnpm dev` via Turborepo |
 | Deployment (cloud) | Render (single web service + managed PostgreSQL) |
 
@@ -218,7 +227,7 @@ Guest restrictions:
 
 - Guest-to-user account upgrade
 - Per-link granular share permissions (column is reserved, enforcement deferred)
-- Automatic Tier 2 suggestions surfaced without user action (skills cover the user-triggered equivalent)
+- Automatic Tier 2 suggestions surfaced without user action (chat handles all user-triggered AI interaction)
 - Dynamic/runtime module loading
 - Mobile app
 - Email notifications

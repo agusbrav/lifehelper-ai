@@ -153,14 +153,21 @@ type ExpensesSummary = {
 
 ---
 
-## Skills
+## Internal Tools (Claude Tool Definitions)
 
-| Skill | Scope | Description |
-|-------|-------|-------------|
-| `who-owes-what` | Module-only | Plain-language settlement summary for a group: who pays whom and how much to clear all debts |
-| `spending-summary` | Module-only | Breakdown of group or personal expenses by category and time period |
-| `cross-group-net` | Module-only | Explains net balances across all groups between you and each person |
-| `budget-friendly-plan` | Cross-module (`plans`) | Given current balances, suggests a plan option that fits the group's budget situation |
+These are the typed tool functions Claude can invoke when processing user chat commands in this pocket. Not visible to users - the chat rail is the sole interface.
+
+| Tool | Context | Description |
+|------|---------|-------------|
+| `create_expense` | Pocket-only | Log a new expense: description, amount, payer, participant subset, split amounts |
+| `update_expense` | Pocket-only | Edit an existing expense field (description, amount, date, category, payer, splits) |
+| `delete_expense` | Pocket-only | Remove an expense by id |
+| `update_member_name` | Pocket-only | Rename a group member |
+| `create_group` | Pocket-only | Create a new expense group |
+| `create_gathering` | Pocket-only | Create a named sub-event within a group with a participant subset |
+| `mark_settled` | Pocket-only | Record a settlement between two members, zeroing their balance |
+| `summarize_balances` | Pocket-only | Return a plain-language breakdown of who owes whom in a group |
+| `suggest_budget_plan` | Cross-pocket (`plans`) | Given current balances, suggest a plan option that fits the group's budget |
 
 ---
 

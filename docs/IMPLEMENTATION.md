@@ -53,13 +53,13 @@ Keep this file updated as work progresses. Mark items `[x]` when done, add notes
 - [ ] Guest name prompt UI (shown on first visit via share link)
 - [ ] Guest session scoping: middleware blocks guests from accessing anything outside their token's instance
 
-## Phase 6 - Module Skills (Claude API)
+## Phase 6 - Chat + Internal Tools (Claude API)
 
 - [ ] Add Anthropic SDK to `packages/core`
-- [ ] `core/skills-runner`: assembles context (module data + Context Registry summaries) → calls Claude API → streams response
-- [ ] `POST /api/skills/[moduleId]/[skillId]` route (streaming)
-- [ ] Skills UI panel in module shell: collapsible, lists skills from manifest, inline chat-like streamed response
-- [ ] Guest access: module-scoped skills only (no cross-module skills for guests)
+- [ ] `core/chat-handler`: assembles context (module data + Context Registry summaries + module system prompt + tool definitions) → calls Claude API with function calling → executes tool calls → streams response
+- [ ] `POST /api/chat/[moduleId]` route (streaming)
+- [ ] Chat rail in shell: message input (text/voice/image), streamed response display, live pocket UI update after tool execution
+- [ ] Guest access: pocket-scoped tools only (no cross-pocket context assembled for guests)
 
 ## Phase 7 - First Module
 

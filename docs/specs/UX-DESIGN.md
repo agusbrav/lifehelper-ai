@@ -13,7 +13,6 @@ The user-facing name for a module is **Pocket**. The underlying codebase uses `m
 | `module` | Pocket |
 | `user_modules` | Your pockets |
 | "add a module" | "add a pocket" |
-| "module skills" | Skills (within a pocket) |
 
 ---
 
@@ -53,7 +52,7 @@ One unified chat. Behavior shifts based on current page:
 | Context | Chat behaviour |
 |---------|---------------|
 | Dashboard | Add/remove pockets, surface cross-pocket insights, answer questions across all data |
-| Pocket view | Modify pocket data, run queries, trigger skills, answer pocket-specific questions |
+| Pocket view | Modify pocket data, run queries, answer pocket-specific questions |
 | Guest view | Same UI, scoped to the shared instance only - restricted write actions |
 
 ### Input Modes
@@ -120,7 +119,7 @@ A single dismissible line above the card grid. Appears only when the user has 2+
 
 ```
 +----------+------------------------------------+
-|          |  Header (name, Share, Skills btn) |
+|          |  Header (name, Share)             |
 | Sidebar  +------------------------------------+
 |          |  Pocket content (tables, views)   |
 |          |                                   |
@@ -134,14 +133,13 @@ A single dismissible line above the card grid. Appears only when the user has 2+
 
 - Pocket name (editable inline)
 - Share button - generates share link for this pocket instance
-- Skills button - expands the skills panel above the chat rail
 
 ### Content Area
 
 Each pocket owns its own views (tables, lists, maps, etc.). Supports:
-- **Manual inline editing** - click any cell/field to edit directly
-- **Chat-driven editing** - natural language commands update the same data
-- Both paths write to the same API - no divergence
+- **Manual inline editing** - click any cell/field to edit directly; all fields in tables and lists are editable in place
+- **Chat-driven editing** - natural language commands update the same data ("add $50 dinner split with Ema", "rename Lucas to Luke")
+- Both paths write to the same API - no divergence between chat and manual entry
 
 ### Tip Cards
 
@@ -149,13 +147,6 @@ Each pocket owns its own views (tables, lists, maps, etc.). Supports:
 - Each tip is independently dismissible (stored in `localStorage`)
 - Global "show tips" toggle in Settings hides all tips across all pockets
 - Tips are pocket-defined - each pocket declares its own tip set in its manifest
-
-### Skills Panel
-
-- Slides up above the chat rail when the Skills button is pressed
-- Lists available skills for this pocket (name + one-line description)
-- Selecting a skill pre-fills the chat input or runs directly, streaming response into chat
-- Skills requiring cross-pocket context show which other pockets they draw from
 
 ---
 
@@ -178,7 +169,7 @@ Guests access a pocket via share link (`/s/{token}`). The shell is stripped down
 - No dashboard
 - Pocket content + chat rail only
 - Chat scoped to the shared pocket instance - cannot reference other pockets
-- Skills limited to pocket-scoped skills (no cross-pocket skills)
+- Chat scoped to pocket-scoped tools only (no cross-pocket context assembled)
 - No tips (guests see a clean experience)
 
 ---

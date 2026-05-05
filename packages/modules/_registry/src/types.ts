@@ -1,7 +1,5 @@
-export type ModuleSkill = {
+export type ModuleTool = {
   id: string
-  name: string
-  description: string
   consumesContext: string[]
 }
 
@@ -12,5 +10,6 @@ export type ModuleManifest = {
   exposesContext: boolean
   consumesContext: string[]
   interactionTier: 1 | 2 | 3
-  skills: ModuleSkill[]
+  tools: ModuleTool[]
+  systemPrompt?: string
 }
