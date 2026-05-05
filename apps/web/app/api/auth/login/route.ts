@@ -1,17 +1,24 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { db } from '@lifehelper/core'
-import { verifyPassword, createSession } from '@lifehelper/core'
+import { db, verifyPassword, createSession } from '@lifehelper/core'
+
+const DUMMY_HASH = '$2b$12$invalidhashfortimingprotectionnnnnnnnnnnnnnnnnnnnnnnnnn'
 
 export async function POST(req: NextRequest) {
-  const body = await req.json() as unknown
+  let body: unknown
+  try {
+    body = await req.json()
+  } catch {
+    return NextResponse.json({ error: 'Invalid request body' }, { status: 400 })
+  }
   const { email, password } = body as { email?: unknown; password?: unknown }
 
-  if (!email || typeof email !== 'string' || !password || typeof password !== 'string') {
+  if (typeof email !== 'string' || typeof password !== 'string') {
     return NextResponse.json({ error: 'Email and password required' }, { status: 400 })
   }
 
   const user = await db.user.findUnique({ where: { email } })
-  if (!user || !(await verifyPassword(password, user.hashedPassword))) {
+  const passwordMatch = await verifyPassword(password, user?.hashedPassword ?? DUMMY_HASH)
+  if (!user || !passwordMatch) {
     return NextResponse.json({ error: 'Invalid credentials' }, { status: 401 })
   }
 
