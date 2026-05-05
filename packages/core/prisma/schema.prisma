@@ -1,0 +1,82 @@
+// Core schema - base tables only.
+// Module schemas live in packages/modules/{id}/prisma/schema.prisma
+// and are merged here at build time via: pnpm merge-schemas
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+model User {
+  id             String    @id @default(cuid())
+  email          String    @unique
+  hashedPassword String
+  createdAt      DateTime  @default(now())
+  sessions       Session[]
+
+  @@map("users")
+}
+
+model Session {
+  id        String   @id @default(cuid())
+  userId    String
+  token     String   @unique @default(cuid())
+  expiresAt DateTime
+  createdAt DateTime @default(now())
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@map("sessions")
+}
+
+model ModuleRegistry {
+  id      String @id
+  name    String
+  version String @default("0.1.0")
+
+  @@map("module_registry")
+}
+
+model UserModule {
+  userId    String
+  moduleId  String
+  enabledAt DateTime @default(now())
+
+  @@id([userId, moduleId])
+  @@map("user_modules")
+}
+
+model ShareLink {
+  id          String    @id @default(cuid())
+  token       String    @unique @default(cuid())
+  moduleId    String
+  instanceId  String
+  permissions Json      @default("{}")
+  expiresAt   DateTime?
+  createdAt   DateTime  @default(now())
+
+  @@map("share_links")
+}
+
+model Guest {
+  id              String   @id @default(cuid())
+  name            String
+  persistentToken String   @unique
+  shareToken      String
+  createdAt       DateTime @default(now())
+
+  @@map("guests")
+}
+
+model ModuleContextCache {
+  moduleId  String
+  userId    String
+  summary   Json
+  updatedAt DateTime @default(now())
+
+  @@id([moduleId, userId])
+  @@map("module_context_cache")
+}
