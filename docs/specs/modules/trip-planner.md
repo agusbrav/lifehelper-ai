@@ -1,0 +1,6 @@
+- Trip planner + itinerary doc
+    - Should create tables for flights, trains and buses
+    - Tables for stayings and links to each staying
+    - These table should have dates and prices
+    - Expenses summary
+    - Potentially suggestions to visit on each places if user desires.
