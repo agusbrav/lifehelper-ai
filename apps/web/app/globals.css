@@ -1,1 +1,19 @@
 @import "tailwindcss";
+
+@variant dark (&:is(.dark *));
+
+:root {
+  --bg: #ffffff;
+  --fg: #09090b;
+  --muted: #f4f4f5;
+  --border: #e4e4e7;
+  --sidebar-bg: #fafafa;
+}
+
+.dark {
+  --bg: #09090b;
+  --fg: #fafafa;
+  --muted: #18181b;
+  --border: #27272a;
+  --sidebar-bg: #111113;
+}

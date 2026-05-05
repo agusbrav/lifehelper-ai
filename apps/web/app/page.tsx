@@ -1,7 +1,8 @@
-export default function Home() {
-  return (
-    <main className="flex min-h-screen items-center justify-center">
-      <h1 className="text-2xl font-semibold">LifeHelper</h1>
-    </main>
-  )
+import { redirect } from 'next/navigation'
+import { cookies } from 'next/headers'
+
+export default async function RootPage() {
+  const cookieStore = await cookies()
+  const session = cookieStore.get('session')
+  redirect(session ? '/dashboard' : '/login')
 }
