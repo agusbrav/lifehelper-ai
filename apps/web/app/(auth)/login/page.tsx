@@ -2,6 +2,7 @@
 import { useState } from 'react'
 import { useRouter } from 'next/navigation'
 import Link from 'next/link'
+import { PasswordInput } from '@/components/password-input'
 
 export default function LoginPage() {
   const router = useRouter()
@@ -44,18 +45,12 @@ export default function LoginPage() {
             name="email"
             type="email"
             required
-            className="w-full rounded-md border border-zinc-300 dark:border-zinc-700 bg-white dark:bg-zinc-900 px-3 py-2 text-sm outline-none focus:ring-2 focus:ring-zinc-500"
+            className="w-full rounded-md border border-zinc-300 dark:border-zinc-700 bg-white dark:bg-zinc-900 text-zinc-900 dark:text-zinc-50 px-3 py-2 text-sm outline-none focus:ring-2 focus:ring-zinc-500"
           />
         </div>
         <div>
           <label className="block text-sm mb-1 text-zinc-700 dark:text-zinc-300" htmlFor="password">Password</label>
-          <input
-            id="password"
-            name="password"
-            type="password"
-            required
-            className="w-full rounded-md border border-zinc-300 dark:border-zinc-700 bg-white dark:bg-zinc-900 px-3 py-2 text-sm outline-none focus:ring-2 focus:ring-zinc-500"
-          />
+          <PasswordInput id="password" name="password" required />
         </div>
         {error && <p className="text-sm text-red-500">{error}</p>}
         <button
