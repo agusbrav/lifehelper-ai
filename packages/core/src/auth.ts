@@ -1,3 +1,4 @@
+import { randomBytes } from 'crypto'
 import bcrypt from 'bcryptjs'
 import { db } from './db'
 
@@ -13,9 +14,11 @@ export async function verifyPassword(password: string, hash: string): Promise<bo
 }
 
 export async function createSession(userId: string): Promise<string> {
+  const token = randomBytes(32).toString('hex')
   const session = await db.session.create({
     data: {
       userId,
+      token,
       expiresAt: new Date(Date.now() + SESSION_MS),
     },
   })

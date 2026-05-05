@@ -52,11 +52,11 @@ describe('createSession', () => {
     const token = await createSession('user-1')
 
     expect(token).toBe('abc-token')
-    expect(db.session.create).toHaveBeenCalledWith(
-      expect.objectContaining({
-        data: expect.objectContaining({ userId: 'user-1' }),
-      })
-    )
+    const call = vi.mocked(db.session.create).mock.calls[0][0]
+    expect(call.data.userId).toBe('user-1')
+    const expectedExpiry = Date.now() + 7 * 24 * 60 * 60 * 1000
+    expect(call.data.expiresAt.getTime()).toBeGreaterThan(expectedExpiry - 5000)
+    expect(call.data.expiresAt.getTime()).toBeLessThan(expectedExpiry + 5000)
   })
 })
 
