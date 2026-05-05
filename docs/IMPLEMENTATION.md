@@ -15,6 +15,7 @@ Keep this file updated as work progresses. Mark items `[x]` when done, add notes
 - [ ] Scaffold `packages/ui` (shared component stubs: Button, Card, Sidebar, Modal)
 - [ ] Scaffold `packages/modules/_registry` (empty manifest index)
 - [ ] Set up `merge-schemas` script in `core`
+- [ ] Add `next-intl` to `apps/web`; set up `messages/es.json` + `messages/en.json`; Spanish default
 - [ ] Verify `pnpm dev` runs the full workspace
 
 ## Phase 2 - Auth

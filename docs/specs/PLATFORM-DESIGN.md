@@ -55,7 +55,7 @@ turbo.json pipeline:
 
 | Table | Purpose |
 |-------|---------|
-| `users` | id, email, hashed_password, created_at |
+| `users` | id, email, hashed_password, locale (`es`\|`en`, default `es`), created_at |
 | `sessions` | Server-side session store (cookie-based auth, no JWTs) |
 | `module_registry` | Available modules: id, name, version |
 | `user_modules` | Which modules a user has enabled |
@@ -218,6 +218,7 @@ Guest restrictions:
 | ORM | Prisma (with per-module schema fragments, merged at build) |
 | Auth | bcrypt + server-side sessions + HttpOnly cookies |
 | AI | Claude API (Anthropic SDK) - chat handler with per-pocket tool definitions |
+| i18n | next-intl - Spanish (default) + English; locale stored in user profile |
 | Deployment (local) | `pnpm dev` via Turborepo |
 | Deployment (cloud) | Render (single web service + managed PostgreSQL) |
 

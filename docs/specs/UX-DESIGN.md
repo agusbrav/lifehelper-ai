@@ -161,6 +161,19 @@ Dark mode and light mode, toggled via the sidebar sun/moon icon.
 
 ---
 
+## 5b. Language
+
+Spanish (es) and English (en) supported. Spanish is the default.
+
+- UI text, labels, chat responses, and error messages are translated
+- Brand terms are never translated: **Pockets**, **LifeHelper**, pocket names the user creates (e.g. "Expenses")
+- Locale preference stored in user profile (DB) for registered users; `localStorage` for guests
+- No URL-based locale routing - locale is a user preference, not part of the path
+- Chat responses: the user's locale is included in the Claude system prompt so AI replies match the selected language
+- Translation files live in `apps/web/messages/{es,en}.json`, managed with `next-intl`
+
+---
+
 ## 6. Guest View
 
 Guests access a pocket via share link (`/s/{token}`). The shell is stripped down:
@@ -182,4 +195,5 @@ Accessible via sidebar settings icon. Covers:
 - Pocket management (enable/disable pockets, reorder)
 - **Tips** - global on/off toggle
 - **Theme** - light/dark (mirrors sidebar toggle)
+- **Language** - Spanish / English selector
 - Notification preferences (deferred)
