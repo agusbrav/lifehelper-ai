@@ -20,10 +20,7 @@ export default function LoginPage() {
     const res = await fetch('/api/auth/login', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({
-        email,
-        password,
-      }),
+      body: JSON.stringify({ email, password }),
     })
     setLoading(false)
     if (res.ok) {
@@ -36,34 +33,51 @@ export default function LoginPage() {
 
   return (
     <div>
-      <h1 className="text-2xl font-semibold mb-6 text-zinc-900 dark:text-zinc-50">Sign in</h1>
+      <div className="mb-8">
+        <div className="w-10 h-10 rounded-xl bg-[var(--accent)] flex items-center justify-center text-[var(--accent-fg)] font-bold text-lg mb-4">
+          L
+        </div>
+        <h1 className="text-2xl font-semibold text-[var(--fg)]">Welcome back</h1>
+        <p className="text-sm text-[var(--muted-fg)] mt-1">Sign in to your account</p>
+      </div>
+
       <form onSubmit={handleSubmit} className="flex flex-col gap-4">
         <div>
-          <label className="block text-sm mb-1 text-zinc-700 dark:text-zinc-300" htmlFor="email">Email</label>
+          <label className="block text-sm font-medium mb-1.5 text-[var(--fg)]" htmlFor="email">
+            Email
+          </label>
           <input
             id="email"
             name="email"
             type="email"
             required
-            className="w-full rounded-md border border-zinc-300 dark:border-zinc-700 bg-white dark:bg-zinc-900 text-zinc-900 dark:text-zinc-50 px-3 py-2 text-sm outline-none focus:ring-2 focus:ring-zinc-500"
+            className="w-full rounded-xl border border-[var(--border)] bg-[var(--muted)] text-[var(--fg)] px-3.5 py-2.5 text-sm outline-none focus:ring-2 focus:ring-[var(--accent)] placeholder:text-[var(--muted-fg)] transition-shadow"
           />
         </div>
         <div>
-          <label className="block text-sm mb-1 text-zinc-700 dark:text-zinc-300" htmlFor="password">Password</label>
+          <label className="block text-sm font-medium mb-1.5 text-[var(--fg)]" htmlFor="password">
+            Password
+          </label>
           <PasswordInput id="password" name="password" required />
         </div>
-        {error && <p className="text-sm text-red-500">{error}</p>}
+        {error && (
+          <p className="text-sm text-rose-500 bg-rose-50 dark:bg-rose-950/30 border border-rose-200 dark:border-rose-800 rounded-lg px-3 py-2">
+            {error}
+          </p>
+        )}
         <button
           type="submit"
           disabled={loading}
-          className="rounded-md bg-zinc-900 dark:bg-zinc-50 text-white dark:text-zinc-900 py-2 text-sm font-medium hover:opacity-90 disabled:opacity-50"
+          className="w-full rounded-xl bg-[var(--accent)] text-[var(--accent-fg)] py-2.5 text-sm font-semibold hover:opacity-90 disabled:opacity-50 transition-opacity mt-1"
         >
           {loading ? 'Signing in...' : 'Sign in'}
         </button>
       </form>
-      <p className="mt-4 text-sm text-zinc-500">
+      <p className="mt-6 text-sm text-center text-[var(--muted-fg)]">
         No account?{' '}
-        <Link href="/register" className="text-zinc-900 dark:text-zinc-100 underline">Register</Link>
+        <Link href="/register" className="text-[var(--accent)] font-medium hover:opacity-80">
+          Register
+        </Link>
       </p>
     </div>
   )

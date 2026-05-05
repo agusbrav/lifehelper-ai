@@ -12,10 +12,10 @@ export function Sidebar({ pockets }: { pockets: Pocket[] }) {
     : undefined
 
   return (
-    <nav className="flex flex-col items-center w-14 shrink-0 border-r border-zinc-200 dark:border-zinc-800 bg-[var(--sidebar-bg)] py-3 gap-1">
+    <nav className="flex flex-col items-center w-14 shrink-0 border-r border-[var(--border)] bg-[var(--sidebar-bg)] py-3 gap-1">
       <Link
         href="/dashboard"
-        className="flex items-center justify-center w-8 h-8 rounded-md text-zinc-900 dark:text-zinc-100 font-bold text-sm mb-3"
+        className="flex items-center justify-center w-8 h-8 rounded-xl bg-[var(--accent)] text-[var(--accent-fg)] font-bold text-sm mb-3 shadow-sm"
         aria-label="Dashboard"
       >
         L
@@ -26,10 +26,10 @@ export function Sidebar({ pockets }: { pockets: Pocket[] }) {
           key={p.id}
           href={`/m/${p.id}`}
           aria-label={p.name}
-          className={`flex items-center justify-center w-8 h-8 rounded-md text-xs font-medium transition-colors ${
+          className={`flex items-center justify-center w-8 h-8 rounded-lg text-xs font-semibold transition-colors ${
             currentPocketId === p.id
-              ? 'bg-zinc-900 dark:bg-zinc-100 text-white dark:text-zinc-900'
-              : 'text-zinc-500 hover:text-zinc-900 dark:hover:text-zinc-100 hover:bg-zinc-100 dark:hover:bg-zinc-800'
+              ? 'bg-[var(--accent)] text-[var(--accent-fg)]'
+              : 'text-[var(--muted-fg)] hover:text-[var(--fg)] hover:bg-[var(--accent-muted)]'
           }`}
         >
           {p.name.slice(0, 2).toUpperCase()}
@@ -41,7 +41,7 @@ export function Sidebar({ pockets }: { pockets: Pocket[] }) {
         <Link
           href="/settings"
           aria-label="Settings"
-          className="flex items-center justify-center w-8 h-8 rounded-md text-zinc-400 hover:text-zinc-900 dark:hover:text-zinc-100 hover:bg-zinc-100 dark:hover:bg-zinc-800 transition-colors"
+          className="flex items-center justify-center w-8 h-8 rounded-lg text-[var(--muted-fg)] hover:text-[var(--fg)] hover:bg-[var(--accent-muted)] transition-colors mb-8"
         >
           <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
             <circle cx="12" cy="12" r="3"/>

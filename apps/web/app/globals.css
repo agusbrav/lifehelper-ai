@@ -3,17 +3,32 @@
 @variant dark (&:is(.dark *));
 
 :root {
-  --bg: #ffffff;
-  --fg: #09090b;
-  --muted: #f4f4f5;
-  --border: #e4e4e7;
-  --sidebar-bg: #fafafa;
+  --bg:           #faf9ff;
+  --fg:           #1e1b2e;
+  --muted:        #f0ecff;
+  --muted-fg:     #7c6fa8;
+  --border:       #ddd5f5;
+  --card-bg:      #ffffff;
+  --sidebar-bg:   #f3eeff;
+  --accent:       #7c5cfc;
+  --accent-muted: #ede8ff;
+  --accent-fg:    #ffffff;
 }
 
 .dark {
-  --bg: #09090b;
-  --fg: #fafafa;
-  --muted: #18181b;
-  --border: #27272a;
-  --sidebar-bg: #111113;
+  --bg:           #0f0d1a;
+  --fg:           #eee9ff;
+  --muted:        #1d1a30;
+  --muted-fg:     #9d90c5;
+  --border:       #2e2a4a;
+  --card-bg:      #1a1630;
+  --sidebar-bg:   #130f23;
+  --accent:       #a68dff;
+  --accent-muted: #261f45;
+  --accent-fg:    #0f0d1a;
+}
+
+body {
+  background-color: var(--bg);
+  color: var(--fg);
 }

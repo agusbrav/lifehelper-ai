@@ -17,12 +17,14 @@ export default async function DashboardPage() {
 
   return (
     <div className="p-6">
-      <h1 className="text-lg font-semibold mb-6 text-zinc-900 dark:text-zinc-100">Your pockets</h1>
+      <h1 className="text-lg font-semibold mb-6 text-[var(--fg)]">Your Pockets</h1>
 
       {userModules.length === 0 ? (
-        <div className="rounded-xl border border-dashed border-zinc-200 dark:border-zinc-800 p-8 text-center">
-          <p className="text-sm text-zinc-500">You have no pockets yet.</p>
-          <p className="text-xs text-zinc-400 mt-1">Try typing "add an expenses pocket" in the chat below.</p>
+        <div className="rounded-2xl border border-dashed border-[var(--border)] bg-[var(--muted)] p-10 text-center">
+          <p className="text-sm font-medium text-[var(--fg)]">No pockets yet</p>
+          <p className="text-xs text-[var(--muted-fg)] mt-1">
+            Try typing &quot;add an expenses pocket&quot; in the chat below.
+          </p>
         </div>
       ) : (
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">

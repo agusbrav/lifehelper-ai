@@ -6,6 +6,9 @@ const nextConfig: NextConfig = {
   turbopack: {
     root: path.resolve(__dirname, '../..'),
   },
+  devIndicators: {
+    position: 'bottom-right',
+  },
 }
 
 export default nextConfig

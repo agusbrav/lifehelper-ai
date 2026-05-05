@@ -11,12 +11,12 @@ export function PasswordInput({ className = '', ...props }: Props) {
       <input
         {...props}
         type={visible ? 'text' : 'password'}
-        className={`w-full rounded-md border border-zinc-300 dark:border-zinc-700 bg-white dark:bg-zinc-900 text-zinc-900 dark:text-zinc-50 px-3 py-2 pr-10 text-sm outline-none focus:ring-2 focus:ring-zinc-500 ${className}`}
+        className={`w-full rounded-xl border border-[var(--border)] bg-[var(--muted)] text-[var(--fg)] px-3.5 py-2.5 pr-10 text-sm outline-none focus:ring-2 focus:ring-[var(--accent)] placeholder:text-[var(--muted-fg)] transition-shadow ${className}`}
       />
       <button
         type="button"
         onClick={() => setVisible(v => !v)}
-        className="absolute right-2 top-1/2 -translate-y-1/2 text-zinc-400 hover:text-zinc-600 dark:hover:text-zinc-300"
+        className="absolute right-3 top-1/2 -translate-y-1/2 text-[var(--muted-fg)] hover:text-[var(--fg)] transition-colors"
         aria-label={visible ? 'Hide password' : 'Show password'}
       >
         {visible ? (
