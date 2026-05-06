@@ -2,7 +2,7 @@
 import { revalidatePath } from 'next/cache'
 import { cookies } from 'next/headers'
 import { getSession } from '@lifehelper/core'
-import { addExpense, addInstallment, setAmount, togglePaid, deleteItem } from '@lifehelper/budget'
+import { addExpense, addInstallment, setAmount, togglePaid, deleteItem, resetMonth } from '@lifehelper/budget'
 
 async function getUserId() {
   const cookieStore = await cookies()
@@ -52,5 +52,11 @@ export async function togglePaidAction(itemId: string) {
 export async function deleteItemAction(itemId: string) {
   const userId = await getUserId()
   await deleteItem({ userId, itemId })
+  revalidatePath('/m/budget')
+}
+
+export async function resetMonthAction(year: number, month: number) {
+  const userId = await getUserId()
+  await resetMonth(userId, year, month)
   revalidatePath('/m/budget')
 }

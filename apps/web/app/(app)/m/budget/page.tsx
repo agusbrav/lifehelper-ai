@@ -6,6 +6,7 @@ import { getTranslations } from 'next-intl/server'
 import { MonthNav } from '@/components/budget/month-nav'
 import { SummaryBar } from '@/components/budget/summary-bar'
 import { ExpenseTable } from '@/components/budget/expense-table'
+import { ResetMonthButton } from '@/components/budget/reset-month-button'
 import Link from 'next/link'
 
 type Props = { searchParams: Promise<{ year?: string; month?: string }> }
@@ -57,6 +58,7 @@ export default async function BudgetPage({ searchParams }: Props) {
           >
             {t('analyticsLink')}
           </Link>
+          <ResetMonthButton year={year} month={month} />
         </div>
       </div>
 

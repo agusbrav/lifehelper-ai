@@ -61,6 +61,8 @@
     "noCards": "Sin tarjetas configuradas",
     "carriedTitle": "Monto del mes anterior",
     "delete": "Eliminar",
+    "resetMonth": "Borrar mes",
+    "resetMonthConfirm": "¿Borrar todos los gastos de este mes? Se recreará la próxima vez que lo visites.",
     "legend": {
       "recurring": "Recurrente",
       "installments": "Cuotas",

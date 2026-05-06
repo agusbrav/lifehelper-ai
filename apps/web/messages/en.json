@@ -61,6 +61,8 @@
     "noCards": "No cards configured",
     "carriedTitle": "Amount from previous month",
     "delete": "Delete",
+    "resetMonth": "Clear month",
+    "resetMonthConfirm": "Delete all expenses from this month? It will be recreated the next time you visit.",
     "legend": {
       "recurring": "Recurring",
       "installments": "Installments",

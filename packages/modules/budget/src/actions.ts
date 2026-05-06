@@ -234,11 +234,22 @@ export async function getMonthsForUser(userId: string) {
 
 export async function getFirstMonth(userId: string): Promise<{ year: number; month: number } | null> {
   const row = await db.budgetMonth.findFirst({
-    where: { userId },
+    where: { userId, items: { some: {} } },
     orderBy: [{ year: 'asc' }, { month: 'asc' }],
     select: { year: true, month: true },
   })
   return row ?? null
+}
+
+export async function resetMonth(userId: string, year: number, month: number): Promise<void> {
+  const existing = await db.budgetMonth.findUnique({
+    where: { userId_year_month: { userId, year, month } },
+    select: { id: true },
+  })
+  if (!existing) return
+  await assertOwnsMonth(userId, existing.id)
+  await db.budgetItem.deleteMany({ where: { monthId: existing.id } })
+  await db.budgetMonth.delete({ where: { id: existing.id } })
 }
 
 export async function getItemsForAnalytics(userId: string) {
