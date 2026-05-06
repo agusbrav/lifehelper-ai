@@ -10,6 +10,7 @@ import {
 } from '@lifehelper/budget'
 import { getTranslations } from 'next-intl/server'
 import { AnalyticsDashboard } from '@/components/budget/analytics-dashboard'
+import { AnalyticsMonthNav } from '@/components/budget/analytics-month-nav'
 import Link from 'next/link'
 
 export default async function BudgetAnalyticsPage({
@@ -81,9 +82,13 @@ export default async function BudgetAnalyticsPage({
   }))
 
   return (
-    <div className="p-6 max-w-4xl">
-      <div className="flex items-center justify-between mb-6">
-        <h1 className="text-lg font-semibold text-[var(--fg)]">{t('title')}</h1>
+    <div className="p-6">
+      <div className="flex items-center justify-between mb-4">
+        <AnalyticsMonthNav
+          availableMonths={availableMonths}
+          selectedYear={selectedYear}
+          selectedMonth={selectedMonth}
+        />
         <Link
           href="/m/budget"
           className="text-sm text-[var(--accent)] hover:opacity-80 font-medium"
@@ -92,9 +97,6 @@ export default async function BudgetAnalyticsPage({
         </Link>
       </div>
       <AnalyticsDashboard
-        availableMonths={availableMonths}
-        selectedYear={selectedYear}
-        selectedMonth={selectedMonth}
         categoryTotals={categoryTotals}
         avg3mo={avg3mo}
         avg6mo={avg6mo}

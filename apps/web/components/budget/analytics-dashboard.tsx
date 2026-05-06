@@ -2,7 +2,6 @@
 import { useState, useMemo } from 'react'
 import { useTranslations, useLocale } from 'next-intl'
 import { DonutChart } from './donut-chart'
-import { MonthPicker } from './month-picker'
 import type {
   CategoryTotal,
   RollingAvgResult,
@@ -38,9 +37,6 @@ function pctColor(pct: number) {
 type MonthlyTotal = { label: string; totalCents: number }
 
 type Props = {
-  availableMonths: { year: number; month: number }[]
-  selectedYear: number
-  selectedMonth: number
   categoryTotals: CategoryTotal[]
   avg3mo: RollingAvgResult[]
   avg6mo: RollingAvgResult[]
@@ -50,9 +46,6 @@ type Props = {
 }
 
 export function AnalyticsDashboard({
-  availableMonths,
-  selectedYear,
-  selectedMonth,
   categoryTotals,
   avg3mo,
   avg6mo,
@@ -93,15 +86,9 @@ export function AnalyticsDashboard({
   return (
     <div className="flex flex-col gap-8">
 
-      <MonthPicker
-        months={availableMonths}
-        selectedYear={selectedYear}
-        selectedMonth={selectedMonth}
-      />
-
       {/* Split: donut left, table right */}
       <section>
-        <div className="grid grid-cols-1 md:grid-cols-[220px_1fr] gap-6 items-start">
+        <div className="grid grid-cols-1 md:grid-cols-[200px_1fr] gap-6 items-start">
 
           {/* Left: donut + legend */}
           <div className="flex flex-col items-center gap-4">
