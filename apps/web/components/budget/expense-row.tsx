@@ -21,9 +21,18 @@ type Item = {
   children: Item[]
 }
 
-type Props = { item: Item; depth?: number; monthId: string; keywordMap: Record<string, string>; categories: string[] }
+type Props = {
+  item: Item
+  depth?: number
+  monthId: string
+  keywordMap: Record<string, string>
+  categories: string[]
+  year: number
+  month: number
+  monthContext: 'current' | 'next' | 'past'
+}
 
-export function ExpenseRow({ item, depth = 0, monthId, keywordMap, categories }: Props) {
+export function ExpenseRow({ item, depth = 0, monthId, keywordMap, categories, year, month, monthContext }: Props) {
   const t = useTranslations('budget')
   const format = useFormatter()
   const fmt = (cents: number) =>
@@ -266,7 +275,7 @@ export function ExpenseRow({ item, depth = 0, monthId, keywordMap, categories }:
 
       {/* Children rows */}
       {!collapsed && children.map(child => (
-        <ExpenseRow key={child.id} item={child} depth={depth + 1} monthId={monthId} keywordMap={keywordMap} categories={categories} />
+        <ExpenseRow key={child.id} item={child} depth={depth + 1} monthId={monthId} keywordMap={keywordMap} categories={categories} year={year} month={month} monthContext={monthContext} />
       ))}
     </>
   )

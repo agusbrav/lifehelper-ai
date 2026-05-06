@@ -24,6 +24,9 @@ type Props = {
   userId: string
   keywordMap: Record<string, string>
   categories: string[]
+  year: number
+  month: number
+  monthContext: 'current' | 'next' | 'past'
 }
 
 type SortCol = 'name' | 'category' | 'amount'
@@ -47,7 +50,7 @@ function SortArrow({ col, sortCol, sortDir }: { col: SortCol; sortCol: SortCol |
   return <span className="ml-0.5 text-[9px]">{sortDir === 'asc' ? '▲' : '▼'}</span>
 }
 
-export function ExpenseTable({ items, monthId, keywordMap, categories }: Props) {
+export function ExpenseTable({ items, monthId, keywordMap, categories, year, month, monthContext }: Props) {
   const t = useTranslations('budget')
 
   const [sortCol, setSortCol] = useState<SortCol | null>(null)
@@ -206,7 +209,7 @@ export function ExpenseTable({ items, monthId, keywordMap, categories }: Props) 
           </thead>
           <tbody>
             {visibleItems.map(item => (
-              <ExpenseRow key={item.id} item={item} monthId={monthId} keywordMap={keywordMap} categories={categories} />
+              <ExpenseRow key={item.id} item={item} monthId={monthId} keywordMap={keywordMap} categories={categories} year={year} month={month} monthContext={monthContext} />
             ))}
             <AddExpenseRow monthId={monthId} keywordMap={keywordMap} categories={categories} cards={allCards} />
           </tbody>
