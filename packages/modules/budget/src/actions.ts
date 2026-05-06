@@ -44,8 +44,13 @@ export async function getOrCreateMonth(userId: string, year: number, month: numb
   const newMonth = await db.budgetMonth.create({ data: { userId, year, month } })
 
   if (!prev) {
-    for (const seed of DEFAULT_SEED) {
-      await db.budgetItem.create({ data: { monthId: newMonth.id, userId, ...seed } })
+    // Only seed when the user has absolutely no data anywhere — navigating to an
+    // old empty month should produce a genuinely empty month, not a copy of the defaults.
+    const hasAnyData = await db.budgetMonth.count({ where: { userId, items: { some: {} } } })
+    if (hasAnyData === 0) {
+      for (const seed of DEFAULT_SEED) {
+        await db.budgetItem.create({ data: { monthId: newMonth.id, userId, ...seed } })
+      }
     }
   }
 

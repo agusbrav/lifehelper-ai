@@ -16,7 +16,7 @@ export function ResetMonthButton({ year, month }: Props) {
     startTransition(async () => {
       await resetMonthAction(year, month)
       setConfirming(false)
-      router.refresh()
+      router.push('/m/budget')  // navigate to today so the deleted month isn't immediately recreated
     })
   }
 
