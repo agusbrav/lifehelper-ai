@@ -31,19 +31,14 @@ export function ExpenseTable({ items, monthId, keywordMap, categories }: Props) 
   return (
     <div className="rounded-2xl border border-[var(--border)] bg-[var(--card-bg)] overflow-hidden">
       <div className="overflow-x-auto">
-        <table className="w-full border-collapse text-sm" style={{ tableLayout: 'fixed' }}>
-          <colgroup>
-            <col />
-            <col style={{ width: '7rem' }} />
-            <col style={{ width: '3.5rem' }} />
-            <col style={{ width: '2.5rem' }} />
-          </colgroup>
+        <table className="w-full border-collapse text-sm">
           <thead>
             <tr className="bg-[var(--muted)]">
               <th className="text-left py-2.5 pl-4 pr-3 text-xs font-medium text-[var(--muted-fg)] uppercase tracking-wide">{t('expense')}</th>
-              <th className="text-right py-2.5 px-3 text-xs font-medium text-[var(--muted-fg)] uppercase tracking-wide">{t('amount')}</th>
-              <th className="text-center py-2.5 px-2 text-xs font-medium text-[var(--muted-fg)] uppercase tracking-wide">{t('paid')}</th>
-              <th className="py-2.5 pr-3" />
+              <th className="hidden md:table-cell text-left py-2.5 px-3 text-xs font-medium text-[var(--muted-fg)] uppercase tracking-wide w-36">{t('category')}</th>
+              <th className="text-right py-2.5 px-3 text-xs font-medium text-[var(--muted-fg)] uppercase tracking-wide w-28">{t('amount')}</th>
+              <th className="text-center py-2.5 px-2 text-xs font-medium text-[var(--muted-fg)] uppercase tracking-wide w-14">{t('paid')}</th>
+              <th className="py-2.5 pr-3 w-10" />
             </tr>
           </thead>
           <tbody>

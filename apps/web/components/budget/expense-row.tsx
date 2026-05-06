@@ -141,6 +141,11 @@ export function ExpenseRow({ item, depth = 0, monthId }: Props) {
           </div>
         </td>
 
+        {/* Category */}
+        <td className="hidden md:table-cell py-2.5 px-3 text-sm text-[var(--muted-fg)] w-36">
+          {!isSubItem && <span className="capitalize">{item.category ?? ''}</span>}
+        </td>
+
         {/* Amount */}
         <td className="py-2.5 px-3 text-right text-sm w-28">
           {editing ? (
@@ -193,7 +198,7 @@ export function ExpenseRow({ item, depth = 0, monthId }: Props) {
       {/* Inline add-charge form for credit card rows */}
       {isCard && addingCharge && (
         <tr className="border-t border-purple-500/20 bg-purple-500/5">
-          <td colSpan={4} className="py-2.5 pl-10 pr-4">
+          <td colSpan={5} className="py-2.5 pl-10 pr-4">
             <form onSubmit={handleAddCharge} className="flex gap-2 items-center flex-wrap">
               <input
                 name="name"
