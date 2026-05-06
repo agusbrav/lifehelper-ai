@@ -2,26 +2,73 @@
 import { useRef, useState, useTransition } from 'react'
 import { addExpenseAction, addInstallmentAction } from '@/app/(app)/m/budget/actions'
 
-type Props = { monthId: string }
+type Props = {
+  monthId: string
+  keywordMap: Record<string, string>
+  categories: string[]
+}
 
-export function AddExpenseRow({ monthId }: Props) {
+function autoMatchCategory(name: string, keywordMap: Record<string, string>): string | null {
+  const lower = name.toLowerCase().trim()
+  if (!lower) return null
+  if (lower in keywordMap) return keywordMap[lower]!
+  const keys = Object.keys(keywordMap).sort((a, b) => b.length - a.length)
+  for (const kw of keys) {
+    if (lower.includes(kw)) return keywordMap[kw]!
+  }
+  return null
+}
+
+export function AddExpenseRow({ monthId, keywordMap, categories }: Props) {
   const [mode, setMode] = useState<'idle' | 'expense' | 'installment'>('idle')
   const [recurring, setRecurring] = useState(false)
+  const [category, setCategory] = useState('')
+  const wasAutoFilled = useRef(false)
   const [, startTransition] = useTransition()
   const formRef = useRef<HTMLFormElement>(null)
+  const datalistId = 'category-options'
+
+  function handleNameChange(e: React.ChangeEvent<HTMLInputElement>) {
+    const value = e.target.value
+    if (wasAutoFilled.current || category === '') {
+      const matched = autoMatchCategory(value, keywordMap)
+      if (matched !== null) {
+        setCategory(matched)
+        wasAutoFilled.current = true
+      } else if (wasAutoFilled.current) {
+        setCategory('')
+        wasAutoFilled.current = false
+      }
+    }
+  }
+
+  function handleCategoryChange(e: React.ChangeEvent<HTMLInputElement>) {
+    setCategory(e.target.value)
+    wasAutoFilled.current = false
+  }
 
   function handleSubmit(e: React.FormEvent<HTMLFormElement>) {
     e.preventDefault()
     const fd = new FormData(e.currentTarget)
     fd.set('monthId', monthId)
     fd.set('recurring', recurring ? 'true' : 'false')
+    fd.set('category', category)
     startTransition(async () => {
       if (mode === 'expense') await addExpenseAction(fd)
       else await addInstallmentAction(fd)
       formRef.current?.reset()
       setMode('idle')
       setRecurring(false)
+      setCategory('')
+      wasAutoFilled.current = false
     })
+  }
+
+  function handleCancel() {
+    setMode('idle')
+    setRecurring(false)
+    setCategory('')
+    wasAutoFilled.current = false
   }
 
   if (mode === 'idle') {
@@ -55,13 +102,22 @@ export function AddExpenseRow({ monthId }: Props) {
             name="name"
             required
             placeholder="Name"
+            onChange={handleNameChange}
             className="rounded-lg border border-[var(--border)] bg-[var(--card-bg)] text-[var(--fg)] px-2.5 py-1.5 text-sm outline-none focus:ring-1 focus:ring-[var(--accent)] w-40"
           />
           <input
             name="category"
             placeholder="Category"
-            className="rounded-lg border border-[var(--border)] bg-[var(--card-bg)] text-[var(--fg)] px-2.5 py-1.5 text-sm outline-none focus:ring-1 focus:ring-[var(--accent)] w-32"
+            list={datalistId}
+            value={category}
+            onChange={handleCategoryChange}
+            className="rounded-lg border border-[var(--border)] bg-[var(--card-bg)] text-[var(--fg)] px-2.5 py-1.5 text-sm outline-none focus:ring-1 focus:ring-[var(--accent)] w-36"
           />
+          <datalist id={datalistId}>
+            {categories.map(cat => (
+              <option key={cat} value={cat} />
+            ))}
+          </datalist>
 
           {mode === 'expense' && (
             <label className="flex items-center gap-1.5 text-sm text-[var(--muted-fg)] cursor-pointer select-none">
@@ -105,7 +161,7 @@ export function AddExpenseRow({ monthId }: Props) {
           </button>
           <button
             type="button"
-            onClick={() => { setMode('idle'); setRecurring(false) }}
+            onClick={handleCancel}
             className="text-sm text-[var(--muted-fg)] hover:text-[var(--fg)] transition-colors"
           >
             Cancel

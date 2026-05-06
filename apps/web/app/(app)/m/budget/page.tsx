@@ -1,7 +1,7 @@
 import { cookies } from 'next/headers'
 import { redirect } from 'next/navigation'
 import { getSession } from '@lifehelper/core'
-import { getOrCreateMonth } from '@lifehelper/budget'
+import { getOrCreateMonth, fetchCategoryHistory, buildKeywordMap, knownCategories } from '@lifehelper/budget'
 import { MonthNav } from '@/components/budget/month-nav'
 import { SummaryBar } from '@/components/budget/summary-bar'
 import { ExpenseTable } from '@/components/budget/expense-table'
@@ -20,8 +20,13 @@ export default async function BudgetPage({ searchParams }: Props) {
   const year = params.year ? parseInt(params.year) : now.getFullYear()
   const month = params.month ? parseInt(params.month) : now.getMonth() + 1
 
-  const budgetMonth = await getOrCreateMonth(session.user.id, year, month)
+  const [budgetMonth, historyMap] = await Promise.all([
+    getOrCreateMonth(session.user.id, year, month),
+    fetchCategoryHistory(session.user.id),
+  ])
   const items = budgetMonth?.items ?? []
+  const keywordMap = buildKeywordMap(historyMap)
+  const categories = knownCategories(keywordMap)
 
   function effectiveAmount(i: typeof items[number]) {
     if (i.children.length > 0) return i.children.reduce((s, c) => s + (c.amount ?? 0), 0)
@@ -49,6 +54,8 @@ export default async function BudgetPage({ searchParams }: Props) {
         items={items}
         monthId={budgetMonth?.id ?? ''}
         userId={session.user.id}
+        keywordMap={keywordMap}
+        categories={categories}
       />
     </div>
   )

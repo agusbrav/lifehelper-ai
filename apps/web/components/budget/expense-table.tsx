@@ -16,9 +16,15 @@ type Item = {
   children: Item[]
 }
 
-type Props = { items: Item[]; monthId: string; userId: string }
+type Props = {
+  items: Item[]
+  monthId: string
+  userId: string
+  keywordMap: Record<string, string>
+  categories: string[]
+}
 
-export function ExpenseTable({ items, monthId }: Props) {
+export function ExpenseTable({ items, monthId, keywordMap, categories }: Props) {
   return (
     <div className="rounded-2xl border border-[var(--border)] bg-[var(--card-bg)] overflow-hidden">
       <table className="w-full border-collapse text-sm">
@@ -34,7 +40,7 @@ export function ExpenseTable({ items, monthId }: Props) {
           {items.map(item => (
             <ExpenseRow key={item.id} item={item} monthId={monthId} />
           ))}
-          <AddExpenseRow monthId={monthId} />
+          <AddExpenseRow monthId={monthId} keywordMap={keywordMap} categories={categories} />
         </tbody>
       </table>
 
