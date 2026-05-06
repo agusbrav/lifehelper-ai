@@ -45,7 +45,7 @@ export default async function BudgetPage({ searchParams }: Props) {
   const tableItems = items as unknown as TableItem[]
 
   return (
-    <div className="p-6 max-w-3xl">
+    <div className="p-4 sm:p-6 w-full max-w-5xl">
       <div className="flex items-center justify-between mb-6">
         <MonthNav year={year} month={month} />
         <div className="flex items-center gap-4">

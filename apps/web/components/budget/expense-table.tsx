@@ -30,12 +30,13 @@ export function ExpenseTable({ items, monthId, keywordMap, categories }: Props) 
 
   return (
     <div className="rounded-2xl border border-[var(--border)] bg-[var(--card-bg)] overflow-hidden">
-      <table className="w-full border-collapse text-sm">
+      <div className="overflow-x-auto">
+      <table className="w-full border-collapse text-sm min-w-[480px]">
         <thead>
           <tr className="bg-[var(--muted)]">
             <th className="text-left py-2.5 pl-4 pr-3 text-xs font-medium text-[var(--muted-fg)] uppercase tracking-wide">{t('expense')}</th>
-            <th className="text-right py-2.5 px-3 text-xs font-medium text-[var(--muted-fg)] uppercase tracking-wide w-28">{t('amount')}</th>
-            <th className="text-center py-2.5 px-4 text-xs font-medium text-[var(--muted-fg)] uppercase tracking-wide w-16">{t('paid')}</th>
+            <th className="text-right py-2.5 px-3 text-xs font-medium text-[var(--muted-fg)] uppercase tracking-wide w-24">{t('amount')}</th>
+            <th className="text-center py-2.5 px-3 text-xs font-medium text-[var(--muted-fg)] uppercase tracking-wide w-14">{t('paid')}</th>
             <th className="py-2.5 pr-3 w-8" />
           </tr>
         </thead>
@@ -46,6 +47,7 @@ export function ExpenseTable({ items, monthId, keywordMap, categories }: Props) 
           <AddExpenseRow monthId={monthId} keywordMap={keywordMap} categories={categories} />
         </tbody>
       </table>
+      </div>
 
       {items.length === 0 && (
         <div className="py-8 text-center text-sm text-[var(--muted-fg)]">

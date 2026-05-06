@@ -21,6 +21,10 @@ function autoMatchCategory(name: string, keywordMap: Record<string, string>): st
   return null
 }
 
+function capitalize(s: string) {
+  return s ? s.charAt(0).toUpperCase() + s.slice(1) : s
+}
+
 export function AddExpenseRow({ monthId, keywordMap, categories }: Props) {
   const t = useTranslations('budget')
   const [mode, setMode] = useState<'idle' | 'expense' | 'installment'>('idle')
@@ -37,8 +41,9 @@ export function AddExpenseRow({ monthId, keywordMap, categories }: Props) {
     if (wasAutoFilled.current || categoryRef.current === '') {
       const matched = autoMatchCategory(value, keywordMap)
       if (matched !== null) {
-        setCategory(matched)
-        categoryRef.current = matched
+        const cap = capitalize(matched)
+        setCategory(cap)
+        categoryRef.current = cap
         wasAutoFilled.current = true
       } else if (wasAutoFilled.current) {
         setCategory('')
@@ -120,24 +125,34 @@ export function AddExpenseRow({ monthId, keywordMap, categories }: Props) {
             list={datalistId}
             value={category}
             onChange={handleCategoryChange}
-            className="rounded-lg border border-[var(--border)] bg-[var(--card-bg)] text-[var(--fg)] px-2.5 py-1.5 text-sm outline-none focus:ring-1 focus:ring-[var(--accent)] w-36"
+            className="rounded-lg border border-[var(--border)] bg-[var(--card-bg)] text-[var(--fg)] px-2.5 py-1.5 text-sm outline-none focus:ring-1 focus:ring-[var(--accent)] w-36 capitalize"
           />
           <datalist id={datalistId}>
             {categories.map(cat => (
-              <option key={cat} value={cat} />
+              <option key={cat} value={capitalize(cat)} />
             ))}
           </datalist>
 
           {mode === 'expense' && (
-            <label className="flex items-center gap-1.5 text-sm text-[var(--muted-fg)] cursor-pointer select-none">
+            <>
               <input
-                type="checkbox"
-                checked={recurring}
-                onChange={e => setRecurring(e.target.checked)}
-                className="accent-[var(--accent)]"
+                name="amount"
+                type="number"
+                step="0.01"
+                min="0.01"
+                placeholder={t('amount')}
+                className="rounded-lg border border-[var(--border)] bg-[var(--card-bg)] text-[var(--fg)] px-2.5 py-1.5 text-sm outline-none focus:ring-1 focus:ring-[var(--accent)] w-28"
               />
-              {t('recurring')}
-            </label>
+              <label className="flex items-center gap-1.5 text-sm text-[var(--muted-fg)] cursor-pointer select-none">
+                <input
+                  type="checkbox"
+                  checked={recurring}
+                  onChange={e => setRecurring(e.target.checked)}
+                  className="accent-[var(--accent)]"
+                />
+                {t('recurring')}
+              </label>
+            </>
           )}
 
           {mode === 'installment' && (
