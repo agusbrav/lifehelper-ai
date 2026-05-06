@@ -13,6 +13,8 @@
   --accent:       #7c5cfc;
   --accent-muted: #ede8ff;
   --accent-fg:    #ffffff;
+  --error-fg:     #dc2626;
+  --error-bg:     #fef2f2;
 }
 
 .dark {
@@ -26,6 +28,8 @@
   --accent:       #a68dff;
   --accent-muted: #261f45;
   --accent-fg:    #0f0d1a;
+  --error-fg:     #fca5a5;
+  --error-bg:     #7f1d1d;
 }
 
 body {

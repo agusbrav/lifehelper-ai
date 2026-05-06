@@ -64,7 +64,7 @@ export default function RegisterPage() {
           <PasswordInput id="password" name="password" required minLength={8} />
         </div>
         {error && (
-          <p className="text-sm text-rose-500 bg-rose-50 dark:bg-rose-950/30 border border-rose-200 dark:border-rose-800 rounded-lg px-3 py-2">
+          <p className="text-sm text-[var(--error-fg)] bg-[var(--error-bg)] border border-[var(--error-fg)] border-opacity-20 rounded-lg px-3 py-2">
             {error}
           </p>
         )}
