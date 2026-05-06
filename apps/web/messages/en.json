@@ -1,0 +1,86 @@
+{
+  "nav": {
+    "dashboard": "Dashboard",
+    "settings": "Settings"
+  },
+  "settings": {
+    "title": "Settings",
+    "language": "Language",
+    "english": "English",
+    "spanish": "Spanish"
+  },
+  "dashboard": {
+    "title": "Your Pockets",
+    "noPockets": "No pockets yet",
+    "noPocketsHint": "Try typing \"add an expenses pocket\" in the chat below."
+  },
+  "auth": {
+    "loginTitle": "Welcome back",
+    "loginSubtitle": "Sign in to your account",
+    "registerTitle": "Create account",
+    "registerSubtitle": "Start managing your life smarter",
+    "email": "Email",
+    "password": "Password",
+    "passwordHint": "(min 8 chars)",
+    "signIn": "Sign in",
+    "signingIn": "Signing in...",
+    "createAccount": "Create account",
+    "creatingAccount": "Creating account...",
+    "noAccount": "No account?",
+    "register": "Register",
+    "haveAccount": "Already registered?",
+    "loginLink": "Sign in"
+  },
+  "budget": {
+    "expense": "Expense",
+    "amount": "Amount",
+    "paid": "Paid",
+    "addExpense": "Add expense",
+    "addInstallment": "Add installment (cuotas)",
+    "name": "Name",
+    "category": "Category",
+    "recurring": "Recurring",
+    "add": "Add",
+    "cancel": "Cancel",
+    "analyticsLink": "Analytics →",
+    "noExpenses": "No expenses this month.",
+    "chargeDescription": "Charge description",
+    "chargeName": "Charge description",
+    "chargeAmount": "Amount",
+    "addCharge": "+ charge",
+    "paymentsCount": "# payments",
+    "perMonth": "$/month",
+    "carriedIndicator": "↩",
+    "legend": {
+      "recurring": "Recurring",
+      "installments": "Installments",
+      "card": "Card",
+      "oneTime": "One-time",
+      "carriedAmount": "carried amount from previous month"
+    }
+  },
+  "analytics": {
+    "title": "Budget Analytics",
+    "backToTable": "← Back to table",
+    "category": "Category",
+    "thisMonth": "This month",
+    "avg3mo": "3-mo avg",
+    "avg6mo": "6-mo avg",
+    "noData": "No data for this month yet.",
+    "monthlyTotalTitle": "Monthly Total - Last 6 Months",
+    "notEnoughData": "Not enough data yet - add expenses across multiple months to see trends.",
+    "priceChanges": "Price Changes vs 3 Months Ago",
+    "item": "Item",
+    "threeMonthsAgo": "3 months ago",
+    "change": "Change",
+    "activeInstallments": "Active Installments",
+    "purchase": "Purchase",
+    "progress": "Progress",
+    "left": "Left"
+  },
+  "chat": {
+    "placeholder": "Type a message...",
+    "dashboardHint": "Try: \"add an expenses pocket\"",
+    "pocketHint": "Ask me anything or say \"undo\" to reverse your last change."
+  }
+}
