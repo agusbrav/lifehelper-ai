@@ -1,4 +1,5 @@
 import type { CategoryTotal, RollingAvgResult, InflationAlert, InstallmentSummary } from '@lifehelper/budget'
+import { getTranslations } from 'next-intl/server'
 
 function fmt(cents: number) {
   return '$' + (cents / 100).toLocaleString('es-AR', { minimumFractionDigits: 0 })
@@ -24,7 +25,7 @@ type Props = {
   monthlyTotals: MonthlyTotal[]
 }
 
-export function AnalyticsView({
+export async function AnalyticsView({
   currentMonth,
   categoryTotals,
   avg3mo,
@@ -33,6 +34,7 @@ export function AnalyticsView({
   installments,
   monthlyTotals,
 }: Props) {
+  const t = await getTranslations('analytics')
   const maxCategory = Math.max(...categoryTotals.map(c => c.total), 1)
   const maxMonthly = Math.max(...monthlyTotals.map(m => m.totalCents), 1)
 
@@ -48,10 +50,10 @@ export function AnalyticsView({
           <table className="w-full border-collapse text-sm">
             <thead>
               <tr className="bg-[var(--muted)]">
-                <th className="text-left py-2.5 pl-5 text-xs font-medium text-[var(--muted-fg)] uppercase tracking-wide">Category</th>
-                <th className="text-right py-2.5 px-4 text-xs font-medium text-[var(--muted-fg)] uppercase tracking-wide w-28">This month</th>
-                <th className="text-right py-2.5 px-4 text-xs font-medium text-[var(--muted-fg)] uppercase tracking-wide w-24">3-mo avg</th>
-                <th className="text-right py-2.5 px-4 text-xs font-medium text-[var(--muted-fg)] uppercase tracking-wide w-24">6-mo avg</th>
+                <th className="text-left py-2.5 pl-5 text-xs font-medium text-[var(--muted-fg)] uppercase tracking-wide">{t('category')}</th>
+                <th className="text-right py-2.5 px-4 text-xs font-medium text-[var(--muted-fg)] uppercase tracking-wide w-28">{t('thisMonth')}</th>
+                <th className="text-right py-2.5 px-4 text-xs font-medium text-[var(--muted-fg)] uppercase tracking-wide w-24">{t('avg3mo')}</th>
+                <th className="text-right py-2.5 px-4 text-xs font-medium text-[var(--muted-fg)] uppercase tracking-wide w-24">{t('avg6mo')}</th>
                 <th className="py-2.5 pr-5 w-36" />
               </tr>
             </thead>
@@ -87,14 +89,14 @@ export function AnalyticsView({
             </tbody>
           </table>
           {categoryTotals.length === 0 && (
-            <div className="py-8 text-center text-sm text-[var(--muted-fg)]">No data for this month yet.</div>
+            <div className="py-8 text-center text-sm text-[var(--muted-fg)]">{t('noData')}</div>
           )}
         </div>
       </section>
 
       {/* Monthly trend */}
       <section>
-        <h2 className="text-xs font-semibold text-[var(--muted-fg)] mb-3 uppercase tracking-wide">Monthly Total - Last 6 Months</h2>
+        <h2 className="text-xs font-semibold text-[var(--muted-fg)] mb-3 uppercase tracking-wide">{t('monthlyTotalTitle')}</h2>
         <div className="rounded-2xl border border-[var(--border)] bg-[var(--card-bg)] p-5">
           {monthlyTotals.some(m => m.totalCents > 0) ? (
             <div className="flex items-end gap-3 h-28">
@@ -110,7 +112,7 @@ export function AnalyticsView({
               ))}
             </div>
           ) : (
-            <p className="text-sm text-[var(--muted-fg)] text-center py-4">Not enough data yet - add expenses across multiple months to see trends.</p>
+            <p className="text-sm text-[var(--muted-fg)] text-center py-4">{t('notEnoughData')}</p>
           )}
         </div>
       </section>
@@ -118,15 +120,15 @@ export function AnalyticsView({
       {/* Inflation alerts */}
       {inflationAlerts.length > 0 && (
         <section>
-          <h2 className="text-xs font-semibold text-[var(--muted-fg)] mb-3 uppercase tracking-wide">Price Changes vs 3 Months Ago</h2>
+          <h2 className="text-xs font-semibold text-[var(--muted-fg)] mb-3 uppercase tracking-wide">{t('priceChanges')}</h2>
           <div className="rounded-2xl border border-[var(--border)] bg-[var(--card-bg)] overflow-hidden">
             <table className="w-full border-collapse text-sm">
               <thead>
                 <tr className="bg-[var(--muted)]">
-                  <th className="text-left py-2.5 pl-5 text-xs font-medium text-[var(--muted-fg)] uppercase tracking-wide">Item</th>
-                  <th className="text-right py-2.5 px-4 text-xs font-medium text-[var(--muted-fg)] uppercase tracking-wide">3 months ago</th>
-                  <th className="text-right py-2.5 px-4 text-xs font-medium text-[var(--muted-fg)] uppercase tracking-wide">This month</th>
-                  <th className="text-right py-2.5 pr-5 text-xs font-medium text-[var(--muted-fg)] uppercase tracking-wide">Change</th>
+                  <th className="text-left py-2.5 pl-5 text-xs font-medium text-[var(--muted-fg)] uppercase tracking-wide">{t('item')}</th>
+                  <th className="text-right py-2.5 px-4 text-xs font-medium text-[var(--muted-fg)] uppercase tracking-wide">{t('threeMonthsAgo')}</th>
+                  <th className="text-right py-2.5 px-4 text-xs font-medium text-[var(--muted-fg)] uppercase tracking-wide">{t('thisMonth')}</th>
+                  <th className="text-right py-2.5 pr-5 text-xs font-medium text-[var(--muted-fg)] uppercase tracking-wide">{t('change')}</th>
                 </tr>
               </thead>
               <tbody>
@@ -149,15 +151,15 @@ export function AnalyticsView({
       {/* Installment overview */}
       {installments.length > 0 && (
         <section>
-          <h2 className="text-xs font-semibold text-[var(--muted-fg)] mb-3 uppercase tracking-wide">Active Installments</h2>
+          <h2 className="text-xs font-semibold text-[var(--muted-fg)] mb-3 uppercase tracking-wide">{t('activeInstallments')}</h2>
           <div className="rounded-2xl border border-[var(--border)] bg-[var(--card-bg)] overflow-hidden">
             <table className="w-full border-collapse text-sm">
               <thead>
                 <tr className="bg-[var(--muted)]">
-                  <th className="text-left py-2.5 pl-5 text-xs font-medium text-[var(--muted-fg)] uppercase tracking-wide">Purchase</th>
+                  <th className="text-left py-2.5 pl-5 text-xs font-medium text-[var(--muted-fg)] uppercase tracking-wide">{t('purchase')}</th>
                   <th className="text-right py-2.5 px-4 text-xs font-medium text-[var(--muted-fg)] uppercase tracking-wide">$/month</th>
-                  <th className="text-center py-2.5 px-4 text-xs font-medium text-[var(--muted-fg)] uppercase tracking-wide">Progress</th>
-                  <th className="text-right py-2.5 pr-5 text-xs font-medium text-[var(--muted-fg)] uppercase tracking-wide">Left</th>
+                  <th className="text-center py-2.5 px-4 text-xs font-medium text-[var(--muted-fg)] uppercase tracking-wide">{t('progress')}</th>
+                  <th className="text-right py-2.5 pr-5 text-xs font-medium text-[var(--muted-fg)] uppercase tracking-wide">{t('left')}</th>
                 </tr>
               </thead>
               <tbody>
