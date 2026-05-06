@@ -48,6 +48,12 @@ describe('matchCategory', () => {
   it('returns null when no keyword matches', () => {
     expect(matchCategory('Random expense', SEEDS)).toBeNull()
   })
+
+  it('does not match keyword as substring of a longer word', () => {
+    // "gas" should not match "Gastos varios"
+    const map = buildKeywordMap({ gas: 'servicios' })
+    expect(matchCategory('Gastos varios', map)).toBeNull()
+  })
 })
 
 describe('buildKeywordMap', () => {

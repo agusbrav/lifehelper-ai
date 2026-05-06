@@ -10,7 +10,8 @@ export function matchCategory(name: string, keywordMap: Record<string, string>):
   if (lower in keywordMap) return keywordMap[lower]!
   const keys = Object.keys(keywordMap).sort((a, b) => b.length - a.length)
   for (const kw of keys) {
-    if (lower.includes(kw)) return keywordMap[kw]!
+    const pattern = new RegExp(`\\b${kw.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')}\\b`, 'i')
+    if (pattern.test(lower)) return keywordMap[kw]!
   }
   return null
 }
