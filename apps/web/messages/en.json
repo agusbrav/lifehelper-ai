@@ -35,6 +35,8 @@
     "expense": "Expense",
     "amount": "Amount",
     "paid": "Paid",
+    "pending": "Pending",
+    "total": "Total",
     "addExpense": "Add expense",
     "addInstallment": "Add installment (cuotas)",
     "name": "Name",

@@ -1,11 +1,7 @@
 'use client'
 import { useState, useRef, useTransition } from 'react'
-import { useTranslations } from 'next-intl'
+import { useTranslations, useFormatter } from 'next-intl'
 import { setAmountAction, togglePaidAction, deleteItemAction, addExpenseAction } from '@/app/(app)/m/budget/actions'
-
-function fmt(cents: number) {
-  return (cents / 100).toLocaleString('es-AR', { minimumFractionDigits: 0 })
-}
 
 type Item = {
   id: string
@@ -25,6 +21,9 @@ type Props = { item: Item; depth?: number; monthId: string }
 
 export function ExpenseRow({ item, depth = 0, monthId }: Props) {
   const t = useTranslations('budget')
+  const format = useFormatter()
+  const fmt = (cents: number) =>
+    format.number(cents / 100, { style: 'currency', currency: 'ARS', minimumFractionDigits: 0, maximumFractionDigits: 0 })
   const [editing, setEditing] = useState(false)
   const [collapsed, setCollapsed] = useState(false)
   const [addingCharge, setAddingCharge] = useState(false)
@@ -157,7 +156,7 @@ export function ExpenseRow({ item, depth = 0, monthId }: Props) {
               disabled={isSubItem || isCard}
               className={`font-medium tabular-nums ${isSubItem || isCard ? 'cursor-default' : 'hover:text-[var(--accent)] transition-colors'} ${displayAmount === null ? 'text-[var(--muted-fg)] italic font-normal' : isCard ? 'text-purple-400' : 'text-[var(--fg)]'}`}
             >
-              {displayAmount !== null ? `$${fmt(displayAmount)}` : '-'}
+              {displayAmount !== null ? fmt(displayAmount) : '-'}
             </button>
           )}
         </td>

@@ -35,6 +35,8 @@
     "expense": "Gasto",
     "amount": "Monto",
     "paid": "Pago",
+    "pending": "Pendiente",
+    "total": "Total",
     "addExpense": "Agregar gasto",
     "addInstallment": "Agregar en cuotas",
     "name": "Nombre",
