@@ -126,4 +126,6 @@ model BudgetItem {
   children           BudgetItem[] @relation("SubItems")
 
   @@map("budget_items")
+  @@index([userId])
+  @@index([monthId])
 }

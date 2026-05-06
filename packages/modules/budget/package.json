@@ -11,10 +11,10 @@
     "test:watch": "vitest"
   },
   "dependencies": {
-    "@lifehelper/core": "workspace:*",
-    "@prisma/client": "^6.19.3"
+    "@lifehelper/core": "workspace:*"
   },
   "devDependencies": {
+    "@prisma/client": "^6.19.3",
     "@types/node": "^22.15.18",
     "typescript": "^5.8.3",
     "vitest": "^3.1.4"
