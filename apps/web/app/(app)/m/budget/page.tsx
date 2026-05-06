@@ -1,7 +1,8 @@
 import { cookies } from 'next/headers'
 import { redirect } from 'next/navigation'
 import { getSession } from '@lifehelper/core'
-import { getOrCreateMonth } from '@lifehelper/budget'
+import { getOrCreateMonth, fetchCategoryHistory, buildKeywordMap, knownCategories } from '@lifehelper/budget'
+import { getTranslations } from 'next-intl/server'
 import { MonthNav } from '@/components/budget/month-nav'
 import { SummaryBar } from '@/components/budget/summary-bar'
 import { ExpenseTable } from '@/components/budget/expense-table'
@@ -20,15 +21,27 @@ export default async function BudgetPage({ searchParams }: Props) {
   const year = params.year ? parseInt(params.year) : now.getFullYear()
   const month = params.month ? parseInt(params.month) : now.getMonth() + 1
 
-  const budgetMonth = await getOrCreateMonth(session.user.id, year, month)
+  const [budgetMonth, historyMap, t] = await Promise.all([
+    getOrCreateMonth(session.user.id, year, month),
+    fetchCategoryHistory(session.user.id),
+    getTranslations('budget'),
+  ])
   const items = budgetMonth?.items ?? []
+  const keywordMap = buildKeywordMap(historyMap)
+  const categories = knownCategories(keywordMap)
 
-  function effectiveAmount(i: typeof items[number]) {
+  type DbItem = typeof items[number]
+  function effectiveAmount(i: DbItem) {
     if (i.children.length > 0) return i.children.reduce((s, c) => s + (c.amount ?? 0), 0)
     return i.amount ?? 0
   }
   const paidCents = items.filter(i => i.paid).reduce((sum, i) => sum + effectiveAmount(i), 0)
   const pendingCents = items.filter(i => !i.paid).reduce((sum, i) => sum + effectiveAmount(i), 0)
+
+  // Children from the DB query are one level deep and never have sub-children;
+  // cast to satisfy the recursive Item type expected by ExpenseTable.
+  type TableItem = Omit<DbItem, 'children'> & { children: TableItem[] }
+  const tableItems = items as unknown as TableItem[]
 
   return (
     <div className="p-6 max-w-3xl">
@@ -40,15 +53,17 @@ export default async function BudgetPage({ searchParams }: Props) {
             href="/m/budget/analytics"
             className="text-sm text-[var(--accent)] hover:opacity-80 font-medium"
           >
-            Analytics →
+            {t('analyticsLink')}
           </Link>
         </div>
       </div>
 
       <ExpenseTable
-        items={items}
+        items={tableItems}
         monthId={budgetMonth?.id ?? ''}
         userId={session.user.id}
+        keywordMap={keywordMap}
+        categories={categories}
       />
     </div>
   )

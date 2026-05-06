@@ -242,3 +242,19 @@ export async function getItemsForAnalytics(userId: string) {
     },
   })
 }
+
+export async function fetchCategoryHistory(userId: string): Promise<Record<string, string>> {
+  const items = await db.budgetItem.findMany({
+    where: { userId, category: { not: null } },
+    select: { name: true, category: true, createdAt: true },
+    orderBy: { createdAt: 'desc' },
+  })
+  const map: Record<string, string> = {}
+  for (const item of items) {
+    const key = item.name.toLowerCase()
+    if (map[key] === undefined && item.category) {
+      map[key] = item.category
+    }
+  }
+  return map
+}

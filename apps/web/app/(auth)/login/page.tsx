@@ -1,11 +1,13 @@
 'use client'
 import { useState } from 'react'
 import { useRouter } from 'next/navigation'
+import { useTranslations } from 'next-intl'
 import Link from 'next/link'
 import { PasswordInput } from '@/components/password-input'
 
 export default function LoginPage() {
   const router = useRouter()
+  const t = useTranslations('auth')
   const [error, setError] = useState('')
   const [loading, setLoading] = useState(false)
 
@@ -37,14 +39,14 @@ export default function LoginPage() {
         <div className="w-10 h-10 rounded-xl bg-[var(--accent)] flex items-center justify-center text-[var(--accent-fg)] font-bold text-lg mb-4">
           L
         </div>
-        <h1 className="text-2xl font-semibold text-[var(--fg)]">Welcome back</h1>
-        <p className="text-sm text-[var(--muted-fg)] mt-1">Sign in to your account</p>
+        <h1 className="text-2xl font-semibold text-[var(--fg)]">{t('loginTitle')}</h1>
+        <p className="text-sm text-[var(--muted-fg)] mt-1">{t('loginSubtitle')}</p>
       </div>
 
       <form onSubmit={handleSubmit} className="flex flex-col gap-4">
         <div>
           <label className="block text-sm font-medium mb-1.5 text-[var(--fg)]" htmlFor="email">
-            Email
+            {t('email')}
           </label>
           <input
             id="email"
@@ -56,12 +58,12 @@ export default function LoginPage() {
         </div>
         <div>
           <label className="block text-sm font-medium mb-1.5 text-[var(--fg)]" htmlFor="password">
-            Password
+            {t('password')}
           </label>
           <PasswordInput id="password" name="password" required />
         </div>
         {error && (
-          <p className="text-sm text-rose-500 bg-rose-50 dark:bg-rose-950/30 border border-rose-200 dark:border-rose-800 rounded-lg px-3 py-2">
+          <p className="text-sm text-[var(--error-fg)] bg-[var(--error-bg)] border border-[var(--error-fg)] border-opacity-20 rounded-lg px-3 py-2">
             {error}
           </p>
         )}
@@ -70,13 +72,13 @@ export default function LoginPage() {
           disabled={loading}
           className="w-full rounded-xl bg-[var(--accent)] text-[var(--accent-fg)] py-2.5 text-sm font-semibold hover:opacity-90 disabled:opacity-50 transition-opacity mt-1"
         >
-          {loading ? 'Signing in...' : 'Sign in'}
+          {loading ? t('signingIn') : t('signIn')}
         </button>
       </form>
       <p className="mt-6 text-sm text-center text-[var(--muted-fg)]">
-        No account?{' '}
+        {t('noAccount')}{' '}
         <Link href="/register" className="text-[var(--accent)] font-medium hover:opacity-80">
-          Register
+          {t('register')}
         </Link>
       </p>
     </div>

@@ -8,10 +8,9 @@ import {
   computeInflationAlerts,
   computeInstallmentOverview,
 } from '@lifehelper/budget'
+import { getTranslations } from 'next-intl/server'
 import { AnalyticsView } from '@/components/budget/analytics-view'
 import Link from 'next/link'
-
-const MONTH_NAMES = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec']
 
 export default async function BudgetAnalyticsPage() {
   const cookieStore = await cookies()
@@ -19,13 +18,17 @@ export default async function BudgetAnalyticsPage() {
   const session = token ? await getSession(token) : null
   if (!session) redirect('/login')
 
-  const allItems = await getItemsForAnalytics(session.user.id)
+  const [allItems, t] = await Promise.all([
+    getItemsForAnalytics(session.user.id),
+    getTranslations('analytics'),
+  ])
+
+  const locale = session.user.locale
 
   const now = new Date()
   const currentYear = now.getFullYear()
   const currentMonth = now.getMonth() + 1
 
-  // Group items by month key
   const monthMap = new Map<string, typeof allItems>()
   for (const item of allItems) {
     const key = `${item.month.year}-${item.month.month}`
@@ -33,7 +36,6 @@ export default async function BudgetAnalyticsPage() {
     monthMap.get(key)!.push(item)
   }
 
-  // Build last 6 months (oldest first)
   const last6: { year: number; month: number; items: typeof allItems }[] = []
   for (let i = 5; i >= 0; i--) {
     let m = currentMonth - i
@@ -52,19 +54,19 @@ export default async function BudgetAnalyticsPage() {
   const installments = computeInstallmentOverview(currentItems)
 
   const monthlyTotals = last6.map(m => ({
-    label: MONTH_NAMES[m.month - 1]!,
+    label: new Date(m.year, m.month - 1, 1).toLocaleString(locale, { month: 'short' }),
     totalCents: computeCategoryTotals(m.items).reduce((sum, c) => sum + c.total, 0),
   }))
 
   return (
     <div className="p-6 max-w-3xl">
       <div className="flex items-center justify-between mb-6">
-        <h1 className="text-lg font-semibold text-[var(--fg)]">Budget Analytics</h1>
+        <h1 className="text-lg font-semibold text-[var(--fg)]">{t('title')}</h1>
         <Link
           href="/m/budget"
           className="text-sm text-[var(--accent)] hover:opacity-80 font-medium"
         >
-          ← Back to table
+          {t('backToTable')}
         </Link>
       </div>
       <AnalyticsView

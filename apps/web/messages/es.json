@@ -1,0 +1,99 @@
+{
+  "nav": {
+    "dashboard": "Inicio",
+    "settings": "Configuración"
+  },
+  "settings": {
+    "title": "Configuración",
+    "language": "Idioma",
+    "english": "Inglés",
+    "spanish": "Español"
+  },
+  "dashboard": {
+    "title": "Tus Bolsillos",
+    "noPockets": "Sin bolsillos aún",
+    "noPocketsHint": "Intentá escribir \"agregar un bolsillo de gastos\" en el chat de abajo."
+  },
+  "auth": {
+    "loginTitle": "Bienvenido",
+    "loginSubtitle": "Iniciá sesión en tu cuenta",
+    "registerTitle": "Crear cuenta",
+    "registerSubtitle": "Empezá a gestionar tu vida de forma más inteligente",
+    "email": "Email",
+    "password": "Contraseña",
+    "passwordHint": "(mín 8 caracteres)",
+    "signIn": "Iniciar sesión",
+    "signingIn": "Iniciando sesión...",
+    "createAccount": "Crear cuenta",
+    "creatingAccount": "Creando cuenta...",
+    "noAccount": "¿Sin cuenta?",
+    "register": "Registrarse",
+    "haveAccount": "¿Ya tenés una cuenta?",
+    "loginLink": "Iniciá sesión"
+  },
+  "budget": {
+    "expense": "Gasto",
+    "amount": "Monto",
+    "paid": "Pago",
+    "pending": "Pendiente",
+    "total": "Total",
+    "addExpense": "Agregar gasto",
+    "addInstallment": "Agregar en cuotas",
+    "name": "Nombre",
+    "category": "Categoría",
+    "recurring": "Recurrente",
+    "add": "Agregar",
+    "cancel": "Cancelar",
+    "analyticsLink": "Análisis →",
+    "noExpenses": "Sin gastos este mes.",
+    "chargeDescription": "Descripción del cargo",
+    "chargeAmount": "Monto",
+    "addCharge": "+ cargo",
+    "paymentsCount": "# cuotas",
+    "perMonth": "$/mes",
+    "carriedIndicator": "↩",
+    "addChargeBadge": "tarjeta",
+    "installmentBadge": "cuotas",
+    "recurringBadge": "rec",
+    "carriedTitle": "Monto del mes anterior",
+    "delete": "Eliminar",
+    "legend": {
+      "recurring": "Recurrente",
+      "installments": "Cuotas",
+      "card": "Tarjeta",
+      "oneTime": "Único",
+      "carriedAmount": "monto del mes anterior"
+    }
+  },
+  "analytics": {
+    "title": "Análisis de Presupuesto",
+    "backToTable": "← Volver a la tabla",
+    "category": "Categoría",
+    "thisMonth": "Este mes",
+    "avg3mo": "Prom 3m",
+    "avg6mo": "Prom 6m",
+    "noData": "Sin datos este mes.",
+    "monthlyTotalTitle": "Total Mensual - Últimos 6 Meses",
+    "notEnoughData": "Sin suficientes datos - agregá gastos en varios meses para ver tendencias.",
+    "priceChanges": "Cambios de precio vs 3 meses atrás",
+    "item": "Ítem",
+    "threeMonthsAgo": "Hace 3 meses",
+    "change": "Cambio",
+    "activeInstallments": "Cuotas Activas",
+    "purchase": "Compra",
+    "progress": "Progreso",
+    "left": "Restante",
+    "spendByCategory": "Gasto por categoría",
+    "perMonth": "$/mes",
+    "uncategorized": "Sin categoría"
+  },
+  "chat": {
+    "placeholder": "Escribí un mensaje...",
+    "dashboardHint": "Probá: \"agregar un bolsillo de gastos\"",
+    "pocketHint": "Preguntame lo que quieras o decí \"deshacer\" para revertir tu último cambio.",
+    "collapseChat": "Cerrar chat",
+    "expandChat": "Abrir chat",
+    "inputLabel": "Escribir mensaje",
+    "sendLabel": "Enviar"
+  }
+}

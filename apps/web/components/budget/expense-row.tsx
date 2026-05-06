@@ -1,10 +1,7 @@
 'use client'
 import { useState, useRef, useTransition } from 'react'
+import { useTranslations, useFormatter } from 'next-intl'
 import { setAmountAction, togglePaidAction, deleteItemAction, addExpenseAction } from '@/app/(app)/m/budget/actions'
-
-function fmt(cents: number) {
-  return (cents / 100).toLocaleString('es-AR', { minimumFractionDigits: 0 })
-}
 
 type Item = {
   id: string
@@ -23,6 +20,10 @@ type Item = {
 type Props = { item: Item; depth?: number; monthId: string }
 
 export function ExpenseRow({ item, depth = 0, monthId }: Props) {
+  const t = useTranslations('budget')
+  const format = useFormatter()
+  const fmt = (cents: number) =>
+    format.number(cents / 100, { style: 'currency', currency: 'ARS', minimumFractionDigits: 0, maximumFractionDigits: 0 })
   const [editing, setEditing] = useState(false)
   const [collapsed, setCollapsed] = useState(false)
   const [addingCharge, setAddingCharge] = useState(false)
@@ -105,24 +106,24 @@ export function ExpenseRow({ item, depth = 0, monthId }: Props) {
 
             {isCard && (
               <span className="text-xs px-1.5 py-0.5 rounded-full bg-purple-500/15 text-purple-400 font-medium flex-shrink-0">
-                tarjeta
+                {t('addChargeBadge')}
               </span>
             )}
             {!isCard && item.installmentTotal !== null && (
               <span className="text-xs px-1.5 py-0.5 rounded-full bg-amber-500/15 text-amber-400 font-medium flex-shrink-0">
-                cuotas
+                {t('installmentBadge')}
               </span>
             )}
             {!isCard && item.installmentTotal === null && item.recurring && !isSubItem && (
               <span className="text-xs px-1.5 py-0.5 rounded-full bg-blue-500/15 text-blue-400 font-medium flex-shrink-0">
-                rec
+                {t('recurringBadge')}
               </span>
             )}
 
             <span className="ml-auto flex-shrink-0 flex items-center gap-2">
               {item.amountCarried && !isCard && (
-                <span className="text-[var(--muted-fg)] text-xs opacity-0 group-hover:opacity-100 transition-opacity" title="Monto del mes anterior">
-                  ↩
+                <span className="text-[var(--muted-fg)] text-xs opacity-0 group-hover:opacity-100 transition-opacity" title={t('carriedTitle')}>
+                  {t('carriedIndicator')}
                 </span>
               )}
               {isCard && !isSubItem && (
@@ -130,7 +131,7 @@ export function ExpenseRow({ item, depth = 0, monthId }: Props) {
                   onClick={() => { setAddingCharge(a => !a); setCollapsed(false) }}
                   className="text-xs text-purple-400 hover:text-purple-300 transition-colors opacity-0 group-hover:opacity-100"
                 >
-                  + cargo
+                  {t('addCharge')}
                 </button>
               )}
             </span>
@@ -155,7 +156,7 @@ export function ExpenseRow({ item, depth = 0, monthId }: Props) {
               disabled={isSubItem || isCard}
               className={`font-medium tabular-nums ${isSubItem || isCard ? 'cursor-default' : 'hover:text-[var(--accent)] transition-colors'} ${displayAmount === null ? 'text-[var(--muted-fg)] italic font-normal' : isCard ? 'text-purple-400' : 'text-[var(--fg)]'}`}
             >
-              {displayAmount !== null ? `$${fmt(displayAmount)}` : '-'}
+              {displayAmount !== null ? fmt(displayAmount) : '-'}
             </button>
           )}
         </td>
@@ -179,7 +180,7 @@ export function ExpenseRow({ item, depth = 0, monthId }: Props) {
           <button
             onClick={() => startTransition(() => deleteItemAction(item.id))}
             className="opacity-0 group-hover:opacity-100 text-[var(--muted-fg)] hover:text-rose-400 transition-all text-xs"
-            aria-label="Eliminar"
+            aria-label={t('delete')}
           >
             ✕
           </button>
@@ -194,7 +195,7 @@ export function ExpenseRow({ item, depth = 0, monthId }: Props) {
               <input
                 name="name"
                 required
-                placeholder="Descripcion del cargo"
+                placeholder={t('chargeDescription')}
                 autoFocus
                 className="rounded-lg border border-[var(--border)] bg-[var(--card-bg)] text-[var(--fg)] px-2.5 py-1.5 text-sm outline-none focus:ring-1 focus:ring-purple-400 flex-1 min-w-32"
               />
@@ -204,21 +205,21 @@ export function ExpenseRow({ item, depth = 0, monthId }: Props) {
                 step="0.01"
                 min="0.01"
                 required
-                placeholder="Monto"
+                placeholder={t('chargeAmount')}
                 className="rounded-lg border border-[var(--border)] bg-[var(--card-bg)] text-[var(--fg)] px-2.5 py-1.5 text-sm outline-none focus:ring-1 focus:ring-purple-400 w-28"
               />
               <button
                 type="submit"
                 className="bg-purple-500 text-white rounded-lg px-3 py-1.5 text-sm font-medium hover:bg-purple-600 transition-colors flex-shrink-0"
               >
-                Agregar
+                {t('add')}
               </button>
               <button
                 type="button"
                 onClick={() => setAddingCharge(false)}
                 className="text-sm text-[var(--muted-fg)] hover:text-[var(--fg)] transition-colors flex-shrink-0"
               >
-                Cancelar
+                {t('cancel')}
               </button>
             </form>
           </td>
