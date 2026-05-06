@@ -8,7 +8,7 @@ export type ModuleManifest = {
   name: string
   icon: string
   exposesContext: boolean
-  consumesContext: string[]
+  accepts: string[]           // module IDs that can contribute data to this module via bridges
   interactionTier: 1 | 2 | 3
   tools: ModuleTool[]
   systemPrompt?: string
