@@ -1,5 +1,6 @@
 'use client'
 import { useRef, useState, useTransition, useId } from 'react'
+import { useTranslations } from 'next-intl'
 import { addExpenseAction, addInstallmentAction } from '@/app/(app)/m/budget/actions'
 
 type Props = {
@@ -14,12 +15,14 @@ function autoMatchCategory(name: string, keywordMap: Record<string, string>): st
   if (lower in keywordMap) return keywordMap[lower]!
   const keys = Object.keys(keywordMap).sort((a, b) => b.length - a.length)
   for (const kw of keys) {
-    if (lower.includes(kw)) return keywordMap[kw]!
+    const pattern = new RegExp(`\\b${kw.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')}\\b`, 'i')
+    if (pattern.test(lower)) return keywordMap[kw]!
   }
   return null
 }
 
 export function AddExpenseRow({ monthId, keywordMap, categories }: Props) {
+  const t = useTranslations('budget')
   const [mode, setMode] = useState<'idle' | 'expense' | 'installment'>('idle')
   const [recurring, setRecurring] = useState(false)
   const [category, setCategory] = useState('')
@@ -86,13 +89,13 @@ export function AddExpenseRow({ monthId, keywordMap, categories }: Props) {
               onClick={() => setMode('expense')}
               className="text-sm text-[var(--muted-fg)] hover:text-[var(--accent)] transition-colors"
             >
-              + Add expense
+              + {t('addExpense')}
             </button>
             <button
               onClick={() => setMode('installment')}
               className="text-sm text-[var(--muted-fg)] hover:text-[var(--accent)] transition-colors"
             >
-              + Add installment (cuotas)
+              + {t('addInstallment')}
             </button>
           </div>
         </td>
@@ -107,13 +110,13 @@ export function AddExpenseRow({ monthId, keywordMap, categories }: Props) {
           <input
             name="name"
             required
-            placeholder="Name"
+            placeholder={t('name')}
             onChange={handleNameChange}
             className="rounded-lg border border-[var(--border)] bg-[var(--card-bg)] text-[var(--fg)] px-2.5 py-1.5 text-sm outline-none focus:ring-1 focus:ring-[var(--accent)] w-40"
           />
           <input
             name="category"
-            placeholder="Category"
+            placeholder={t('category')}
             list={datalistId}
             value={category}
             onChange={handleCategoryChange}
@@ -133,7 +136,7 @@ export function AddExpenseRow({ monthId, keywordMap, categories }: Props) {
                 onChange={e => setRecurring(e.target.checked)}
                 className="accent-[var(--accent)]"
               />
-              Recurring
+              {t('recurring')}
             </label>
           )}
 
@@ -145,7 +148,7 @@ export function AddExpenseRow({ monthId, keywordMap, categories }: Props) {
                 step="0.01"
                 min="0.01"
                 required
-                placeholder="$/month"
+                placeholder={t('perMonth')}
                 className="rounded-lg border border-[var(--border)] bg-[var(--card-bg)] text-[var(--fg)] px-2.5 py-1.5 text-sm outline-none focus:ring-1 focus:ring-[var(--accent)] w-28"
               />
               <input
@@ -153,7 +156,7 @@ export function AddExpenseRow({ monthId, keywordMap, categories }: Props) {
                 type="number"
                 min="2"
                 required
-                placeholder="# payments"
+                placeholder={t('paymentsCount')}
                 className="rounded-lg border border-[var(--border)] bg-[var(--card-bg)] text-[var(--fg)] px-2.5 py-1.5 text-sm outline-none focus:ring-1 focus:ring-[var(--accent)] w-28"
               />
             </>
@@ -163,14 +166,14 @@ export function AddExpenseRow({ monthId, keywordMap, categories }: Props) {
             type="submit"
             className="bg-[var(--accent)] text-[var(--accent-fg)] rounded-lg px-3 py-1.5 text-sm font-medium hover:opacity-90 transition-opacity"
           >
-            Add
+            {t('add')}
           </button>
           <button
             type="button"
             onClick={handleCancel}
             className="text-sm text-[var(--muted-fg)] hover:text-[var(--fg)] transition-colors"
           >
-            Cancel
+            {t('cancel')}
           </button>
         </form>
       </td>

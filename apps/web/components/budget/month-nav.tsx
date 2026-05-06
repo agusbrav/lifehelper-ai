@@ -1,12 +1,14 @@
 'use client'
 import { useRouter } from 'next/navigation'
-
-const MONTH_NAMES = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec']
+import { useFormatter } from 'next-intl'
 
 type Props = { year: number; month: number }
 
 export function MonthNav({ year, month }: Props) {
   const router = useRouter()
+  const format = useFormatter()
+
+  const monthLabel = format.dateTime(new Date(year, month - 1, 1), { month: 'long' })
 
   function navigate(delta: number) {
     let m = month + delta
@@ -24,8 +26,8 @@ export function MonthNav({ year, month }: Props) {
       >
         ←
       </button>
-      <span className="text-base font-semibold text-[var(--fg)] min-w-[120px] text-center">
-        {MONTH_NAMES[month - 1]} {year}
+      <span className="text-base font-semibold text-[var(--fg)] min-w-[120px] text-center capitalize">
+        {monthLabel} {year}
       </span>
       <button
         onClick={() => navigate(1)}

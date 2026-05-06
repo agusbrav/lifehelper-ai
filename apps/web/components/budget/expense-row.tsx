@@ -1,5 +1,6 @@
 'use client'
 import { useState, useRef, useTransition } from 'react'
+import { useTranslations } from 'next-intl'
 import { setAmountAction, togglePaidAction, deleteItemAction, addExpenseAction } from '@/app/(app)/m/budget/actions'
 
 function fmt(cents: number) {
@@ -23,6 +24,7 @@ type Item = {
 type Props = { item: Item; depth?: number; monthId: string }
 
 export function ExpenseRow({ item, depth = 0, monthId }: Props) {
+  const t = useTranslations('budget')
   const [editing, setEditing] = useState(false)
   const [collapsed, setCollapsed] = useState(false)
   const [addingCharge, setAddingCharge] = useState(false)
@@ -122,7 +124,7 @@ export function ExpenseRow({ item, depth = 0, monthId }: Props) {
             <span className="ml-auto flex-shrink-0 flex items-center gap-2">
               {item.amountCarried && !isCard && (
                 <span className="text-[var(--muted-fg)] text-xs opacity-0 group-hover:opacity-100 transition-opacity" title="Monto del mes anterior">
-                  ↩
+                  {t('carriedIndicator')}
                 </span>
               )}
               {isCard && !isSubItem && (
@@ -130,7 +132,7 @@ export function ExpenseRow({ item, depth = 0, monthId }: Props) {
                   onClick={() => { setAddingCharge(a => !a); setCollapsed(false) }}
                   className="text-xs text-purple-400 hover:text-purple-300 transition-colors opacity-0 group-hover:opacity-100"
                 >
-                  + cargo
+                  {t('addCharge')}
                 </button>
               )}
             </span>
@@ -194,7 +196,7 @@ export function ExpenseRow({ item, depth = 0, monthId }: Props) {
               <input
                 name="name"
                 required
-                placeholder="Descripcion del cargo"
+                placeholder={t('chargeDescription')}
                 autoFocus
                 className="rounded-lg border border-[var(--border)] bg-[var(--card-bg)] text-[var(--fg)] px-2.5 py-1.5 text-sm outline-none focus:ring-1 focus:ring-purple-400 flex-1 min-w-32"
               />
@@ -204,7 +206,7 @@ export function ExpenseRow({ item, depth = 0, monthId }: Props) {
                 step="0.01"
                 min="0.01"
                 required
-                placeholder="Monto"
+                placeholder={t('chargeAmount')}
                 className="rounded-lg border border-[var(--border)] bg-[var(--card-bg)] text-[var(--fg)] px-2.5 py-1.5 text-sm outline-none focus:ring-1 focus:ring-purple-400 w-28"
               />
               <button
