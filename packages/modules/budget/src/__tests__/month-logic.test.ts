@@ -71,8 +71,34 @@ describe('computeCarryItems', () => {
     }
     const result = computeCarryItems([item])
     expect(result).toHaveLength(1)
-    expect(result[0]!.installmentNumber).toBe(12)
-    expect(result[0]!.installmentTotal).toBe(null)
+    expect(result[0]!.installmentNumber).toBeNull()
+    expect(result[0]!.installmentTotal).toBeNull()
+    expect(result[0]!.installmentGroupId).toBeNull()
+  })
+
+  it('preserves installmentGroupId on non-final carry', () => {
+    const item: SourceItem = {
+      name: 'Phone', category: 'Tech', amount: 10000, recurring: false,
+      installmentTotal: 12, installmentNumber: 3, installmentGroupId: 'grp-1', children: [],
+    }
+    const result = computeCarryItems([item])
+    expect(result[0]!.installmentGroupId).toBe('grp-1')
+  })
+
+  it('full installment lifecycle: last payment carry is not re-carried', () => {
+    const lastPayment: SourceItem = {
+      name: 'Phone', category: 'Tech', amount: 10000, recurring: false,
+      installmentTotal: 12, installmentNumber: 12, installmentGroupId: 'grp-1', children: [],
+    }
+    // Month N: carry the last payment
+    const carried = computeCarryItems([lastPayment])
+    expect(carried).toHaveLength(1)
+    // Month N+1: the carried item should NOT be carried again
+    const nextCarry = computeCarryItems(carried.map(c => ({
+      ...c,
+      children: [],
+    })))
+    expect(nextCarry).toHaveLength(0)
   })
 
   it('does not carry an installment after its last payment', () => {

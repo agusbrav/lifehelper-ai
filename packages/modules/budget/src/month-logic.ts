@@ -19,11 +19,8 @@ function carryItem(item: SourceItem): CarryItem {
     amountCarried: item.amount !== null,
     recurring: item.recurring,
     installmentTotal: isLastPayment ? null : item.installmentTotal,
-    installmentNumber:
-      item.installmentNumber !== null && !isLastPayment
-        ? item.installmentNumber + 1
-        : item.installmentNumber,
-    installmentGroupId: item.installmentGroupId,
+    installmentNumber: isLastPayment ? null : (item.installmentNumber !== null ? item.installmentNumber + 1 : null),
+    installmentGroupId: isLastPayment ? null : item.installmentGroupId,
     children: item.children
       .filter(shouldCarry)
       .map(carryItem),
