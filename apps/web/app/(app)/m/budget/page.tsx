@@ -30,12 +30,18 @@ export default async function BudgetPage({ searchParams }: Props) {
   const keywordMap = buildKeywordMap(historyMap)
   const categories = knownCategories(keywordMap)
 
-  function effectiveAmount(i: typeof items[number]) {
+  type DbItem = typeof items[number]
+  function effectiveAmount(i: DbItem) {
     if (i.children.length > 0) return i.children.reduce((s, c) => s + (c.amount ?? 0), 0)
     return i.amount ?? 0
   }
   const paidCents = items.filter(i => i.paid).reduce((sum, i) => sum + effectiveAmount(i), 0)
   const pendingCents = items.filter(i => !i.paid).reduce((sum, i) => sum + effectiveAmount(i), 0)
+
+  // Children from the DB query are one level deep and never have sub-children;
+  // cast to satisfy the recursive Item type expected by ExpenseTable.
+  type TableItem = Omit<DbItem, 'children'> & { children: TableItem[] }
+  const tableItems = items as unknown as TableItem[]
 
   return (
     <div className="p-6 max-w-3xl">
@@ -53,7 +59,7 @@ export default async function BudgetPage({ searchParams }: Props) {
       </div>
 
       <ExpenseTable
-        items={items}
+        items={tableItems}
         monthId={budgetMonth?.id ?? ''}
         userId={session.user.id}
         keywordMap={keywordMap}
