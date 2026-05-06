@@ -27,6 +27,7 @@ export function ExpenseRow({ item, depth = 0, monthId }: Props) {
   const [editing, setEditing] = useState(false)
   const [collapsed, setCollapsed] = useState(false)
   const [addingCharge, setAddingCharge] = useState(false)
+  const [chargeRecurring, setChargeRecurring] = useState(false)
   const [, startTransition] = useTransition()
   const inputRef = useRef<HTMLInputElement>(null)
 
@@ -75,11 +76,12 @@ export function ExpenseRow({ item, depth = 0, monthId }: Props) {
     const fd = new FormData(e.currentTarget)
     fd.set('monthId', monthId)
     fd.set('parentId', item.id)
-    fd.set('recurring', 'false')
+    fd.set('recurring', chargeRecurring ? 'true' : 'false')
     e.currentTarget.reset()
     startTransition(async () => {
       await addExpenseAction(fd)
       setAddingCharge(false)
+      setChargeRecurring(false)
     })
   }
 
@@ -209,6 +211,15 @@ export function ExpenseRow({ item, depth = 0, monthId }: Props) {
                 placeholder={t('chargeAmount')}
                 className="rounded-lg border border-[var(--border)] bg-[var(--card-bg)] text-[var(--fg)] px-2.5 py-1.5 text-sm outline-none focus:ring-1 focus:ring-purple-400 w-28"
               />
+              <label className="flex items-center gap-1.5 text-sm text-[var(--muted-fg)] cursor-pointer select-none flex-shrink-0">
+                <input
+                  type="checkbox"
+                  checked={chargeRecurring}
+                  onChange={e => setChargeRecurring(e.target.checked)}
+                  className="accent-purple-500"
+                />
+                {t('recurring')}
+              </label>
               <button
                 type="submit"
                 className="bg-purple-500 text-white rounded-lg px-3 py-1.5 text-sm font-medium hover:bg-purple-600 transition-colors flex-shrink-0"
@@ -217,7 +228,7 @@ export function ExpenseRow({ item, depth = 0, monthId }: Props) {
               </button>
               <button
                 type="button"
-                onClick={() => setAddingCharge(false)}
+                onClick={() => { setAddingCharge(false); setChargeRecurring(false) }}
                 className="text-sm text-[var(--muted-fg)] hover:text-[var(--fg)] transition-colors flex-shrink-0"
               >
                 {t('cancel')}
