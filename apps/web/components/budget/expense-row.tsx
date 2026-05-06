@@ -107,23 +107,23 @@ export function ExpenseRow({ item, depth = 0, monthId }: Props) {
 
             {isCard && (
               <span className="text-xs px-1.5 py-0.5 rounded-full bg-purple-500/15 text-purple-400 font-medium flex-shrink-0">
-                tarjeta
+                {t('addChargeBadge')}
               </span>
             )}
             {!isCard && item.installmentTotal !== null && (
               <span className="text-xs px-1.5 py-0.5 rounded-full bg-amber-500/15 text-amber-400 font-medium flex-shrink-0">
-                cuotas
+                {t('installmentBadge')}
               </span>
             )}
             {!isCard && item.installmentTotal === null && item.recurring && !isSubItem && (
               <span className="text-xs px-1.5 py-0.5 rounded-full bg-blue-500/15 text-blue-400 font-medium flex-shrink-0">
-                rec
+                {t('recurringBadge')}
               </span>
             )}
 
             <span className="ml-auto flex-shrink-0 flex items-center gap-2">
               {item.amountCarried && !isCard && (
-                <span className="text-[var(--muted-fg)] text-xs opacity-0 group-hover:opacity-100 transition-opacity" title="Monto del mes anterior">
+                <span className="text-[var(--muted-fg)] text-xs opacity-0 group-hover:opacity-100 transition-opacity" title={t('carriedTitle')}>
                   {t('carriedIndicator')}
                 </span>
               )}
@@ -181,7 +181,7 @@ export function ExpenseRow({ item, depth = 0, monthId }: Props) {
           <button
             onClick={() => startTransition(() => deleteItemAction(item.id))}
             className="opacity-0 group-hover:opacity-100 text-[var(--muted-fg)] hover:text-rose-400 transition-all text-xs"
-            aria-label="Eliminar"
+            aria-label={t('delete')}
           >
             ✕
           </button>
@@ -213,14 +213,14 @@ export function ExpenseRow({ item, depth = 0, monthId }: Props) {
                 type="submit"
                 className="bg-purple-500 text-white rounded-lg px-3 py-1.5 text-sm font-medium hover:bg-purple-600 transition-colors flex-shrink-0"
               >
-                Agregar
+                {t('add')}
               </button>
               <button
                 type="button"
                 onClick={() => setAddingCharge(false)}
                 className="text-sm text-[var(--muted-fg)] hover:text-[var(--fg)] transition-colors flex-shrink-0"
               >
-                Cancelar
+                {t('cancel')}
               </button>
             </form>
           </td>

@@ -50,6 +50,11 @@
     "paymentsCount": "# cuotas",
     "perMonth": "$/mes",
     "carriedIndicator": "↩",
+    "addChargeBadge": "tarjeta",
+    "installmentBadge": "cuotas",
+    "recurringBadge": "rec",
+    "carriedTitle": "Monto del mes anterior",
+    "delete": "Eliminar",
     "legend": {
       "recurring": "Recurrente",
       "installments": "Cuotas",

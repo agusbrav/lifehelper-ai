@@ -50,6 +50,11 @@
     "paymentsCount": "# payments",
     "perMonth": "$/month",
     "carriedIndicator": "↩",
+    "addChargeBadge": "card",
+    "installmentBadge": "inst.",
+    "recurringBadge": "rec",
+    "carriedTitle": "Amount from previous month",
+    "delete": "Delete",
     "legend": {
       "recurring": "Recurring",
       "installments": "Installments",
