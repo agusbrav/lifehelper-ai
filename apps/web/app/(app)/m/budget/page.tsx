@@ -22,10 +22,18 @@ export default async function BudgetPage({ searchParams }: Props) {
   const year = params.year ? parseInt(params.year) : now.getFullYear()
   const month = params.month ? parseInt(params.month) : now.getMonth() + 1
 
-  const [budgetMonth, historyMap, firstMonth, t] = await Promise.all([
+  const firstMonth = await getFirstMonth(session.user.id)
+  if (firstMonth) {
+    const targetIndex = year * 12 + month
+    const firstIndex = firstMonth.year * 12 + firstMonth.month
+    if (targetIndex < firstIndex) {
+      redirect(`/m/budget?year=${firstMonth.year}&month=${firstMonth.month}`)
+    }
+  }
+
+  const [budgetMonth, historyMap, t] = await Promise.all([
     getOrCreateMonth(session.user.id, year, month),
     fetchCategoryHistory(session.user.id),
-    getFirstMonth(session.user.id),
     getTranslations('budget'),
   ])
   const items = budgetMonth?.items ?? []

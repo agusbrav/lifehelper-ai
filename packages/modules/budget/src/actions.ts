@@ -238,12 +238,19 @@ export async function getMonthsForUser(userId: string) {
 }
 
 export async function getFirstMonth(userId: string): Promise<{ year: number; month: number } | null> {
-  const row = await db.budgetMonth.findFirst({
-    where: { userId, items: { some: {} } },
-    orderBy: [{ year: 'asc' }, { month: 'asc' }],
+  // Use the oldest item's createdAt rather than the earliest year/month record.
+  // Spurious months created by backwards navigation have newer items than the user's
+  // genuine first month, so this correctly identifies the real starting point.
+  const oldest = await db.budgetItem.findFirst({
+    where: { userId, parentId: null },
+    orderBy: { createdAt: 'asc' },
+    select: { monthId: true },
+  })
+  if (!oldest) return null
+  return db.budgetMonth.findUnique({
+    where: { id: oldest.monthId },
     select: { year: true, month: true },
   })
-  return row ?? null
 }
 
 export async function resetMonth(userId: string, year: number, month: number): Promise<void> {
