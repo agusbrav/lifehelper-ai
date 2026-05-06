@@ -7,6 +7,7 @@ type Props = {
   monthId: string
   keywordMap: Record<string, string>
   categories: string[]
+  cards: { id: string; name: string }[]
 }
 
 function autoMatchCategory(name: string, keywordMap: Record<string, string>): string | null {
@@ -25,11 +26,12 @@ function capitalize(s: string) {
   return s ? s.charAt(0).toUpperCase() + s.slice(1) : s
 }
 
-export function AddExpenseRow({ monthId, keywordMap, categories }: Props) {
+export function AddExpenseRow({ monthId, keywordMap, categories, cards }: Props) {
   const t = useTranslations('budget')
   const [mode, setMode] = useState<'idle' | 'expense' | 'installment'>('idle')
   const [recurring, setRecurring] = useState(false)
   const [category, setCategory] = useState('')
+  const [cardId, setCardId] = useState('')
   const categoryRef = useRef('')
   const wasAutoFilled = useRef(false)
   const [, startTransition] = useTransition()
@@ -72,6 +74,7 @@ export function AddExpenseRow({ monthId, keywordMap, categories }: Props) {
       setMode('idle')
       setRecurring(false)
       setCategory('')
+      setCardId('')
       categoryRef.current = ''
       wasAutoFilled.current = false
     })
@@ -81,6 +84,7 @@ export function AddExpenseRow({ monthId, keywordMap, categories }: Props) {
     setMode('idle')
     setRecurring(false)
     setCategory('')
+    setCardId('')
     categoryRef.current = ''
     wasAutoFilled.current = false
   }
@@ -97,7 +101,7 @@ export function AddExpenseRow({ monthId, keywordMap, categories }: Props) {
               + {t('addExpense')}
             </button>
             <button
-              onClick={() => setMode('installment')}
+              onClick={() => { setMode('installment'); setCardId(cards[0]?.id ?? '') }}
               className="text-sm text-[var(--muted-fg)] hover:text-[var(--accent)] transition-colors"
             >
               + {t('addInstallment')}
@@ -159,6 +163,21 @@ export function AddExpenseRow({ monthId, keywordMap, categories }: Props) {
 
           {mode === 'installment' && (
             <>
+              <select
+                name="parentId"
+                required
+                value={cardId}
+                onChange={e => setCardId(e.target.value)}
+                className={`${inputCls} flex-[1_1_8rem]`}
+              >
+                {cards.length === 0 ? (
+                  <option value="" disabled>{t('noCards')}</option>
+                ) : (
+                  cards.map(c => (
+                    <option key={c.id} value={c.id}>{c.name}</option>
+                  ))
+                )}
+              </select>
               <input
                 name="amount"
                 type="number"
