@@ -1,5 +1,5 @@
 'use client'
-import { useRef, useState, useTransition } from 'react'
+import { useRef, useState, useTransition, useId } from 'react'
 import { addExpenseAction, addInstallmentAction } from '@/app/(app)/m/budget/actions'
 
 type Props = {
@@ -23,20 +23,23 @@ export function AddExpenseRow({ monthId, keywordMap, categories }: Props) {
   const [mode, setMode] = useState<'idle' | 'expense' | 'installment'>('idle')
   const [recurring, setRecurring] = useState(false)
   const [category, setCategory] = useState('')
+  const categoryRef = useRef('')
   const wasAutoFilled = useRef(false)
   const [, startTransition] = useTransition()
   const formRef = useRef<HTMLFormElement>(null)
-  const datalistId = 'category-options'
+  const datalistId = useId()
 
   function handleNameChange(e: React.ChangeEvent<HTMLInputElement>) {
     const value = e.target.value
-    if (wasAutoFilled.current || category === '') {
+    if (wasAutoFilled.current || categoryRef.current === '') {
       const matched = autoMatchCategory(value, keywordMap)
       if (matched !== null) {
         setCategory(matched)
+        categoryRef.current = matched
         wasAutoFilled.current = true
       } else if (wasAutoFilled.current) {
         setCategory('')
+        categoryRef.current = ''
         wasAutoFilled.current = false
       }
     }
@@ -44,6 +47,7 @@ export function AddExpenseRow({ monthId, keywordMap, categories }: Props) {
 
   function handleCategoryChange(e: React.ChangeEvent<HTMLInputElement>) {
     setCategory(e.target.value)
+    categoryRef.current = e.target.value
     wasAutoFilled.current = false
   }
 
@@ -60,6 +64,7 @@ export function AddExpenseRow({ monthId, keywordMap, categories }: Props) {
       setMode('idle')
       setRecurring(false)
       setCategory('')
+      categoryRef.current = ''
       wasAutoFilled.current = false
     })
   }
@@ -68,6 +73,7 @@ export function AddExpenseRow({ monthId, keywordMap, categories }: Props) {
     setMode('idle')
     setRecurring(false)
     setCategory('')
+    categoryRef.current = ''
     wasAutoFilled.current = false
   }
 
