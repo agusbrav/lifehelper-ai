@@ -1,7 +1,7 @@
 'use client'
 import { useState, useRef, useTransition, useId } from 'react'
 import { useTranslations, useFormatter } from 'next-intl'
-import { setAmountAction, togglePaidAction, deleteItemAction, addExpenseAction } from '@/app/(app)/m/budget/actions'
+import { setAmountAction, setAmountNextMonthAction, togglePaidAction, deleteItemAction, addExpenseAction } from '@/app/(app)/m/budget/actions'
 
 function capitalize(s: string) {
   return s ? s.charAt(0).toUpperCase() + s.slice(1) : s
@@ -41,6 +41,12 @@ export function ExpenseRow({ item, depth = 0, monthId, keywordMap, categories, y
   const [collapsed, setCollapsed] = useState(false)
   const [addingCharge, setAddingCharge] = useState(false)
   const [chargeRecurring, setChargeRecurring] = useState(false)
+  const [inflationOpen, setInflationOpen] = useState(false)
+  const [inflationMode, setInflationMode] = useState<'pct' | 'direct'>('pct')
+  const [inflationValue, setInflationValue] = useState('')
+  const [inflationTarget, setInflationTarget] = useState<'next' | 'this'>(
+    monthContext === 'next' ? 'this' : 'next'
+  )
   const [, startTransition] = useTransition()
   const inputRef = useRef<HTMLInputElement>(null)
   const chargeDatalistId = useId()
@@ -65,6 +71,33 @@ export function ExpenseRow({ item, depth = 0, monthId, keywordMap, categories, y
     item.installmentTotal !== null && item.installmentNumber !== null
       ? `${item.name} (${item.installmentNumber}/${item.installmentTotal})`
       : item.name
+
+  const showInflationBtn = monthContext !== 'past' && item.recurring && !isCard && item.amount !== null
+
+  const inflationCurrentAmount = item.amount ?? 0
+  const inflationNumVal = parseFloat(inflationValue) || 0
+  const inflationNewAmount = inflationMode === 'pct'
+    ? Math.round(inflationCurrentAmount * (1 + inflationNumVal / 100))
+    : Math.round(inflationNumVal * 100)
+
+  const inflationNextYear = month === 12 ? year + 1 : year
+  const inflationNextMonthNum = month === 12 ? 1 : month + 1
+  const thisMonthLabel = format.dateTime(new Date(year, month - 1, 1), { month: 'long' })
+  const nextMonthLabel = format.dateTime(new Date(inflationNextYear, inflationNextMonthNum - 1, 1), { month: 'long' })
+  const inflationTargetLabel = (inflationTarget === 'this' || monthContext === 'next') ? thisMonthLabel : nextMonthLabel
+
+  function handleInflationApply() {
+    if (inflationNewAmount <= 0) return
+    startTransition(async () => {
+      if (inflationTarget === 'this' || monthContext === 'next') {
+        await setAmountAction(item.id, inflationNewAmount)
+      } else {
+        await setAmountNextMonthAction(item.id, inflationNewAmount)
+      }
+      setInflationOpen(false)
+      setInflationValue('')
+    })
+  }
 
   function handleAmountClick() {
     if (isSubItem || isCard) return
@@ -148,6 +181,18 @@ export function ExpenseRow({ item, depth = 0, monthId, keywordMap, categories, y
                   {t('carriedIndicator')}
                 </span>
               )}
+              {showInflationBtn && (
+                <button
+                  onClick={e => { e.stopPropagation(); setInflationOpen(o => !o) }}
+                  className={`inline-flex items-center px-1.5 py-0.5 rounded-full text-[10px] font-semibold border transition-colors flex-shrink-0 opacity-0 group-hover:opacity-100 ${
+                    inflationOpen
+                      ? 'bg-indigo-500/25 text-indigo-300 border-indigo-500/40'
+                      : 'bg-indigo-500/15 text-indigo-400 border-indigo-500/25 hover:bg-indigo-500/25'
+                  }`}
+                >
+                  {t('inflationBtn')}
+                </button>
+              )}
               {isCard && !isSubItem && (
                 <button
                   onClick={() => { setAddingCharge(a => !a); setCollapsed(false) }}
@@ -213,6 +258,94 @@ export function ExpenseRow({ item, depth = 0, monthId, keywordMap, categories, y
           </button>
         </td>
       </tr>
+
+      {/* Inflation quick-adjust popover */}
+      {inflationOpen && (
+        <tr className="border-t border-indigo-500/20 bg-indigo-500/5">
+          <td colSpan={5} className={`py-3 pr-4 ${depth === 0 ? 'pl-4' : 'pl-10'}`}>
+            <div className="flex flex-col gap-3 max-w-sm">
+              <span className="text-xs font-medium text-[var(--muted-fg)] uppercase tracking-wide">
+                {t('inflationTitle', { name: item.name })}
+              </span>
+
+              <div className="flex rounded-md overflow-hidden border border-[var(--border)] w-fit text-xs">
+                <button
+                  onClick={() => setInflationTarget('next')}
+                  disabled={monthContext === 'next'}
+                  className={`px-3 py-1.5 transition-colors ${
+                    inflationTarget === 'next' && monthContext !== 'next'
+                      ? 'bg-indigo-500/20 text-indigo-300'
+                      : monthContext === 'next'
+                        ? 'text-[var(--muted-fg)]/30 cursor-not-allowed'
+                        : 'text-[var(--muted-fg)] hover:text-[var(--fg)]'
+                  }`}
+                >
+                  {t('inflationNextMonth')}
+                </button>
+                <button
+                  onClick={() => setInflationTarget('this')}
+                  className={`px-3 py-1.5 transition-colors border-l border-[var(--border)] ${
+                    inflationTarget === 'this' || monthContext === 'next'
+                      ? 'bg-indigo-500/20 text-indigo-300'
+                      : 'text-[var(--muted-fg)] hover:text-[var(--fg)]'
+                  }`}
+                >
+                  {t('inflationThisMonth')}
+                </button>
+              </div>
+
+              <div className="flex items-center gap-2 flex-wrap">
+                <div className="flex rounded-md overflow-hidden border border-[var(--border)] text-xs">
+                  <button
+                    onClick={() => setInflationMode('pct')}
+                    className={`px-3 py-1.5 transition-colors ${inflationMode === 'pct' ? 'bg-indigo-500/20 text-indigo-300' : 'text-[var(--muted-fg)] hover:text-[var(--fg)]'}`}
+                  >
+                    {t('inflationPct')}
+                  </button>
+                  <button
+                    onClick={() => setInflationMode('direct')}
+                    className={`px-3 py-1.5 transition-colors border-l border-[var(--border)] ${inflationMode === 'direct' ? 'bg-indigo-500/20 text-indigo-300' : 'text-[var(--muted-fg)] hover:text-[var(--fg)]'}`}
+                  >
+                    {t('inflationDirect')}
+                  </button>
+                </div>
+                <input
+                  type="number"
+                  min="0"
+                  step={inflationMode === 'pct' ? '0.1' : '1'}
+                  value={inflationValue}
+                  onChange={e => setInflationValue(e.target.value)}
+                  placeholder={inflationMode === 'pct' ? '5' : format.number(inflationCurrentAmount / 100, { minimumFractionDigits: 0, maximumFractionDigits: 0 })}
+                  className="w-32 bg-[var(--muted)] border border-[var(--border)] rounded-md px-2 py-1.5 text-sm text-[var(--fg)] outline-none focus:ring-1 focus:ring-indigo-400"
+                />
+                {inflationValue !== '' && inflationNewAmount > 0 && (
+                  <span className="text-xs text-[var(--muted-fg)]">
+                    {'→ '}<span className="text-emerald-400 font-medium font-mono">
+                      {format.number(inflationNewAmount / 100, { style: 'currency', currency: 'ARS', minimumFractionDigits: 0, maximumFractionDigits: 0 })}
+                    </span>
+                  </span>
+                )}
+              </div>
+
+              <div className="flex items-center gap-2">
+                <button
+                  onClick={handleInflationApply}
+                  disabled={inflationValue === '' || inflationNewAmount <= 0}
+                  className="bg-indigo-500 text-white rounded-md px-3 py-1.5 text-xs font-medium hover:bg-indigo-600 transition-colors disabled:opacity-40 disabled:cursor-not-allowed"
+                >
+                  {t('inflationApply', { month: inflationTargetLabel })}
+                </button>
+                <button
+                  onClick={() => { setInflationOpen(false); setInflationValue('') }}
+                  className="text-xs text-[var(--muted-fg)] hover:text-[var(--fg)] transition-colors"
+                >
+                  {t('inflationCancel')}
+                </button>
+              </div>
+            </div>
+          </td>
+        </tr>
+      )}
 
       {/* Inline add-charge form for credit card rows */}
       {isCard && addingCharge && (
