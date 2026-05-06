@@ -80,6 +80,10 @@
   "chat": {
     "placeholder": "Type a message...",
     "dashboardHint": "Try: \"add an expenses pocket\"",
-    "pocketHint": "Ask me anything or say \"undo\" to reverse your last change."
+    "pocketHint": "Ask me anything or say \"undo\" to reverse your last change.",
+    "collapseChat": "Collapse chat",
+    "expandChat": "Expand chat",
+    "inputLabel": "Chat input",
+    "sendLabel": "Send"
   }
 }

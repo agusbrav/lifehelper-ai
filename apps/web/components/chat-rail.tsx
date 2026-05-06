@@ -29,7 +29,7 @@ export function ChatRail() {
       <button
         onClick={() => setOpen(o => !o)}
         className="w-full flex items-center justify-center h-5 text-[var(--muted-fg)] hover:text-[var(--fg)] transition-colors"
-        aria-label={open ? 'Collapse chat' : 'Expand chat'}
+        aria-label={open ? t('collapseChat') : t('expandChat')}
       >
         <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
           <polyline points={open ? '18 15 12 9 6 15' : '6 9 12 15 18 9'} />
@@ -60,7 +60,7 @@ export function ChatRail() {
           <div className="flex items-center gap-2 px-3 py-2 border-t border-[var(--border)]">
             <input
               type="text"
-              aria-label="Chat input"
+              aria-label={t('inputLabel')}
               value={input}
               onChange={e => setInput(e.target.value)}
               onKeyDown={e => e.key === 'Enter' && handleSend()}
@@ -70,7 +70,7 @@ export function ChatRail() {
             <button
               onClick={handleSend}
               disabled={!input.trim()}
-              aria-label="Send"
+              aria-label={t('sendLabel')}
               className="text-[var(--accent)] hover:opacity-80 disabled:opacity-30 transition-opacity"
             >
               <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">

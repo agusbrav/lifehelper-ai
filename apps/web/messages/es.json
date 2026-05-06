@@ -80,6 +80,10 @@
   "chat": {
     "placeholder": "Escribí un mensaje...",
     "dashboardHint": "Probá: \"agregar un bolsillo de gastos\"",
-    "pocketHint": "Preguntame lo que quieras o decí \"deshacer\" para revertir tu último cambio."
+    "pocketHint": "Preguntame lo que quieras o decí \"deshacer\" para revertir tu último cambio.",
+    "collapseChat": "Cerrar chat",
+    "expandChat": "Abrir chat",
+    "inputLabel": "Escribir mensaje",
+    "sendLabel": "Enviar"
   }
 }
