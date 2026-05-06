@@ -4,20 +4,27 @@ import { useTranslations, useLocale } from 'next-intl'
 import { DonutChart } from './donut-chart'
 import type {
   CategoryTotal,
+  TypeTotal,
   RollingAvgResult,
   InflationAlert,
   InstallmentSummary,
 } from '@lifehelper/budget'
 
 const PALETTE = [
-  '#6366f1', '#f59e0b', '#10b981', '#3b82f6',
-  '#f43f5e', '#a855f7', '#06b6d4', '#f97316',
+  '#6366f1', '#f59e0b', '#10b981', '#ef4444',
+  '#d946ef', '#06b6d4', '#ec4899', '#84cc16',
 ]
 
-function buildColorMap(categoryTotals: CategoryTotal[]): Map<string | null, string> {
-  const sorted = [...categoryTotals].sort((a, b) => b.total - a.total)
+const TYPE_COLORS: Record<string, string> = {
+  recurring: '#3b82f6',
+  installment: '#f59e0b',
+  card: '#a855f7',
+  'one-time': '#64748b',
+}
+
+function buildColorMap(items: { category: string | null }[]): Map<string | null, string> {
   const map = new Map<string | null, string>()
-  sorted.forEach((c, i) => { map.set(c.category, PALETTE[i % PALETTE.length]!) })
+  items.forEach((c, i) => { map.set(c.category, PALETTE[i % PALETTE.length]!) })
   return map
 }
 
@@ -36,8 +43,18 @@ function pctColor(pct: number) {
 
 type MonthlyTotal = { label: string; totalCents: number }
 
+type ViewItem = {
+  key: string
+  label: string
+  total: number
+  color: string
+  avg3?: number
+  avg6?: number
+}
+
 type Props = {
   categoryTotals: CategoryTotal[]
+  typeTotals: TypeTotal[]
   avg3mo: RollingAvgResult[]
   avg6mo: RollingAvgResult[]
   inflationAlerts: InflationAlert[]
@@ -47,6 +64,7 @@ type Props = {
 
 export function AnalyticsDashboard({
   categoryTotals,
+  typeTotals,
   avg3mo,
   avg6mo,
   inflationAlerts,
@@ -54,15 +72,46 @@ export function AnalyticsDashboard({
   monthlyTotals,
 }: Props) {
   const t = useTranslations('analytics')
+  const tBudget = useTranslations('budget')
   const locale = useLocale()
+  const [viewMode, setViewMode] = useState<'category' | 'type'>('category')
   const [excluded, setExcluded] = useState<Set<string>>(new Set())
-
-  const colorMap = useMemo(() => buildColorMap(categoryTotals), [categoryTotals])
 
   const fmt = (cents: number) =>
     '$' + (cents / 100).toLocaleString(locale, { minimumFractionDigits: 0 })
 
-  function catKey(cat: string | null) { return cat ?? '__null__' }
+  const sortedCategoryTotals = useMemo(
+    () => [...categoryTotals].sort((a, b) => b.total - a.total),
+    [categoryTotals],
+  )
+
+  const categoryColorMap = useMemo(() => buildColorMap(sortedCategoryTotals), [sortedCategoryTotals])
+
+  const typeLabels: Record<string, string> = {
+    recurring: tBudget('recurringBadge'),
+    installment: tBudget('installmentBadge'),
+    card: tBudget('addChargeBadge'),
+    'one-time': tBudget('oneTimeBadge'),
+  }
+
+  const viewItems: ViewItem[] = useMemo(() => {
+    if (viewMode === 'category') {
+      return sortedCategoryTotals.map(c => ({
+        key: c.category ?? '__null__',
+        label: c.category ?? t('uncategorized'),
+        total: c.total,
+        color: categoryColorMap.get(c.category) ?? PALETTE[0]!,
+        avg3: avg3mo.find(a => a.category === c.category)?.avg ?? 0,
+        avg6: avg6mo.find(a => a.category === c.category)?.avg ?? 0,
+      }))
+    }
+    return typeTotals.map(tp => ({
+      key: tp.type,
+      label: typeLabels[tp.type] ?? tp.type,
+      total: tp.total,
+      color: TYPE_COLORS[tp.type] ?? '#64748b',
+    }))
+  }, [viewMode, sortedCategoryTotals, typeTotals, categoryColorMap, avg3mo, avg6mo])
 
   function toggle(key: string) {
     setExcluded(prev => {
@@ -72,19 +121,52 @@ export function AnalyticsDashboard({
     })
   }
 
-  const includedTotals = categoryTotals.filter(c => !excluded.has(catKey(c.category)))
-  const includedSum = includedTotals.reduce((s, c) => s + c.total, 0)
-  const maxCategory = Math.max(...categoryTotals.map(c => c.total), 1)
+  function switchMode(mode: 'category' | 'type') {
+    setViewMode(mode)
+    setExcluded(new Set())
+  }
+
+  const includedItems = viewItems.filter(item => !excluded.has(item.key))
+  const includedSum = includedItems.reduce((s, item) => s + item.total, 0)
+  const maxItem = Math.max(...viewItems.map(item => item.total), 1)
   const maxMonthly = Math.max(...monthlyTotals.map(m => m.totalCents), 1)
 
-  const donutSegments = includedTotals.map(c => ({
-    category: c.category,
-    value: c.total,
-    color: colorMap.get(c.category) ?? PALETTE[0]!,
+  const donutSegments = includedItems.map(item => ({
+    category: item.key,
+    value: item.total,
+    color: item.color,
   }))
+
+  const showAvgCols = viewMode === 'category'
 
   return (
     <div className="flex flex-col gap-8">
+
+      {/* View mode toggle */}
+      <div className="flex">
+        <div className="inline-flex rounded-lg border border-[var(--border)] overflow-hidden text-sm">
+          <button
+            onClick={() => switchMode('category')}
+            className={`px-4 py-1.5 font-medium transition-colors ${
+              viewMode === 'category'
+                ? 'bg-[var(--accent)] text-[var(--accent-fg)]'
+                : 'text-[var(--muted-fg)] hover:bg-[var(--muted)]'
+            }`}
+          >
+            {t('byCategory')}
+          </button>
+          <button
+            onClick={() => switchMode('type')}
+            className={`px-4 py-1.5 font-medium transition-colors border-l border-[var(--border)] ${
+              viewMode === 'type'
+                ? 'bg-[var(--accent)] text-[var(--accent-fg)]'
+                : 'text-[var(--muted-fg)] hover:bg-[var(--muted)]'
+            }`}
+          >
+            {t('byType')}
+          </button>
+        </div>
+      </div>
 
       {/* Split: donut left, table right */}
       <section>
@@ -100,27 +182,25 @@ export function AnalyticsDashboard({
             />
 
             <div className="w-full flex flex-col gap-1.5">
-              {categoryTotals.map(c => {
-                const key = catKey(c.category)
-                const isExcluded = excluded.has(key)
-                const color = colorMap.get(c.category) ?? PALETTE[0]!
+              {viewItems.map(item => {
+                const isExcluded = excluded.has(item.key)
                 const pct = !isExcluded && includedSum > 0
-                  ? Math.round((c.total / includedSum) * 100)
+                  ? Math.round((item.total / includedSum) * 100)
                   : 0
                 return (
                   <button
-                    key={key}
-                    onClick={() => toggle(key)}
+                    key={item.key}
+                    onClick={() => toggle(item.key)}
                     className={`flex items-center gap-2 text-xs text-left transition-opacity w-full ${
                       isExcluded ? 'opacity-40' : ''
                     }`}
                   >
                     <span
                       className="w-2.5 h-2.5 rounded-full flex-shrink-0"
-                      style={{ background: color }}
+                      style={{ background: item.color }}
                     />
                     <span className={`flex-1 capitalize ${isExcluded ? 'line-through' : ''}`}>
-                      {c.category ?? t('uncategorized')}
+                      {item.label}
                     </span>
                     <span className="text-[var(--muted-fg)]">
                       {isExcluded ? '' : `${pct}%`}
@@ -140,38 +220,40 @@ export function AnalyticsDashboard({
             </div>
           </div>
 
-          {/* Right: category table */}
+          {/* Right: table */}
           <div className="rounded-2xl border border-[var(--border)] bg-[var(--card-bg)] overflow-hidden">
             <table className="w-full border-collapse text-sm">
               <thead>
                 <tr className="bg-[var(--muted)]">
                   <th className="text-left py-2.5 pl-5 text-xs font-medium text-[var(--muted-fg)] uppercase tracking-wide">
-                    {t('category')}
+                    {viewMode === 'category' ? t('category') : t('byType')}
                   </th>
                   <th className="text-right py-2.5 px-4 text-xs font-medium text-[var(--muted-fg)] uppercase tracking-wide w-28">
                     {t('thisMonth')}
                   </th>
-                  <th className="text-right py-2.5 px-4 text-xs font-medium text-[var(--muted-fg)] uppercase tracking-wide w-24">
-                    {t('avg3mo')}
-                  </th>
-                  <th className="text-right py-2.5 px-4 text-xs font-medium text-[var(--muted-fg)] uppercase tracking-wide w-24">
-                    {t('avg6mo')}
-                  </th>
+                  {showAvgCols && (
+                    <>
+                      <th className="text-right py-2.5 px-4 text-xs font-medium text-[var(--muted-fg)] uppercase tracking-wide w-24">
+                        {t('avg3mo')}
+                      </th>
+                      <th className="text-right py-2.5 px-4 text-xs font-medium text-[var(--muted-fg)] uppercase tracking-wide w-24">
+                        {t('avg6mo')}
+                      </th>
+                    </>
+                  )}
                   <th className="py-2.5 pr-5 w-36" />
                 </tr>
               </thead>
               <tbody>
-                {categoryTotals.map(({ category, total }) => {
-                  const key = catKey(category)
-                  const isExcluded = excluded.has(key)
-                  const color = colorMap.get(category) ?? PALETTE[0]!
-                  const a3 = avg3mo.find(a => a.category === category)?.avg ?? 0
-                  const a6 = avg6mo.find(a => a.category === category)?.avg ?? 0
-                  const pct3 = a3 > 0 ? Math.round(((total - a3) / a3) * 100) : 0
+                {viewItems.map(item => {
+                  const isExcluded = excluded.has(item.key)
+                  const pct3 = (item.avg3 ?? 0) > 0
+                    ? Math.round(((item.total - item.avg3!) / item.avg3!) * 100)
+                    : 0
                   return (
                     <tr
-                      key={key}
-                      onClick={() => toggle(key)}
+                      key={item.key}
+                      onClick={() => toggle(item.key)}
                       className={`border-t border-[var(--border)] cursor-pointer transition-opacity ${
                         isExcluded ? 'opacity-40' : 'hover:bg-[var(--muted)]/40'
                       }`}
@@ -180,34 +262,38 @@ export function AnalyticsDashboard({
                         <span className="flex items-center gap-2">
                           <span
                             className="w-2 h-2 rounded-full flex-shrink-0"
-                            style={{ background: color }}
+                            style={{ background: item.color }}
                           />
                           <span className={`capitalize ${isExcluded ? 'line-through' : ''}`}>
-                            {category ?? t('uncategorized')}
+                            {item.label}
                           </span>
                         </span>
                       </td>
                       <td className="py-3 px-4 text-right font-semibold text-[var(--fg)]">
-                        {fmt(total)}
+                        {fmt(item.total)}
                       </td>
-                      <td className="py-3 px-4 text-right text-[var(--muted-fg)]">
-                        {a3 > 0 ? fmt(a3) : '-'}
-                      </td>
-                      <td className="py-3 px-4 text-right text-[var(--muted-fg)]">
-                        {a6 > 0 ? fmt(a6) : '-'}
-                      </td>
+                      {showAvgCols && (
+                        <>
+                          <td className="py-3 px-4 text-right text-[var(--muted-fg)]">
+                            {(item.avg3 ?? 0) > 0 ? fmt(item.avg3!) : '-'}
+                          </td>
+                          <td className="py-3 px-4 text-right text-[var(--muted-fg)]">
+                            {(item.avg6 ?? 0) > 0 ? fmt(item.avg6!) : '-'}
+                          </td>
+                        </>
+                      )}
                       <td className="py-3 pr-5">
                         <div className="flex items-center gap-2">
                           <div className="flex-1 bg-[var(--muted)] rounded-full h-1.5">
                             <div
                               className="h-1.5 rounded-full"
                               style={{
-                                width: `${Math.round((total / maxCategory) * 100)}%`,
-                                background: color,
+                                width: `${Math.round((item.total / maxItem) * 100)}%`,
+                                background: item.color,
                               }}
                             />
                           </div>
-                          {a3 > 0 && (
+                          {showAvgCols && (item.avg3 ?? 0) > 0 && (
                             <span className={`text-xs font-medium w-10 text-right ${pctColor(pct3)}`}>
                               {pct3 > 0 ? '+' : ''}{pct3}%
                             </span>
@@ -219,7 +305,7 @@ export function AnalyticsDashboard({
                 })}
               </tbody>
             </table>
-            {categoryTotals.length === 0 && (
+            {viewItems.length === 0 && (
               <div className="py-8 text-center text-sm text-[var(--muted-fg)]">
                 {t('noData')}
               </div>
@@ -228,7 +314,7 @@ export function AnalyticsDashboard({
         </div>
       </section>
 
-      {/* Monthly trend - always shows full totals, unaffected by exclusions */}
+      {/* Monthly trend */}
       <section>
         <h2 className="text-xs font-semibold text-[var(--muted-fg)] mb-3 uppercase tracking-wide">
           {t('monthlyTotalTitle')}

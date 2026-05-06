@@ -4,6 +4,7 @@ import { getSession } from '@lifehelper/core'
 import {
   getItemsForAnalytics,
   computeCategoryTotals,
+  computeTypeTotals,
   computeRollingAverage,
   computeInflationAlerts,
   computeInstallmentOverview,
@@ -71,6 +72,7 @@ export default async function BudgetAnalyticsPage({
   const threeMonthsAgoItems = last6[2]?.items ?? []
 
   const categoryTotals = computeCategoryTotals(currentItems)
+  const typeTotals = computeTypeTotals(currentItems)
   const avg3mo = computeRollingAverage(last6, 3)
   const avg6mo = computeRollingAverage(last6, 6)
   const inflationAlerts = computeInflationAlerts(currentItems, threeMonthsAgoItems)
@@ -98,6 +100,7 @@ export default async function BudgetAnalyticsPage({
       </div>
       <AnalyticsDashboard
         categoryTotals={categoryTotals}
+        typeTotals={typeTotals}
         avg3mo={avg3mo}
         avg6mo={avg6mo}
         inflationAlerts={inflationAlerts}

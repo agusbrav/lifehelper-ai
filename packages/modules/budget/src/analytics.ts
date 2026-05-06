@@ -95,6 +95,27 @@ export function computeInflationAlerts(
   return alerts
 }
 
+export type TypeTotal = {
+  type: 'recurring' | 'installment' | 'card' | 'one-time'
+  total: number
+}
+
+const TYPE_ORDER: TypeTotal['type'][] = ['recurring', 'installment', 'card', 'one-time']
+
+export function computeTypeTotals(items: ItemSlim[]): TypeTotal[] {
+  const map = new Map<string, number>()
+  for (const item of items) {
+    if (item.parentId !== null || item.amount === null) continue
+    const type: TypeTotal['type'] =
+      item.category === 'tarjeta' ? 'card'
+      : item.installmentTotal !== null ? 'installment'
+      : item.recurring ? 'recurring'
+      : 'one-time'
+    map.set(type, (map.get(type) ?? 0) + item.amount)
+  }
+  return TYPE_ORDER.filter(t => map.has(t)).map(type => ({ type, total: map.get(type)! }))
+}
+
 export function computeInstallmentOverview(items: ItemSlim[]): InstallmentSummary[] {
   const seen = new Set<string>()
   const result: InstallmentSummary[] = []

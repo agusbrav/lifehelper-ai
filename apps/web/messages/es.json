@@ -102,7 +102,9 @@
     "spendByCategory": "Gasto por categoría",
     "perMonth": "$/mes",
     "uncategorized": "Sin categoría",
-    "resetExclusions": "Restablecer"
+    "resetExclusions": "Restablecer",
+    "byCategory": "Por categoría",
+    "byType": "Por tipo"
   },
   "chat": {
     "placeholder": "Escribí un mensaje...",
