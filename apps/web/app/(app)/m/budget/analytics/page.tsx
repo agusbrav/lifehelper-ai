@@ -9,14 +9,28 @@ import {
   computeInstallmentOverview,
 } from '@lifehelper/budget'
 import { getTranslations } from 'next-intl/server'
-import { AnalyticsView } from '@/components/budget/analytics-view'
+import { AnalyticsDashboard } from '@/components/budget/analytics-dashboard'
 import Link from 'next/link'
 
-export default async function BudgetAnalyticsPage() {
+export default async function BudgetAnalyticsPage({
+  searchParams,
+}: {
+  searchParams: Promise<{ year?: string; month?: string }>
+}) {
   const cookieStore = await cookies()
   const token = cookieStore.get('session')?.value
   const session = token ? await getSession(token) : null
   if (!session) redirect('/login')
+
+  const params = await searchParams
+  const now = new Date()
+  const rawYear = parseInt(params.year ?? '', 10)
+  const rawMonth = parseInt(params.month ?? '', 10)
+  const selectedYear = isNaN(rawYear) ? now.getFullYear() : rawYear
+  const selectedMonth =
+    isNaN(rawMonth) || rawMonth < 1 || rawMonth > 12
+      ? now.getMonth() + 1
+      : rawMonth
 
   const [allItems, t] = await Promise.all([
     getItemsForAnalytics(session.user.id),
@@ -25,10 +39,6 @@ export default async function BudgetAnalyticsPage() {
 
   const locale = session.user.locale
 
-  const now = new Date()
-  const currentYear = now.getFullYear()
-  const currentMonth = now.getMonth() + 1
-
   const monthMap = new Map<string, typeof allItems>()
   for (const item of allItems) {
     const key = `${item.month.year}-${item.month.month}`
@@ -36,11 +46,23 @@ export default async function BudgetAnalyticsPage() {
     monthMap.get(key)!.push(item)
   }
 
+  const availableMonths = Array.from(
+    new Map(
+      allItems.map(i => [
+        `${i.month.year}-${i.month.month}`,
+        { year: i.month.year, month: i.month.month },
+      ]),
+    ).values(),
+  )
+    .sort((a, b) => b.year * 12 + b.month - (a.year * 12 + a.month))
+    .slice(0, 12)
+
+  // 6-month window ending at selectedMonth
   const last6: { year: number; month: number; items: typeof allItems }[] = []
   for (let i = 5; i >= 0; i--) {
-    let m = currentMonth - i
-    let y = currentYear
-    if (m <= 0) { m += 12; y-- }
+    let m = selectedMonth - i
+    let y = selectedYear
+    while (m <= 0) { m += 12; y-- }
     last6.push({ year: y, month: m, items: monthMap.get(`${y}-${m}`) ?? [] })
   }
 
@@ -59,7 +81,7 @@ export default async function BudgetAnalyticsPage() {
   }))
 
   return (
-    <div className="p-6 max-w-3xl">
+    <div className="p-6 max-w-4xl">
       <div className="flex items-center justify-between mb-6">
         <h1 className="text-lg font-semibold text-[var(--fg)]">{t('title')}</h1>
         <Link
@@ -69,8 +91,10 @@ export default async function BudgetAnalyticsPage() {
           {t('backToTable')}
         </Link>
       </div>
-      <AnalyticsView
-        currentMonth={{ year: currentYear, month: currentMonth }}
+      <AnalyticsDashboard
+        availableMonths={availableMonths}
+        selectedYear={selectedYear}
+        selectedMonth={selectedMonth}
         categoryTotals={categoryTotals}
         avg3mo={avg3mo}
         avg6mo={avg6mo}
