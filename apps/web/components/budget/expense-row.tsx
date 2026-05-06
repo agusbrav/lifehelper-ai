@@ -183,7 +183,7 @@ export function ExpenseRow({ item, depth = 0, monthId, keywordMap, categories, y
               )}
               {showInflationBtn && (
                 <button
-                  onClick={e => { e.stopPropagation(); setInflationOpen(o => !o) }}
+                  onClick={e => { e.stopPropagation(); setInflationOpen(o => { if (o) setInflationValue(''); return !o }) }}
                   className={`inline-flex items-center px-1.5 py-0.5 rounded-full text-[10px] font-semibold border transition-colors flex-shrink-0 opacity-0 group-hover:opacity-100 ${
                     inflationOpen
                       ? 'bg-indigo-500/25 text-indigo-300 border-indigo-500/40'

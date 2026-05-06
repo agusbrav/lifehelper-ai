@@ -72,7 +72,7 @@
     "inflationPct": "%",
     "inflationDirect": "$ directo",
     "inflationApply": "Aplicar en {month}",
-    "inflationCancel": "Cancelar"
+    "inflationCancel": "Cancelar",
     "legend": {
       "recurring": "Recurrente",
       "installments": "Cuotas",

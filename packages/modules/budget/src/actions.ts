@@ -367,10 +367,14 @@ export async function setAmountNextMonth(input: { userId: string; itemId: string
   const nextYear = currentMonth.month === 12 ? currentMonth.year + 1 : currentMonth.year
   const nextMonth = currentMonth.month === 12 ? 1 : currentMonth.month + 1
 
-  const nextMonthRecord = await db.budgetMonth.findUnique({
+  let nextMonthRecord = await db.budgetMonth.findUnique({
     where: { userId_year_month: { userId: input.userId, year: nextYear, month: nextMonth } },
     select: { id: true },
   })
+  if (!nextMonthRecord) {
+    const created = await getOrCreateMonth(input.userId, nextYear, nextMonth)
+    nextMonthRecord = created ? { id: created.id } : null
+  }
   if (!nextMonthRecord) return
 
   let nextItem: { id: string } | null = null
@@ -392,7 +396,7 @@ export async function setAmountNextMonth(input: { userId: string; itemId: string
       })
       if (nextParent) {
         nextItem = await db.budgetItem.findFirst({
-          where: { monthId: nextMonthRecord.id, parentId: nextParent.id, name: item.name },
+          where: { monthId: nextMonthRecord.id, parentId: nextParent.id, name: item.name, recurring: true },
           select: { id: true },
         })
       }
