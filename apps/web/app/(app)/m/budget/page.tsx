@@ -32,7 +32,8 @@ export default async function BudgetPage({ searchParams }: Props) {
 
   type DbItem = typeof items[number]
   function effectiveAmount(i: DbItem) {
-    if (i.children.length > 0) return i.children.reduce((s, c) => s + (c.amount ?? 0), 0)
+    const ch = i.children ?? []
+    if (ch.length > 0) return ch.reduce((s, c) => s + (c.amount ?? 0), 0)
     return i.amount ?? 0
   }
   const paidCents = items.filter(i => i.paid).reduce((sum, i) => sum + effectiveAmount(i), 0)

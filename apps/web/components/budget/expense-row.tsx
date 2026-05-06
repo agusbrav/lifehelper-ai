@@ -32,9 +32,10 @@ export function ExpenseRow({ item, depth = 0, monthId }: Props) {
 
   const isCard = item.category === 'tarjeta'
   const isSubItem = depth > 0
-  const hasChildren = item.children.length > 0
+  const children = item.children ?? []
+  const hasChildren = children.length > 0
 
-  const childrenSum = item.children.reduce((s, c) => s + (c.amount ?? 0), 0)
+  const childrenSum = children.reduce((s, c) => s + (c.amount ?? 0), 0)
   const displayAmount = isCard && hasChildren ? childrenSum : item.amount
 
   const dotColor = isCard
@@ -227,7 +228,7 @@ export function ExpenseRow({ item, depth = 0, monthId }: Props) {
       )}
 
       {/* Children rows */}
-      {!collapsed && item.children.map(child => (
+      {!collapsed && children.map(child => (
         <ExpenseRow key={child.id} item={child} depth={depth + 1} monthId={monthId} />
       ))}
     </>
