@@ -12,6 +12,7 @@
     "test:watch": "vitest"
   },
   "dependencies": {
+    "@lifehelper/budget": "workspace:*",
     "@lifehelper/core": "workspace:*",
     "@lifehelper/registry": "workspace:*",
     "@lifehelper/ui": "workspace:*",

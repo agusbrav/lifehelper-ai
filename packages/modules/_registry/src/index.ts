@@ -1,11 +1,10 @@
 import type { ModuleManifest } from './types'
+import { manifest as budgetManifest } from '@lifehelper/budget'
 
 export type { ModuleManifest, ModuleTool } from './types'
 
-// Register modules here by importing and adding their manifest.
-// Each entry = one line. The shell reads this to build nav, routes, and context.
 const modules: ModuleManifest[] = [
-  // { ...expensesManifest },
+  budgetManifest,
 ]
 
 export default modules

@@ -20,6 +20,9 @@ importers:
 
   apps/web:
     dependencies:
+      '@lifehelper/budget':
+        specifier: workspace:*
+        version: link:../../packages/modules/budget
       '@lifehelper/core':
         specifier: workspace:*
         version: link:../../packages/core
@@ -115,7 +118,14 @@ importers:
         version: 5.9.3
 
   packages/modules/_registry:
+    dependencies:
+      '@lifehelper/budget':
+        specifier: workspace:*
+        version: link:../budget
     devDependencies:
+      '@types/node':
+        specifier: ^22.15.18
+        version: 22.19.17
       typescript:
         specifier: ^5.8.3
         version: 5.9.3
