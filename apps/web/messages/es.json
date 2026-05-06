@@ -65,6 +65,14 @@
     "delete": "Eliminar",
     "resetMonth": "Reiniciar mes",
     "resetMonthConfirm": "¿Reiniciar este mes? Se eliminarán todos los gastos y se recargará desde el mes anterior.",
+    "inflationBtn": "+%",
+    "inflationTitle": "Ajustar: {name}",
+    "inflationNextMonth": "→ Próximo mes",
+    "inflationThisMonth": "Este mes",
+    "inflationPct": "%",
+    "inflationDirect": "$ directo",
+    "inflationApply": "Aplicar en {month}",
+    "inflationCancel": "Cancelar"
     "legend": {
       "recurring": "Recurrente",
       "installments": "Cuotas",

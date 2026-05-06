@@ -65,6 +65,14 @@
     "delete": "Delete",
     "resetMonth": "Reload month",
     "resetMonthConfirm": "Reload this month? All expenses will be removed and rebuilt from the previous month.",
+    "inflationBtn": "+%",
+    "inflationTitle": "Adjust: {name}",
+    "inflationNextMonth": "→ Next month",
+    "inflationThisMonth": "This month",
+    "inflationPct": "%",
+    "inflationDirect": "$ direct",
+    "inflationApply": "Apply in {month}",
+    "inflationCancel": "Cancel"
     "legend": {
       "recurring": "Recurring",
       "installments": "Installments",
