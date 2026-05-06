@@ -24,7 +24,7 @@ vi.mock('@lifehelper/integrations', () => ({
 }))
 
 import { assertOwnsMonth, assertOwnsItem } from '../ownership'
-import { getOrCreateMonth, addExpense, togglePaid, setAmount } from '../actions'
+import { getOrCreateMonth, addExpense, togglePaid, setAmount, fetchCategoryHistory } from '../actions'
 import { db } from '@lifehelper/core'
 
 const MONTH = { id: 'm1', userId: 'u1', year: 2025, month: 5, compacted: false, compactedSummary: null, createdAt: new Date() }
@@ -110,5 +110,28 @@ describe('setAmount', () => {
     expect(db.budgetItem.update).toHaveBeenCalledWith(expect.objectContaining({
       data: { amount: 120000, amountCarried: false },
     }))
+  })
+})
+
+describe('fetchCategoryHistory', () => {
+  beforeEach(() => vi.clearAllMocks())
+
+  it('returns a map of lowercase name to most recent category', async () => {
+    vi.mocked(db.budgetItem.findMany).mockResolvedValue([
+      { name: 'Rappi', category: 'comida', createdAt: new Date('2025-05-01') },
+      { name: 'rappi', category: 'viajes', createdAt: new Date('2025-04-01') },
+      { name: 'Gym', category: 'salud', createdAt: new Date('2025-05-01') },
+    ] as never)
+    const result = await fetchCategoryHistory('u1')
+    expect(result['rappi']).toBe('comida')
+    expect(result['gym']).toBe('salud')
+  })
+
+  it('skips items with null category', async () => {
+    vi.mocked(db.budgetItem.findMany).mockResolvedValue([
+      { name: 'Unknown', category: null, createdAt: new Date() },
+    ] as never)
+    const result = await fetchCategoryHistory('u1')
+    expect(Object.keys(result)).toHaveLength(0)
   })
 })
