@@ -101,7 +101,8 @@
     "left": "Restante",
     "spendByCategory": "Gasto por categoría",
     "perMonth": "$/mes",
-    "uncategorized": "Sin categoría"
+    "uncategorized": "Sin categoría",
+    "resetExclusions": "Restablecer"
   },
   "chat": {
     "placeholder": "Escribí un mensaje...",
