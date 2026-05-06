@@ -1,7 +1,11 @@
 'use client'
-import { useState, useRef, useTransition } from 'react'
+import { useState, useRef, useTransition, useId } from 'react'
 import { useTranslations, useFormatter } from 'next-intl'
 import { setAmountAction, togglePaidAction, deleteItemAction, addExpenseAction } from '@/app/(app)/m/budget/actions'
+
+function capitalize(s: string) {
+  return s ? s.charAt(0).toUpperCase() + s.slice(1) : s
+}
 
 type Item = {
   id: string
@@ -17,9 +21,9 @@ type Item = {
   children: Item[]
 }
 
-type Props = { item: Item; depth?: number; monthId: string }
+type Props = { item: Item; depth?: number; monthId: string; keywordMap: Record<string, string>; categories: string[] }
 
-export function ExpenseRow({ item, depth = 0, monthId }: Props) {
+export function ExpenseRow({ item, depth = 0, monthId, keywordMap, categories }: Props) {
   const t = useTranslations('budget')
   const format = useFormatter()
   const fmt = (cents: number) =>
@@ -30,6 +34,7 @@ export function ExpenseRow({ item, depth = 0, monthId }: Props) {
   const [chargeRecurring, setChargeRecurring] = useState(false)
   const [, startTransition] = useTransition()
   const inputRef = useRef<HTMLInputElement>(null)
+  const chargeDatalistId = useId()
 
   const isCard = item.category === 'tarjeta'
   const isSubItem = depth > 0
@@ -87,7 +92,7 @@ export function ExpenseRow({ item, depth = 0, monthId }: Props) {
 
   return (
     <>
-      <tr className={`border-t border-[var(--border)] group ${isSubItem ? 'bg-[var(--muted)]' : ''}`}>
+      <tr className={`border-t border-[var(--border)] group transition-colors hover:bg-[var(--accent-muted)] ${isSubItem ? 'bg-[var(--muted)]' : ''}`}>
         {/* Name */}
         <td className={`py-2.5 ${depth === 0 ? 'pl-4' : 'pl-10'} pr-3`}>
           <div className="flex items-center gap-2 min-w-0">
@@ -122,6 +127,11 @@ export function ExpenseRow({ item, depth = 0, monthId }: Props) {
                 {t('recurringBadge')}
               </span>
             )}
+            {!isCard && item.installmentTotal === null && !item.recurring && !isSubItem && (
+              <span className="text-xs px-1.5 py-0.5 rounded-full bg-[var(--muted-fg)]/15 text-[var(--muted-fg)] font-medium flex-shrink-0">
+                {t('oneTimeBadge')}
+              </span>
+            )}
 
             <span className="ml-auto flex-shrink-0 flex items-center gap-2">
               {item.amountCarried && !isCard && (
@@ -142,8 +152,8 @@ export function ExpenseRow({ item, depth = 0, monthId }: Props) {
         </td>
 
         {/* Category */}
-        <td className="hidden md:table-cell py-2.5 px-3 text-sm text-[var(--muted-fg)] w-36">
-          {!isSubItem && <span className="capitalize">{item.category ?? ''}</span>}
+        <td className="hidden md:table-cell py-2.5 px-3 text-sm text-[var(--muted-fg)] w-36 text-center">
+          <span className="capitalize">{item.category ?? ''}</span>
         </td>
 
         {/* Amount */}
@@ -205,8 +215,19 @@ export function ExpenseRow({ item, depth = 0, monthId }: Props) {
                 required
                 placeholder={t('chargeDescription')}
                 autoFocus
-                className="rounded-lg border border-[var(--border)] bg-[var(--card-bg)] text-[var(--fg)] px-2.5 py-1.5 text-sm outline-none focus:ring-1 focus:ring-purple-400 flex-1 min-w-32"
+                className="rounded-lg border border-[var(--border)] bg-[var(--card-bg)] text-[var(--fg)] px-2.5 py-1.5 text-sm outline-none focus:ring-1 focus:ring-purple-400 flex-[2_1_8rem] min-w-0"
               />
+              <input
+                name="category"
+                list={chargeDatalistId}
+                placeholder={t('category')}
+                className="rounded-lg border border-[var(--border)] bg-[var(--card-bg)] text-[var(--fg)] px-2.5 py-1.5 text-sm outline-none focus:ring-1 focus:ring-purple-400 flex-[1_1_6rem] min-w-0 capitalize"
+              />
+              <datalist id={chargeDatalistId}>
+                {categories.map(cat => (
+                  <option key={cat} value={capitalize(cat)} />
+                ))}
+              </datalist>
               <input
                 name="amount"
                 type="number"
@@ -214,7 +235,7 @@ export function ExpenseRow({ item, depth = 0, monthId }: Props) {
                 min="0.01"
                 required
                 placeholder={t('chargeAmount')}
-                className="rounded-lg border border-[var(--border)] bg-[var(--card-bg)] text-[var(--fg)] px-2.5 py-1.5 text-sm outline-none focus:ring-1 focus:ring-purple-400 w-28"
+                className="rounded-lg border border-[var(--border)] bg-[var(--card-bg)] text-[var(--fg)] px-2.5 py-1.5 text-sm outline-none focus:ring-1 focus:ring-purple-400 w-28 flex-shrink-0"
               />
               <label className="flex items-center gap-1.5 text-sm text-[var(--muted-fg)] cursor-pointer select-none flex-shrink-0">
                 <input
@@ -245,7 +266,7 @@ export function ExpenseRow({ item, depth = 0, monthId }: Props) {
 
       {/* Children rows */}
       {!collapsed && children.map(child => (
-        <ExpenseRow key={child.id} item={child} depth={depth + 1} monthId={monthId} />
+        <ExpenseRow key={child.id} item={child} depth={depth + 1} monthId={monthId} keywordMap={keywordMap} categories={categories} />
       ))}
     </>
   )

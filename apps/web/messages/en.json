@@ -55,7 +55,10 @@
     "carriedIndicator": "↩",
     "addChargeBadge": "card",
     "installmentBadge": "inst.",
-    "recurringBadge": "rec",
+    "recurringBadge": "recurring",
+    "oneTimeBadge": "one-time",
+    "selectCard": "Select card",
+    "noCards": "No cards configured",
     "carriedTitle": "Amount from previous month",
     "delete": "Delete",
     "legend": {

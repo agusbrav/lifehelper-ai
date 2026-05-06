@@ -28,6 +28,10 @@ type Props = {
 export function ExpenseTable({ items, monthId, keywordMap, categories }: Props) {
   const t = useTranslations('budget')
 
+  const cards = items
+    .filter(i => i.category === 'tarjeta')
+    .map(i => ({ id: i.id, name: i.name }))
+
   return (
     <div className="rounded-2xl border border-[var(--border)] bg-[var(--card-bg)] overflow-hidden">
       <div className="overflow-x-auto">
@@ -35,7 +39,7 @@ export function ExpenseTable({ items, monthId, keywordMap, categories }: Props) 
           <thead>
             <tr className="bg-[var(--muted)]">
               <th className="text-left py-2.5 pl-4 pr-3 text-xs font-medium text-[var(--muted-fg)] uppercase tracking-wide">{t('expense')}</th>
-              <th className="hidden md:table-cell text-left py-2.5 px-3 text-xs font-medium text-[var(--muted-fg)] uppercase tracking-wide w-36">{t('category')}</th>
+              <th className="hidden md:table-cell text-center py-2.5 px-3 text-xs font-medium text-[var(--muted-fg)] uppercase tracking-wide w-36">{t('category')}</th>
               <th className="text-right py-2.5 px-3 text-xs font-medium text-[var(--muted-fg)] uppercase tracking-wide w-28">{t('amount')}</th>
               <th className="text-center py-2.5 px-2 text-xs font-medium text-[var(--muted-fg)] uppercase tracking-wide w-14">{t('paid')}</th>
               <th className="py-2.5 pr-3 w-10" />
@@ -43,9 +47,9 @@ export function ExpenseTable({ items, monthId, keywordMap, categories }: Props) 
           </thead>
           <tbody>
             {items.map(item => (
-              <ExpenseRow key={item.id} item={item} monthId={monthId} />
+              <ExpenseRow key={item.id} item={item} monthId={monthId} keywordMap={keywordMap} categories={categories} />
             ))}
-            <AddExpenseRow monthId={monthId} keywordMap={keywordMap} categories={categories} />
+            <AddExpenseRow monthId={monthId} keywordMap={keywordMap} categories={categories} cards={cards} />
           </tbody>
         </table>
       </div>
