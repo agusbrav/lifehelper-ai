@@ -22,6 +22,7 @@ Designed with Argentine economy in mind: prices change frequently, rent can incr
 | **BudgetItem** | One expense row in a month. Can be a top-level item or a sub-item under a parent (e.g. charges inside a credit card bill). |
 | **Recurring item** | An item marked `recurring: true`. Auto-copied when a new month is opened — name, category, and the previous month's amount are carried forward as a suggestion. The user can accept or update the amount before paying. |
 | **Card group** | A top-level item (e.g. "Credit Card Visa") that acts as a collapsible parent. Sub-items (Netflix, Spotify) live under it via `parentId`. |
+| **Installment** | An expense split across N monthly payments (cuotas). Carries forward automatically each month, incrementing the installment counter, until the final payment. Can live as a sub-item under a credit card or as a standalone top-level item. |
 | **One-off** | An item added manually for a single month. Not carried forward. |
 
 ---
@@ -55,7 +56,10 @@ model BudgetItem {
   amountCarried  Boolean      @default(false)  // true when amount was auto-copied from previous month, cleared once user edits it
   paid           Boolean      @default(false)  // only meaningful when parentId is null
   paidAt         DateTime?
-  recurring      Boolean      @default(false)
+  recurring        Boolean      @default(false)
+  installmentTotal  Int?         // null = not an installment. Set to total number of payments (e.g. 12)
+  installmentNumber Int?         // which payment this row represents (1-based, e.g. 3 = "3 of 12")
+  installmentGroupId String?     // shared cuid linking all installment rows for the same purchase across months
   notes          String?
   linkedPocketId String?      // reserved for cross-pocket linking (v2)
   createdAt      DateTime     @default(now())
@@ -71,6 +75,9 @@ model BudgetItem {
 - `paid` is only read/written on rows where `parentId IS NULL`. Sub-items inherit their parent's paid status in the UI — they have no paid toggle.
 - `amount` is pre-filled from the previous month for recurring items (`amountCarried: true`). One-offs start as null. The user edits the amount if it changed; editing clears `amountCarried` to `false`.
 - `amountCarried` drives a subtle UI indicator ("suggested from last month") on recurring rows where the user hasn't confirmed the amount yet. Useful for catching rent increases or variable bills.
+- Installment items are implicitly recurring — `installmentTotal` being set means the item will carry forward. On each new month copy, `installmentNumber` is incremented. When `installmentNumber === installmentTotal`, the item is copied one final time and then never carried again (last payment).
+- `installmentGroupId` is a cuid generated at creation time and shared across all monthly copies of the same purchase. Used to aggregate remaining payments and total committed spend in analytics.
+- Display format for installments: `"Phone (3/12)"` — name + current/total in parentheses.
 - `userId` is denormalized on `BudgetItem` so every ownership check is a single-field query — no join to `BudgetMonth` required.
 
 ---
@@ -81,10 +88,11 @@ When a user opens a month that has no `BudgetMonth` record yet:
 
 1. Create the `BudgetMonth` row.
 2. Find the most recent previous month that has items.
-3. Copy all top-level items where `recurring = true` (name, category, recurring flag, and **previous month's amount**). Set `amountCarried: true` on each copied row — the UI will show a subtle "suggested" indicator until the user confirms or edits the amount.
-4. For each copied parent item that had children with `recurring = true`, copy those children too (linked to the new parent copy), also with `amountCarried: true`.
-5. One-off items (`recurring = false`) are never carried forward.
-6. When the user edits an amount on a carried row, `amountCarried` is set to `false` — the indicator clears and the new value is treated as confirmed.
+3. Copy all top-level items where `recurring = true` or `installmentTotal IS NOT NULL` (name, category, flags, and **previous month's amount**). Set `amountCarried: true` on each copied row.
+4. For installment items: increment `installmentNumber` on the copy. If the source row's `installmentNumber === installmentTotal`, this is the final payment — copy it once more (the last payment) and do not set it up to carry again (set `installmentTotal: null` on the copy so it won't recur).
+5. For each copied parent item that had children meeting the above criteria, copy those children too (linked to the new parent copy), also with `amountCarried: true` and installment counters incremented as above.
+6. One-off items (`recurring = false` and no `installmentTotal`) are never carried forward.
+7. When the user edits an amount on a carried row, `amountCarried` is set to `false` — the indicator clears and the new value is treated as confirmed.
 
 ---
 
@@ -121,6 +129,12 @@ All analytics are computed from raw `BudgetItem` data across all months.
 - Savings callout: categories where this month is below the 3-month average
 - Growth callout: categories where this month is more than 10% above the 6-month average
 
+**Installment overview:**
+- Active installment plans: name, amount/month, payments remaining, total remaining spend
+  - e.g. "Phone — $100/mo · 9 of 12 remaining · $900 left"
+- Total monthly installment load: sum of all active installment amounts this month
+- Installments completing soon: plans with ≤ 2 payments remaining
+
 **History compaction (deferred action, data kept):**
 A future UI action can compute and store a yearly aggregate into `compactedSummary` JSON (per-category totals, monthly averages, inflation deltas) and set `compacted = true`. Raw `BudgetItem` rows are **not deleted** — data is always preserved. Compacted months show a "summarized" badge in the navigator but remain fully readable.
 
@@ -131,6 +145,7 @@ A future UI action can compute and store a yearly aggregate into `compactedSumma
 | Tool | Scope | Description |
 |------|-------|-------------|
 | `add_expense` | Pocket | Add a top-level item or a sub-item under a named card group. Optionally mark as recurring. |
+| `add_installment` | Pocket | Add an installment purchase: name, amount per payment, total number of payments, optional card group. Creates the first month's row and sets up the carry-forward chain. |
 | `set_amount` | Pocket | Set or update the amount on an existing item by name or id. |
 | `mark_paid` | Pocket | Mark a top-level item as paid. Optionally set amount at the same time. |
 | `add_month` | Pocket | Open a new month (creates the BudgetMonth and copies recurring items). |
