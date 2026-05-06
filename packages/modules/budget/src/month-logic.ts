@@ -1,16 +1,19 @@
 import type { SourceItem, CarryItem } from './types'
 
-function shouldCarry(item: SourceItem): boolean {
+function shouldCarry(item: SourceItem, gap: number): boolean {
   if (item.recurring) return true
-  // active installment: has a total and hasn't been marked as "last payment done"
-  if (item.installmentTotal !== null && item.installmentNumber !== null) return true
+  if (item.installmentTotal !== null && item.installmentNumber !== null) {
+    if (gap === 1) return true  // gap-1 path: carry including the final-payment → one-time conversion
+    // Larger gaps: only carry if a payment actually lands in the target month
+    return item.installmentNumber + gap <= item.installmentTotal
+  }
   return false
 }
 
-function carryItem(item: SourceItem): CarryItem {
-  const isLastPayment =
-    item.installmentTotal !== null &&
-    item.installmentNumber === item.installmentTotal
+function carryItem(item: SourceItem, gap: number): CarryItem {
+  const nextNumber = item.installmentNumber !== null ? item.installmentNumber + gap : null
+  // nextNumber overshoots installmentTotal when the last payment was already this period
+  const isLastPayment = item.installmentTotal !== null && nextNumber !== null && nextNumber > item.installmentTotal
 
   return {
     name: item.name,
@@ -19,14 +22,14 @@ function carryItem(item: SourceItem): CarryItem {
     amountCarried: item.amount !== null,
     recurring: item.recurring,
     installmentTotal: isLastPayment ? null : item.installmentTotal,
-    installmentNumber: isLastPayment ? null : (item.installmentNumber !== null ? item.installmentNumber + 1 : null),
+    installmentNumber: isLastPayment ? null : nextNumber,
     installmentGroupId: isLastPayment ? null : item.installmentGroupId,
     children: item.children
-      .filter(shouldCarry)
-      .map(carryItem),
+      .filter(child => shouldCarry(child, gap))
+      .map(child => carryItem(child, gap)),
   }
 }
 
-export function computeCarryItems(previousItems: SourceItem[]): CarryItem[] {
-  return previousItems.filter(shouldCarry).map(carryItem)
+export function computeCarryItems(previousItems: SourceItem[], gap = 1): CarryItem[] {
+  return previousItems.filter(item => shouldCarry(item, gap)).map(item => carryItem(item, gap))
 }

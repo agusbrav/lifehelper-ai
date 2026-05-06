@@ -27,7 +27,11 @@ export async function getOrCreateMonth(userId: string, year: number, month: numb
   if (existing) return existing
 
   const prev = await db.budgetMonth.findFirst({
-    where: { userId, items: { some: {} } },
+    where: {
+      userId,
+      items: { some: {} },
+      OR: [{ year: { lt: year } }, { year, month: { lt: month } }],
+    },
     orderBy: [{ year: 'desc' }, { month: 'desc' }],
     include: {
       items: {
@@ -46,6 +50,7 @@ export async function getOrCreateMonth(userId: string, year: number, month: numb
   }
 
   if (prev) {
+    const monthGap = (year * 12 + month) - (prev.year * 12 + prev.month)
     const toCarry = computeCarryItems(
       prev.items.map(i => ({
         name: i.name,
@@ -66,6 +71,7 @@ export async function getOrCreateMonth(userId: string, year: number, month: numb
           children: [],
         })),
       })),
+      monthGap,
     )
 
     for (const item of toCarry) {
