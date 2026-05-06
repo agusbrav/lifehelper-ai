@@ -42,7 +42,7 @@ export function AnalyticsView({
       {/* Category spend */}
       <section>
         <h2 className="text-xs font-semibold text-[var(--muted-fg)] mb-3 uppercase tracking-wide">
-          Spend by Category — {MONTH_NAMES[currentMonth.month - 1]} {currentMonth.year}
+          Spend by Category - {MONTH_NAMES[currentMonth.month - 1]} {currentMonth.year}
         </h2>
         <div className="rounded-2xl border border-[var(--border)] bg-[var(--card-bg)] overflow-hidden">
           <table className="w-full border-collapse text-sm">
@@ -64,8 +64,8 @@ export function AnalyticsView({
                   <tr key={category ?? '__null__'} className="border-t border-[var(--border)]">
                     <td className="py-3 pl-5 font-medium text-[var(--fg)]">{category ?? 'Uncategorized'}</td>
                     <td className="py-3 px-4 text-right font-semibold text-[var(--fg)]">{fmt(total)}</td>
-                    <td className="py-3 px-4 text-right text-[var(--muted-fg)]">{a3 > 0 ? fmt(a3) : '—'}</td>
-                    <td className="py-3 px-4 text-right text-[var(--muted-fg)]">{a6 > 0 ? fmt(a6) : '—'}</td>
+                    <td className="py-3 px-4 text-right text-[var(--muted-fg)]">{a3 > 0 ? fmt(a3) : '-'}</td>
+                    <td className="py-3 px-4 text-right text-[var(--muted-fg)]">{a6 > 0 ? fmt(a6) : '-'}</td>
                     <td className="py-3 pr-5">
                       <div className="flex items-center gap-2">
                         <div className="flex-1 bg-[var(--muted)] rounded-full h-1.5">
@@ -94,7 +94,7 @@ export function AnalyticsView({
 
       {/* Monthly trend */}
       <section>
-        <h2 className="text-xs font-semibold text-[var(--muted-fg)] mb-3 uppercase tracking-wide">Monthly Total — Last 6 Months</h2>
+        <h2 className="text-xs font-semibold text-[var(--muted-fg)] mb-3 uppercase tracking-wide">Monthly Total - Last 6 Months</h2>
         <div className="rounded-2xl border border-[var(--border)] bg-[var(--card-bg)] p-5">
           {monthlyTotals.some(m => m.totalCents > 0) ? (
             <div className="flex items-end gap-3 h-28">
@@ -110,7 +110,7 @@ export function AnalyticsView({
               ))}
             </div>
           ) : (
-            <p className="text-sm text-[var(--muted-fg)] text-center py-4">Not enough data yet — add expenses across multiple months to see trends.</p>
+            <p className="text-sm text-[var(--muted-fg)] text-center py-4">Not enough data yet - add expenses across multiple months to see trends.</p>
           )}
         </div>
       </section>

@@ -126,7 +126,6 @@ pnpm test
 ## 9. Commit Rules
 
 - Human-style messages: short, accurate, no AI attribution.
-- **Never add Co-authored-by, co-pilot, claude, or any AI contributor to commits.**
 - Never commit: `.env`, `docs/superpowers/`, `*.tsbuildinfo`, `.next/`, `node_modules/`.
 - One logical change per commit. Bug fix = one commit, feature = one commit per meaningful unit.
 - Before committing: verify `tsc --noEmit` passes and tests pass.

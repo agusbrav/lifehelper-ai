@@ -23,12 +23,12 @@ export default async function BudgetPage({ searchParams }: Props) {
   const budgetMonth = await getOrCreateMonth(session.user.id, year, month)
   const items = budgetMonth?.items ?? []
 
-  const paidCents = items
-    .filter(i => i.paid && i.amount !== null)
-    .reduce((sum, i) => sum + (i.amount ?? 0), 0)
-  const pendingCents = items
-    .filter(i => !i.paid && i.amount !== null)
-    .reduce((sum, i) => sum + (i.amount ?? 0), 0)
+  function effectiveAmount(i: typeof items[number]) {
+    if (i.children.length > 0) return i.children.reduce((s, c) => s + (c.amount ?? 0), 0)
+    return i.amount ?? 0
+  }
+  const paidCents = items.filter(i => i.paid).reduce((sum, i) => sum + effectiveAmount(i), 0)
+  const pendingCents = items.filter(i => !i.paid).reduce((sum, i) => sum + effectiveAmount(i), 0)
 
   return (
     <div className="p-6 max-w-3xl">

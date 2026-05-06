@@ -3,6 +3,16 @@ import { resolveContributions } from '@lifehelper/integrations'
 import { assertOwnsMonth, assertOwnsItem } from './ownership'
 import { computeCarryItems } from './month-logic'
 
+const DEFAULT_SEED = [
+  { name: 'Alquiler', category: 'vivienda', recurring: true },
+  { name: 'Expensas', category: 'vivienda', recurring: true },
+  { name: 'Cochera', category: 'vivienda', recurring: true },
+  { name: 'Luz', category: 'servicios', recurring: true },
+  { name: 'Internet', category: 'servicios', recurring: true },
+  { name: 'Tarjeta de crédito (Visa)', category: 'tarjeta', recurring: true },
+  { name: 'Tarjeta de crédito (American Express)', category: 'tarjeta', recurring: true },
+] as const
+
 export async function getOrCreateMonth(userId: string, year: number, month: number) {
   const existing = await db.budgetMonth.findUnique({
     where: { userId_year_month: { userId, year, month } },
@@ -28,6 +38,12 @@ export async function getOrCreateMonth(userId: string, year: number, month: numb
   })
 
   const newMonth = await db.budgetMonth.create({ data: { userId, year, month } })
+
+  if (!prev) {
+    for (const seed of DEFAULT_SEED) {
+      await db.budgetItem.create({ data: { monthId: newMonth.id, userId, ...seed } })
+    }
+  }
 
   if (prev) {
     const toCarry = computeCarryItems(
