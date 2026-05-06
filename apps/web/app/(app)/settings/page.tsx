@@ -1,8 +1,24 @@
-export default function SettingsPage() {
+import { cookies } from 'next/headers'
+import { redirect } from 'next/navigation'
+import { getSession } from '@lifehelper/core'
+import { getTranslations } from 'next-intl/server'
+import { LanguageSelector } from './language-selector'
+
+export default async function SettingsPage() {
+  const cookieStore = await cookies()
+  const token = cookieStore.get('session')?.value
+  const session = token ? await getSession(token) : null
+  if (!session) redirect('/login')
+
+  const t = await getTranslations('settings')
+
   return (
-    <div className="p-6">
-      <h1 className="text-lg font-semibold text-zinc-900 dark:text-zinc-100">Settings</h1>
-      <p className="text-sm text-zinc-500 mt-1">Coming soon.</p>
+    <div className="p-6 max-w-md">
+      <h1 className="text-lg font-semibold text-[var(--fg)] mb-6">{t('title')}</h1>
+      <div className="rounded-2xl border border-[var(--border)] bg-[var(--card-bg)] p-5">
+        <h2 className="text-sm font-medium text-[var(--fg)] mb-3">{t('language')}</h2>
+        <LanguageSelector currentLocale={session.user.locale as 'en' | 'es'} />
+      </div>
     </div>
   )
 }
