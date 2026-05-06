@@ -356,6 +356,61 @@ export async function getItemsForAnalytics(userId: string) {
   })
 }
 
+export async function setAmountNextMonth(input: { userId: string; itemId: string; amountCents: number }) {
+  const item = await assertOwnsItem(input.userId, input.itemId)
+  const currentMonth = await db.budgetMonth.findUnique({
+    where: { id: item.monthId },
+    select: { year: true, month: true },
+  })
+  if (!currentMonth) return
+
+  const nextYear = currentMonth.month === 12 ? currentMonth.year + 1 : currentMonth.year
+  const nextMonth = currentMonth.month === 12 ? 1 : currentMonth.month + 1
+
+  const nextMonthRecord = await db.budgetMonth.findUnique({
+    where: { userId_year_month: { userId: input.userId, year: nextYear, month: nextMonth } },
+    select: { id: true },
+  })
+  if (!nextMonthRecord) return
+
+  let nextItem: { id: string } | null = null
+
+  if (item.installmentGroupId) {
+    nextItem = await db.budgetItem.findFirst({
+      where: { monthId: nextMonthRecord.id, installmentGroupId: item.installmentGroupId },
+      select: { id: true },
+    })
+  } else if (item.parentId) {
+    const parent = await db.budgetItem.findUnique({
+      where: { id: item.parentId },
+      select: { name: true },
+    })
+    if (parent) {
+      const nextParent = await db.budgetItem.findFirst({
+        where: { monthId: nextMonthRecord.id, name: parent.name, parentId: null },
+        select: { id: true },
+      })
+      if (nextParent) {
+        nextItem = await db.budgetItem.findFirst({
+          where: { monthId: nextMonthRecord.id, parentId: nextParent.id, name: item.name },
+          select: { id: true },
+        })
+      }
+    }
+  } else {
+    nextItem = await db.budgetItem.findFirst({
+      where: { monthId: nextMonthRecord.id, name: item.name, recurring: true, parentId: null },
+      select: { id: true },
+    })
+  }
+
+  if (!nextItem) return
+  await db.budgetItem.update({
+    where: { id: nextItem.id },
+    data: { amount: input.amountCents, amountCarried: false },
+  })
+}
+
 export async function fetchCategoryHistory(userId: string): Promise<Record<string, string>> {
   const items = await db.budgetItem.findMany({
     where: { userId, category: { not: null } },
