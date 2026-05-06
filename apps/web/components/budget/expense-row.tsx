@@ -38,7 +38,7 @@ export function ExpenseRow({ item, depth = 0, monthId, keywordMap, categories, y
   const fmt = (cents: number) =>
     format.number(cents / 100, { style: 'currency', currency: 'ARS', minimumFractionDigits: 0, maximumFractionDigits: 0 })
   const [editing, setEditing] = useState(false)
-  const [collapsed, setCollapsed] = useState(false)
+  const [collapsed, setCollapsed] = useState(item.category === 'tarjeta')
   const [addingCharge, setAddingCharge] = useState(false)
   const [chargeRecurring, setChargeRecurring] = useState(false)
   const [inflationOpen, setInflationOpen] = useState(false)

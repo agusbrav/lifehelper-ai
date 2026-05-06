@@ -24,10 +24,8 @@ export function AnalyticsMonthNav({ availableMonths, selectedYear, selectedMonth
   const isNewest = selectedYear === newest.year && selectedMonth === newest.month
   const isOldest = selectedYear === oldest.year && selectedMonth === oldest.month
 
-  const monthLabel = new Date(selectedYear, selectedMonth - 1, 1).toLocaleString(locale, {
-    month: 'long',
-    year: 'numeric',
-  })
+  const monthName = new Date(selectedYear, selectedMonth - 1, 1).toLocaleString(locale, { month: 'long' })
+  const monthLabel = `${monthName} ${selectedYear}`
 
   function navigate(delta: number) {
     let m = selectedMonth + delta
