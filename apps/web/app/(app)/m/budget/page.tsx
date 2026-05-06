@@ -45,14 +45,14 @@ export default async function BudgetPage({ searchParams }: Props) {
   const tableItems = items as unknown as TableItem[]
 
   return (
-    <div className="p-4 sm:p-6 w-full max-w-5xl">
-      <div className="flex items-center justify-between mb-6">
+    <div className="p-4 sm:p-6 w-full">
+      <div className="flex flex-wrap items-center gap-x-4 gap-y-3 mb-6">
         <MonthNav year={year} month={month} />
-        <div className="flex items-center gap-4">
+        <div className="flex flex-wrap items-center gap-x-4 gap-y-2 ml-auto">
           <SummaryBar paidCents={paidCents} pendingCents={pendingCents} />
           <Link
             href="/m/budget/analytics"
-            className="text-sm text-[var(--accent)] hover:opacity-80 font-medium"
+            className="text-sm text-[var(--accent)] hover:opacity-80 font-medium whitespace-nowrap"
           >
             {t('analyticsLink')}
           </Link>

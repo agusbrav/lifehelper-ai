@@ -108,16 +108,18 @@ export function AddExpenseRow({ monthId, keywordMap, categories }: Props) {
     )
   }
 
+  const inputCls = 'rounded-lg border border-[var(--border)] bg-[var(--card-bg)] text-[var(--fg)] px-2.5 py-1.5 text-sm outline-none focus:ring-1 focus:ring-[var(--accent)] min-w-0'
+
   return (
     <tr className="border-t border-[var(--border)] bg-[var(--muted)]">
-      <td colSpan={5} className="py-3 px-5">
+      <td colSpan={5} className="py-3 px-4">
         <form ref={formRef} onSubmit={handleSubmit} className="flex flex-wrap gap-2 items-center">
           <input
             name="name"
             required
             placeholder={t('name')}
             onChange={handleNameChange}
-            className="rounded-lg border border-[var(--border)] bg-[var(--card-bg)] text-[var(--fg)] px-2.5 py-1.5 text-sm outline-none focus:ring-1 focus:ring-[var(--accent)] w-40"
+            className={`${inputCls} flex-[2_1_8rem]`}
           />
           <input
             name="category"
@@ -125,7 +127,7 @@ export function AddExpenseRow({ monthId, keywordMap, categories }: Props) {
             list={datalistId}
             value={category}
             onChange={handleCategoryChange}
-            className="rounded-lg border border-[var(--border)] bg-[var(--card-bg)] text-[var(--fg)] px-2.5 py-1.5 text-sm outline-none focus:ring-1 focus:ring-[var(--accent)] w-36 capitalize"
+            className={`${inputCls} flex-[1_1_6rem] capitalize`}
           />
           <datalist id={datalistId}>
             {categories.map(cat => (
@@ -141,9 +143,9 @@ export function AddExpenseRow({ monthId, keywordMap, categories }: Props) {
                 step="0.01"
                 min="0.01"
                 placeholder={t('amount')}
-                className="rounded-lg border border-[var(--border)] bg-[var(--card-bg)] text-[var(--fg)] px-2.5 py-1.5 text-sm outline-none focus:ring-1 focus:ring-[var(--accent)] w-28"
+                className={`${inputCls} w-24 flex-shrink-0`}
               />
-              <label className="flex items-center gap-1.5 text-sm text-[var(--muted-fg)] cursor-pointer select-none">
+              <label className="flex items-center gap-1.5 text-sm text-[var(--muted-fg)] cursor-pointer select-none flex-shrink-0">
                 <input
                   type="checkbox"
                   checked={recurring}
@@ -164,7 +166,7 @@ export function AddExpenseRow({ monthId, keywordMap, categories }: Props) {
                 min="0.01"
                 required
                 placeholder={t('perMonth')}
-                className="rounded-lg border border-[var(--border)] bg-[var(--card-bg)] text-[var(--fg)] px-2.5 py-1.5 text-sm outline-none focus:ring-1 focus:ring-[var(--accent)] w-28"
+                className={`${inputCls} w-24 flex-shrink-0`}
               />
               <input
                 name="totalPayments"
@@ -172,14 +174,14 @@ export function AddExpenseRow({ monthId, keywordMap, categories }: Props) {
                 min="2"
                 required
                 placeholder={t('paymentsCount')}
-                className="rounded-lg border border-[var(--border)] bg-[var(--card-bg)] text-[var(--fg)] px-2.5 py-1.5 text-sm outline-none focus:ring-1 focus:ring-[var(--accent)] w-28"
+                className={`${inputCls} w-24 flex-shrink-0`}
               />
             </>
           )}
 
           <button
             type="submit"
-            className="bg-[var(--accent)] text-[var(--accent-fg)] rounded-lg px-3 py-1.5 text-sm font-medium hover:opacity-90 transition-opacity"
+            className="bg-[var(--accent)] text-[var(--accent-fg)] rounded-lg px-3 py-1.5 text-sm font-medium hover:opacity-90 transition-opacity flex-shrink-0"
           >
             {t('add')}
           </button>
