@@ -1,0 +1,40 @@
+// Fragment — NO datasource or generator blocks.
+
+model BudgetMonth {
+  id               String       @id @default(cuid())
+  userId           String
+  year             Int
+  month            Int
+  compacted        Boolean      @default(false)
+  compactedSummary Json?
+  createdAt        DateTime     @default(now())
+  items            BudgetItem[]
+
+  @@unique([userId, year, month])
+  @@map("budget_months")
+}
+
+model BudgetItem {
+  id                 String       @id @default(cuid())
+  monthId            String
+  userId             String
+  parentId           String?
+  name               String
+  category           String?
+  amount             Int?
+  amountCarried      Boolean      @default(false)
+  paid               Boolean      @default(false)
+  paidAt             DateTime?
+  recurring          Boolean      @default(false)
+  installmentTotal   Int?
+  installmentNumber  Int?
+  installmentGroupId String?
+  notes              String?
+  linkedPocketId     String?
+  createdAt          DateTime     @default(now())
+  month              BudgetMonth  @relation(fields: [monthId], references: [id], onDelete: Cascade)
+  parent             BudgetItem?  @relation("SubItems", fields: [parentId], references: [id])
+  children           BudgetItem[] @relation("SubItems")
+
+  @@map("budget_items")
+}
