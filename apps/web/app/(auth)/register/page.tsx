@@ -1,11 +1,13 @@
 'use client'
 import { useState } from 'react'
 import { useRouter } from 'next/navigation'
+import { useTranslations } from 'next-intl'
 import Link from 'next/link'
 import { PasswordInput } from '@/components/password-input'
 
 export default function RegisterPage() {
   const router = useRouter()
+  const t = useTranslations('auth')
   const [error, setError] = useState('')
   const [loading, setLoading] = useState(false)
 
@@ -37,14 +39,14 @@ export default function RegisterPage() {
         <div className="w-10 h-10 rounded-xl bg-[var(--accent)] flex items-center justify-center text-[var(--accent-fg)] font-bold text-lg mb-4">
           L
         </div>
-        <h1 className="text-2xl font-semibold text-[var(--fg)]">Create account</h1>
-        <p className="text-sm text-[var(--muted-fg)] mt-1">Start managing your life smarter</p>
+        <h1 className="text-2xl font-semibold text-[var(--fg)]">{t('registerTitle')}</h1>
+        <p className="text-sm text-[var(--muted-fg)] mt-1">{t('registerSubtitle')}</p>
       </div>
 
       <form onSubmit={handleSubmit} className="flex flex-col gap-4">
         <div>
           <label className="block text-sm font-medium mb-1.5 text-[var(--fg)]" htmlFor="email">
-            Email
+            {t('email')}
           </label>
           <input
             id="email"
@@ -56,8 +58,8 @@ export default function RegisterPage() {
         </div>
         <div>
           <label className="block text-sm font-medium mb-1.5 text-[var(--fg)]" htmlFor="password">
-            Password{' '}
-            <span className="text-[var(--muted-fg)] font-normal">(min 8 chars)</span>
+            {t('password')}{' '}
+            <span className="text-[var(--muted-fg)] font-normal">{t('passwordHint')}</span>
           </label>
           <PasswordInput id="password" name="password" required minLength={8} />
         </div>
@@ -71,13 +73,13 @@ export default function RegisterPage() {
           disabled={loading}
           className="w-full rounded-xl bg-[var(--accent)] text-[var(--accent-fg)] py-2.5 text-sm font-semibold hover:opacity-90 disabled:opacity-50 transition-opacity mt-1"
         >
-          {loading ? 'Creating account...' : 'Create account'}
+          {loading ? t('creatingAccount') : t('createAccount')}
         </button>
       </form>
       <p className="mt-6 text-sm text-center text-[var(--muted-fg)]">
-        Already registered?{' '}
+        {t('haveAccount')}{' '}
         <Link href="/login" className="text-[var(--accent)] font-medium hover:opacity-80">
-          Sign in
+          {t('loginLink')}
         </Link>
       </p>
     </div>
