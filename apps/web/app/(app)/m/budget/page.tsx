@@ -1,7 +1,7 @@
 import { cookies } from 'next/headers'
 import { redirect } from 'next/navigation'
 import { getSession } from '@lifehelper/core'
-import { getOrCreateMonth, fetchCategoryHistory, buildKeywordMap, knownCategories } from '@lifehelper/budget'
+import { getOrCreateMonth, fetchCategoryHistory, buildKeywordMap, knownCategories, getFirstMonth } from '@lifehelper/budget'
 import { getTranslations } from 'next-intl/server'
 import { MonthNav } from '@/components/budget/month-nav'
 import { SummaryBar } from '@/components/budget/summary-bar'
@@ -21,9 +21,10 @@ export default async function BudgetPage({ searchParams }: Props) {
   const year = params.year ? parseInt(params.year) : now.getFullYear()
   const month = params.month ? parseInt(params.month) : now.getMonth() + 1
 
-  const [budgetMonth, historyMap, t] = await Promise.all([
+  const [budgetMonth, historyMap, firstMonth, t] = await Promise.all([
     getOrCreateMonth(session.user.id, year, month),
     fetchCategoryHistory(session.user.id),
+    getFirstMonth(session.user.id),
     getTranslations('budget'),
   ])
   const items = budgetMonth?.items ?? []
@@ -47,7 +48,7 @@ export default async function BudgetPage({ searchParams }: Props) {
   return (
     <div className="p-4 sm:p-6 w-full">
       <div className="flex flex-wrap items-center gap-x-4 gap-y-3 mb-6">
-        <MonthNav year={year} month={month} />
+        <MonthNav year={year} month={month} firstYear={firstMonth?.year} firstMonth={firstMonth?.month} />
         <div className="flex flex-wrap items-center gap-x-4 gap-y-2 ml-auto">
           <SummaryBar paidCents={paidCents} pendingCents={pendingCents} />
           <Link

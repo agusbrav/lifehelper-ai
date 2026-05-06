@@ -226,6 +226,15 @@ export async function getMonthsForUser(userId: string) {
   })
 }
 
+export async function getFirstMonth(userId: string): Promise<{ year: number; month: number } | null> {
+  const row = await db.budgetMonth.findFirst({
+    where: { userId },
+    orderBy: [{ year: 'asc' }, { month: 'asc' }],
+    select: { year: true, month: true },
+  })
+  return row ?? null
+}
+
 export async function getItemsForAnalytics(userId: string) {
   return db.budgetItem.findMany({
     where: { userId },
