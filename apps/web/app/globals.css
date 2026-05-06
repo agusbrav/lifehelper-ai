@@ -15,6 +15,7 @@
   --accent-fg:    #ffffff;
   --error-fg:     #dc2626;
   --error-bg:     #fef2f2;
+  --success-fg:   oklch(0.55 0.2 140);
 }
 
 .dark {
@@ -30,6 +31,7 @@
   --accent-fg:    #0f0d1a;
   --error-fg:     #fca5a5;
   --error-bg:     #7f1d1d;
+  --success-fg:   oklch(0.72 0.18 140);
 }
 
 body {

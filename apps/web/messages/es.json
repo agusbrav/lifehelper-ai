@@ -80,7 +80,10 @@
     "activeInstallments": "Cuotas Activas",
     "purchase": "Compra",
     "progress": "Progreso",
-    "left": "Restante"
+    "left": "Restante",
+    "spendByCategory": "Gasto por categoría",
+    "perMonth": "$/mes",
+    "uncategorized": "Sin categoría"
   },
   "chat": {
     "placeholder": "Escribí un mensaje...",

@@ -80,7 +80,10 @@
     "activeInstallments": "Active Installments",
     "purchase": "Purchase",
     "progress": "Progress",
-    "left": "Left"
+    "left": "Left",
+    "spendByCategory": "Spend by Category",
+    "perMonth": "$/month",
+    "uncategorized": "Uncategorized"
   },
   "chat": {
     "placeholder": "Type a message...",

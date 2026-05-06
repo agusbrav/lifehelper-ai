@@ -1,17 +1,11 @@
 import type { CategoryTotal, RollingAvgResult, InflationAlert, InstallmentSummary } from '@lifehelper/budget'
-import { getTranslations } from 'next-intl/server'
-
-function fmt(cents: number) {
-  return '$' + (cents / 100).toLocaleString('es-AR', { minimumFractionDigits: 0 })
-}
+import { getTranslations, getLocale } from 'next-intl/server'
 
 function pctColor(pct: number) {
-  if (pct > 10) return 'text-rose-400'
-  if (pct < -5) return 'text-emerald-400'
+  if (pct > 10) return 'text-[var(--error-fg)]'
+  if (pct < -5) return 'text-[var(--success-fg)]'
   return 'text-[var(--muted-fg)]'
 }
-
-const MONTH_NAMES = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec']
 
 type MonthlyTotal = { label: string; totalCents: number }
 
@@ -35,6 +29,8 @@ export async function AnalyticsView({
   monthlyTotals,
 }: Props) {
   const t = await getTranslations('analytics')
+  const locale = await getLocale()
+  const fmt = (cents: number) => '$' + (cents / 100).toLocaleString(locale, { minimumFractionDigits: 0 })
   const maxCategory = Math.max(...categoryTotals.map(c => c.total), 1)
   const maxMonthly = Math.max(...monthlyTotals.map(m => m.totalCents), 1)
 
@@ -44,7 +40,7 @@ export async function AnalyticsView({
       {/* Category spend */}
       <section>
         <h2 className="text-xs font-semibold text-[var(--muted-fg)] mb-3 uppercase tracking-wide">
-          Spend by Category - {MONTH_NAMES[currentMonth.month - 1]} {currentMonth.year}
+          {t('spendByCategory')} - {new Date(currentMonth.year, currentMonth.month - 1, 1).toLocaleString(locale, { month: 'long' })} {currentMonth.year}
         </h2>
         <div className="rounded-2xl border border-[var(--border)] bg-[var(--card-bg)] overflow-hidden">
           <table className="w-full border-collapse text-sm">
@@ -64,7 +60,7 @@ export async function AnalyticsView({
                 const pct3 = a3 > 0 ? Math.round(((total - a3) / a3) * 100) : 0
                 return (
                   <tr key={category ?? '__null__'} className="border-t border-[var(--border)]">
-                    <td className="py-3 pl-5 font-medium text-[var(--fg)]">{category ?? 'Uncategorized'}</td>
+                    <td className="py-3 pl-5 font-medium text-[var(--fg)]">{category ?? t('uncategorized')}</td>
                     <td className="py-3 px-4 text-right font-semibold text-[var(--fg)]">{fmt(total)}</td>
                     <td className="py-3 px-4 text-right text-[var(--muted-fg)]">{a3 > 0 ? fmt(a3) : '-'}</td>
                     <td className="py-3 px-4 text-right text-[var(--muted-fg)]">{a6 > 0 ? fmt(a6) : '-'}</td>
@@ -157,7 +153,7 @@ export async function AnalyticsView({
               <thead>
                 <tr className="bg-[var(--muted)]">
                   <th className="text-left py-2.5 pl-5 text-xs font-medium text-[var(--muted-fg)] uppercase tracking-wide">{t('purchase')}</th>
-                  <th className="text-right py-2.5 px-4 text-xs font-medium text-[var(--muted-fg)] uppercase tracking-wide">$/month</th>
+                  <th className="text-right py-2.5 px-4 text-xs font-medium text-[var(--muted-fg)] uppercase tracking-wide">{t('perMonth')}</th>
                   <th className="text-center py-2.5 px-4 text-xs font-medium text-[var(--muted-fg)] uppercase tracking-wide">{t('progress')}</th>
                   <th className="text-right py-2.5 pr-5 text-xs font-medium text-[var(--muted-fg)] uppercase tracking-wide">{t('left')}</th>
                 </tr>
