@@ -17,6 +17,10 @@ export function MonthNav({ year, month, firstYear, firstMonth }: Props) {
     firstYear !== undefined && firstMonth !== undefined &&
     year === firstYear && month === firstMonth
 
+  const maxYear = now.getMonth() === 11 ? now.getFullYear() + 1 : now.getFullYear()
+  const maxMonth = now.getMonth() === 11 ? 1 : now.getMonth() + 2
+  const isMaxMonth = year === maxYear && month === maxMonth
+
   function navigate(delta: number) {
     let m = month + delta
     let y = year
@@ -39,7 +43,8 @@ export function MonthNav({ year, month, firstYear, firstMonth }: Props) {
       </span>
       <button
         onClick={() => navigate(1)}
-        className="border border-[var(--border)] rounded-lg px-3 py-1 text-sm text-[var(--muted-fg)] hover:text-[var(--fg)] hover:bg-[var(--accent-muted)] transition-colors"
+        disabled={isMaxMonth}
+        className="border border-[var(--border)] rounded-lg px-3 py-1 text-sm text-[var(--muted-fg)] hover:text-[var(--fg)] hover:bg-[var(--accent-muted)] transition-colors disabled:opacity-30 disabled:cursor-not-allowed disabled:hover:bg-transparent disabled:hover:text-[var(--muted-fg)]"
       >
         →
       </button>

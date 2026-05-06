@@ -160,9 +160,78 @@ type AddExpenseInput = {
   parentId?: string
 }
 
+type CarryableItem = {
+  name: string
+  category: string | null
+  amount: number | null
+  recurring: boolean
+  installmentTotal: number | null
+  installmentNumber: number | null
+  installmentGroupId: string | null
+  parentId: string | null
+}
+
+async function propagateToNextMonth(userId: string, monthId: string, item: CarryableItem) {
+  const currentMonth = await db.budgetMonth.findUnique({
+    where: { id: monthId },
+    select: { year: true, month: true },
+  })
+  if (!currentMonth) return
+
+  const nextYear = currentMonth.month === 12 ? currentMonth.year + 1 : currentMonth.year
+  const nextMonth = currentMonth.month === 12 ? 1 : currentMonth.month + 1
+
+  const nextMonthRecord = await db.budgetMonth.findUnique({
+    where: { userId_year_month: { userId, year: nextYear, month: nextMonth } },
+    select: { id: true },
+  })
+  if (!nextMonthRecord) return
+
+  const [carried] = computeCarryItems([{ ...item, children: [] }], 1)
+  if (!carried) return
+
+  const alreadyExists = await db.budgetItem.findFirst({
+    where: item.installmentGroupId
+      ? { monthId: nextMonthRecord.id, installmentGroupId: carried.installmentGroupId }
+      : { monthId: nextMonthRecord.id, name: carried.name, recurring: true },
+  })
+  if (alreadyExists) return
+
+  let nextParentId: string | null = null
+  if (item.parentId) {
+    const currentParent = await db.budgetItem.findUnique({
+      where: { id: item.parentId },
+      select: { name: true },
+    })
+    if (currentParent) {
+      const nextParent = await db.budgetItem.findFirst({
+        where: { monthId: nextMonthRecord.id, name: currentParent.name, parentId: null },
+        select: { id: true },
+      })
+      nextParentId = nextParent?.id ?? null
+    }
+  }
+
+  await db.budgetItem.create({
+    data: {
+      monthId: nextMonthRecord.id,
+      userId,
+      parentId: nextParentId,
+      name: carried.name,
+      category: carried.category,
+      amount: carried.amount,
+      amountCarried: carried.amountCarried,
+      recurring: carried.recurring,
+      installmentTotal: carried.installmentTotal,
+      installmentNumber: carried.installmentNumber,
+      installmentGroupId: carried.installmentGroupId,
+    },
+  })
+}
+
 export async function addExpense(input: AddExpenseInput) {
   await assertOwnsMonth(input.userId, input.monthId)
-  return db.budgetItem.create({
+  const item = await db.budgetItem.create({
     data: {
       monthId: input.monthId,
       userId: input.userId,
@@ -173,6 +242,10 @@ export async function addExpense(input: AddExpenseInput) {
       recurring: input.recurring ?? false,
     },
   })
+  if (item.recurring) {
+    await propagateToNextMonth(input.userId, input.monthId, item)
+  }
+  return item
 }
 
 type AddInstallmentInput = {
@@ -189,7 +262,7 @@ export async function addInstallment(input: AddInstallmentInput) {
   await assertOwnsMonth(input.userId, input.monthId)
   const { randomBytes } = await import('crypto')
   const installmentGroupId = randomBytes(12).toString('hex')
-  return db.budgetItem.create({
+  const item = await db.budgetItem.create({
     data: {
       monthId: input.monthId,
       userId: input.userId,
@@ -203,6 +276,8 @@ export async function addInstallment(input: AddInstallmentInput) {
       installmentGroupId,
     },
   })
+  await propagateToNextMonth(input.userId, input.monthId, item)
+  return item
 }
 
 export async function setAmount(input: { userId: string; itemId: string; amountCents: number }) {

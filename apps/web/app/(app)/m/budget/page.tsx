@@ -22,6 +22,12 @@ export default async function BudgetPage({ searchParams }: Props) {
   const year = params.year ? parseInt(params.year) : now.getFullYear()
   const month = params.month ? parseInt(params.month) : now.getMonth() + 1
 
+  const maxYear = now.getMonth() === 11 ? now.getFullYear() + 1 : now.getFullYear()
+  const maxMonth = now.getMonth() === 11 ? 1 : now.getMonth() + 2
+  if (year * 12 + month > maxYear * 12 + maxMonth) {
+    redirect(`/m/budget?year=${maxYear}&month=${maxMonth}`)
+  }
+
   const firstMonth = await getFirstMonth(session.user.id)
   if (firstMonth) {
     const targetIndex = year * 12 + month
