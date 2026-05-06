@@ -1,11 +1,13 @@
 'use client'
 import { useState } from 'react'
 import { usePathname } from 'next/navigation'
+import { useTranslations } from 'next-intl'
 
 type ChatMessage = { role: 'user' | 'assistant'; text: string }
 
 export function ChatRail() {
   const pathname = usePathname()
+  const t = useTranslations('chat')
   const context = pathname.startsWith('/m/') ? 'pocket' : 'dashboard'
 
   const [open, setOpen] = useState(true)
@@ -39,9 +41,7 @@ export function ChatRail() {
           <div className="flex-1 overflow-y-auto px-4 py-2 flex flex-col gap-2">
             {messages.length === 0 && (
               <p className="text-xs text-[var(--muted-fg)] mt-auto">
-                {context === 'dashboard'
-                  ? 'Try: "add an expenses pocket"'
-                  : 'Ask me anything or say "undo" to reverse your last change.'}
+                {context === 'dashboard' ? t('dashboardHint') : t('pocketHint')}
               </p>
             )}
             {messages.map((m, i) => (
@@ -64,7 +64,7 @@ export function ChatRail() {
               value={input}
               onChange={e => setInput(e.target.value)}
               onKeyDown={e => e.key === 'Enter' && handleSend()}
-              placeholder="Type a message..."
+              placeholder={t('placeholder')}
               className="flex-1 text-sm bg-transparent outline-none text-[var(--fg)] placeholder:text-[var(--muted-fg)]"
             />
             <button

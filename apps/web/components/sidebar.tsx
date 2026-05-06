@@ -1,12 +1,14 @@
 'use client'
 import Link from 'next/link'
 import { usePathname } from 'next/navigation'
+import { useTranslations } from 'next-intl'
 import { ThemeToggle } from './theme-toggle'
 
 type Pocket = { id: string; name: string }
 
 export function Sidebar({ pockets }: { pockets: Pocket[] }) {
   const pathname = usePathname()
+  const t = useTranslations('nav')
   const currentPocketId = pathname.startsWith('/m/')
     ? pathname.split('/')[2]
     : undefined
@@ -16,7 +18,7 @@ export function Sidebar({ pockets }: { pockets: Pocket[] }) {
       <Link
         href="/dashboard"
         className="flex items-center justify-center w-8 h-8 rounded-xl bg-[var(--accent)] text-[var(--accent-fg)] font-bold text-sm mb-3 shadow-sm"
-        aria-label="Dashboard"
+        aria-label={t('dashboard')}
       >
         L
       </Link>
@@ -40,7 +42,7 @@ export function Sidebar({ pockets }: { pockets: Pocket[] }) {
         <ThemeToggle />
         <Link
           href="/settings"
-          aria-label="Settings"
+          aria-label={t('settings')}
           className="flex items-center justify-center w-8 h-8 rounded-lg text-[var(--muted-fg)] hover:text-[var(--fg)] hover:bg-[var(--accent-muted)] transition-colors mb-8"
         >
           <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
