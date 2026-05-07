@@ -1,7 +1,7 @@
 'use client'
 import { useState, useRef, useTransition, useId } from 'react'
 import { useTranslations, useFormatter } from 'next-intl'
-import { setAmountAction, setAmountNextMonthAction, togglePaidAction, deleteItemAction, addExpenseAction } from '@/app/(app)/m/budget/actions'
+import { setAmountAction, setAmountNextMonthAction, togglePaidAction, deleteItemAction, addExpenseAction, addInstallmentAction } from '@/app/(app)/m/budget/actions'
 
 function capitalize(s: string) {
   return s ? s.charAt(0).toUpperCase() + s.slice(1) : s
@@ -16,6 +16,7 @@ type Item = {
   paid: boolean
   recurring: boolean
   itemType: string
+  isCard: boolean
   installmentTotal: number | null
   installmentNumber: number | null
   parentId: string | null
@@ -39,9 +40,10 @@ export function ExpenseRow({ item, depth = 0, monthId, keywordMap, categories, y
   const fmt = (cents: number) =>
     format.number(cents / 100, { style: 'currency', currency: 'ARS', minimumFractionDigits: 0, maximumFractionDigits: 0 })
   const [editing, setEditing] = useState(false)
-  const [collapsed, setCollapsed] = useState(item.category === 'tarjeta')
+  const [collapsed, setCollapsed] = useState(item.isCard)
   const [addingCharge, setAddingCharge] = useState(false)
-  const [chargeRecurring, setChargeRecurring] = useState(false)
+  const [chargeType, setChargeType] = useState<'one_time' | 'recurring' | 'subscription' | 'installment'>('one_time')
+  const [chargeTotalPayments, setChargeTotalPayments] = useState('')
   const [inflationOpen, setInflationOpen] = useState(false)
   const [inflationMode, setInflationMode] = useState<'pct' | 'direct'>('pct')
   const [inflationValue, setInflationValue] = useState('')
@@ -52,7 +54,7 @@ export function ExpenseRow({ item, depth = 0, monthId, keywordMap, categories, y
   const inputRef = useRef<HTMLInputElement>(null)
   const chargeDatalistId = useId()
 
-  const isCard = item.category === 'tarjeta'
+  const isCard = item.isCard
   const isSubItem = depth > 0
   const children = item.children ?? []
   const hasChildren = children.length > 0
@@ -126,12 +128,18 @@ export function ExpenseRow({ item, depth = 0, monthId, keywordMap, categories, y
     const fd = new FormData(e.currentTarget)
     fd.set('monthId', monthId)
     fd.set('parentId', item.id)
-    fd.set('itemType', chargeRecurring ? 'recurring' : 'one_time')
     e.currentTarget.reset()
     startTransition(async () => {
-      await addExpenseAction(fd)
+      if (chargeType === 'installment') {
+        fd.set('totalPayments', chargeTotalPayments)
+        await addInstallmentAction(fd)
+      } else {
+        fd.set('itemType', chargeType)
+        await addExpenseAction(fd)
+      }
       setAddingCharge(false)
-      setChargeRecurring(false)
+      setChargeType('one_time')
+      setChargeTotalPayments('')
     })
   }
 
@@ -258,7 +266,10 @@ export function ExpenseRow({ item, depth = 0, monthId, keywordMap, categories, y
         {/* Delete */}
         <td className="py-2.5 pr-3 text-center w-8">
           <button
-            onClick={() => startTransition(() => deleteItemAction(item.id))}
+            onClick={() => {
+              if (isCard && !window.confirm(`¿Eliminar la tarjeta "${item.name}"? Se eliminarán también todos sus cargos.`)) return
+              startTransition(() => deleteItemAction(item.id))
+            }}
             className="opacity-0 group-hover:opacity-100 text-[var(--muted-fg)] hover:text-rose-400 transition-all text-xs"
             aria-label={t('delete')}
           >
@@ -384,18 +395,36 @@ export function ExpenseRow({ item, depth = 0, monthId, keywordMap, categories, y
                 step="0.01"
                 min="0.01"
                 required
-                placeholder={t('chargeAmount')}
-                className="rounded-lg border border-[var(--border)] bg-[var(--card-bg)] text-[var(--fg)] px-2.5 py-1.5 text-sm outline-none focus:ring-1 focus:ring-purple-400 w-28 flex-shrink-0"
+                placeholder={chargeType === 'installment' ? t('perMonth') : t('chargeAmount')}
+                className="rounded-lg border border-[var(--border)] bg-[var(--card-bg)] text-[var(--fg)] px-2.5 py-1.5 text-sm outline-none focus:ring-1 focus:ring-purple-400 w-24 flex-shrink-0"
               />
-              <label className="flex items-center gap-1.5 text-sm text-[var(--muted-fg)] cursor-pointer select-none flex-shrink-0">
+              {chargeType === 'installment' && (
                 <input
-                  type="checkbox"
-                  checked={chargeRecurring}
-                  onChange={e => setChargeRecurring(e.target.checked)}
-                  className="accent-purple-500"
+                  type="number"
+                  min="2"
+                  required
+                  value={chargeTotalPayments}
+                  onChange={e => setChargeTotalPayments(e.target.value)}
+                  placeholder={t('paymentsCount')}
+                  className="rounded-lg border border-[var(--border)] bg-[var(--card-bg)] text-[var(--fg)] px-2.5 py-1.5 text-sm outline-none focus:ring-1 focus:ring-purple-400 w-20 flex-shrink-0"
                 />
-                {t('recurring')}
-              </label>
+              )}
+              <div className="inline-flex rounded-lg border border-purple-500/40 overflow-hidden text-xs flex-shrink-0">
+                {(['one_time', 'recurring', 'subscription', 'installment'] as const).map(type => (
+                  <button
+                    key={type}
+                    type="button"
+                    onClick={() => setChargeType(type)}
+                    className={`px-2.5 py-1.5 font-medium transition-colors border-l border-purple-500/20 first:border-l-0 ${
+                      chargeType === type
+                        ? 'bg-purple-500 text-white'
+                        : 'text-[var(--muted-fg)] hover:bg-purple-500/10'
+                    }`}
+                  >
+                    {t(`${type}Badge` as Parameters<typeof t>[0])}
+                  </button>
+                ))}
+              </div>
               <button
                 type="submit"
                 className="bg-purple-500 text-white rounded-lg px-3 py-1.5 text-sm font-medium hover:bg-purple-600 transition-colors flex-shrink-0"
@@ -404,7 +433,7 @@ export function ExpenseRow({ item, depth = 0, monthId, keywordMap, categories, y
               </button>
               <button
                 type="button"
-                onClick={() => { setAddingCharge(false); setChargeRecurring(false) }}
+                onClick={() => { setAddingCharge(false); setChargeType('one_time'); setChargeTotalPayments('') }}
                 className="text-sm text-[var(--muted-fg)] hover:text-[var(--fg)] transition-colors flex-shrink-0"
               >
                 {t('cancel')}

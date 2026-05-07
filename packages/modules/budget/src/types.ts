@@ -6,6 +6,7 @@ export type SourceItem = {
   amount: number | null
   recurring: boolean
   itemType: string
+  isCard: boolean
   installmentTotal: number | null
   installmentNumber: number | null
   installmentGroupId: string | null
@@ -19,6 +20,7 @@ export type CarryItem = {
   amountCarried: boolean
   recurring: boolean
   itemType: string
+  isCard: boolean
   installmentTotal: number | null
   installmentNumber: number | null
   installmentGroupId: string | null

@@ -9,8 +9,8 @@ const DEFAULT_SEED = [
   { name: 'Cochera', category: 'vivienda', recurring: true, itemType: 'recurring' },
   { name: 'Luz', category: 'servicios', recurring: true, itemType: 'recurring' },
   { name: 'Internet', category: 'servicios', recurring: true, itemType: 'subscription' },
-  { name: 'Tarjeta de crédito (Visa)', category: 'tarjeta', recurring: true, itemType: 'recurring' },
-  { name: 'Tarjeta de crédito (American Express)', category: 'tarjeta', recurring: true, itemType: 'recurring' },
+  { name: 'Tarjeta de crédito (Visa)', category: 'tarjeta', recurring: true, itemType: 'recurring', isCard: true },
+  { name: 'Tarjeta de crédito (American Express)', category: 'tarjeta', recurring: true, itemType: 'recurring', isCard: true },
 ] as const
 
 export async function getOrCreateMonth(userId: string, year: number, month: number) {
@@ -63,6 +63,7 @@ export async function getOrCreateMonth(userId: string, year: number, month: numb
         amount: i.amount,
         recurring: i.recurring,
         itemType: i.itemType,
+        isCard: i.isCard,
         installmentTotal: i.installmentTotal,
         installmentNumber: i.installmentNumber,
         installmentGroupId: i.installmentGroupId,
@@ -72,6 +73,7 @@ export async function getOrCreateMonth(userId: string, year: number, month: numb
           amount: c.amount,
           recurring: c.recurring,
           itemType: c.itemType,
+          isCard: c.isCard,
           installmentTotal: c.installmentTotal,
           installmentNumber: c.installmentNumber,
           installmentGroupId: c.installmentGroupId,
@@ -92,6 +94,7 @@ export async function getOrCreateMonth(userId: string, year: number, month: numb
           amountCarried: item.amountCarried,
           recurring: item.recurring,
           itemType: item.itemType,
+          isCard: item.isCard,
           installmentTotal: item.installmentTotal,
           installmentNumber: item.installmentNumber,
           installmentGroupId: item.installmentGroupId,
@@ -109,6 +112,7 @@ export async function getOrCreateMonth(userId: string, year: number, month: numb
             amountCarried: child.amountCarried,
             recurring: child.recurring,
             itemType: child.itemType,
+            isCard: child.isCard,
             installmentTotal: child.installmentTotal,
             installmentNumber: child.installmentNumber,
             installmentGroupId: child.installmentGroupId,
@@ -171,6 +175,7 @@ type CarryableItem = {
   amount: number | null
   recurring: boolean
   itemType: string
+  isCard: boolean
   installmentTotal: number | null
   installmentNumber: number | null
   installmentGroupId: string | null
@@ -235,6 +240,7 @@ async function propagateToNextMonth(userId: string, monthId: string, item: Carry
         amountCarried: carried.amountCarried,
         recurring: carried.recurring,
         itemType: carried.itemType,
+        isCard: carried.isCard,
         installmentTotal: carried.installmentTotal,
         installmentNumber: carried.installmentNumber,
         installmentGroupId: carried.installmentGroupId,
@@ -263,7 +269,7 @@ export async function addExpense(input: AddExpenseInput) {
     },
   })
   if (item.recurring) {
-    await propagateToNextMonth(input.userId, input.monthId, { ...item, itemType: item.itemType })
+    await propagateToNextMonth(input.userId, input.monthId, { ...item, itemType: item.itemType, isCard: item.isCard })
   }
   return item
 }
@@ -369,6 +375,7 @@ export async function getItemsForAnalytics(userId: string) {
       amount: true,
       recurring: true,
       itemType: true,
+      isCard: true,
       installmentTotal: true,
       installmentNumber: true,
       installmentGroupId: true,

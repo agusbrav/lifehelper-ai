@@ -5,6 +5,7 @@ type ItemSlim = {
   amount: number | null
   recurring: boolean
   itemType: string
+  isCard: boolean
   installmentTotal: number | null
   installmentNumber: number | null
   installmentGroupId: string | null
@@ -47,7 +48,7 @@ export type InstallmentSummary = {
 export function computeCategoryTotals(items: ItemSlim[]): CategoryTotal[] {
   const map = new Map<string, number>()
   for (const item of items) {
-    if (item.parentId !== null || item.amount === null) continue
+    if (item.parentId !== null || item.amount === null || item.isCard) continue
     const key = item.category?.toLowerCase() ?? '__null__'
     map.set(key, (map.get(key) ?? 0) + item.amount)
   }
@@ -105,9 +106,8 @@ export type TypeTotal = {
 const TYPE_ORDER: TypeTotal['type'][] = ['recurring', 'subscription', 'installment', 'card', 'one-time']
 
 export function computeTypeTotals(items: ItemSlim[]): TypeTotal[] {
-  // Build id→category map so card charges (children) can resolve their parent's type
-  const idToCategory = new Map(
-    items.filter(i => i.parentId === null).map(i => [i.id, i.category]),
+  const idIsCard = new Map(
+    items.filter(i => i.parentId === null).map(i => [i.id, i.isCard]),
   )
 
   const map = new Map<string, number>()
@@ -116,11 +116,10 @@ export function computeTypeTotals(items: ItemSlim[]): TypeTotal[] {
 
     let type: TypeTotal['type']
     if (item.parentId !== null) {
-      // Only include children of card parents; other sub-items are skipped
-      if (idToCategory.get(item.parentId) !== 'tarjeta') continue
+      if (!idIsCard.get(item.parentId)) continue
       type = 'card'
     } else {
-      if (item.category === 'tarjeta') continue // container has no own amount
+      if (item.isCard) continue // card container: amount is sum of charges, counted via children above
       if (item.installmentTotal !== null) { type = 'installment' }
       else if (item.itemType === 'subscription') { type = 'subscription' }
       else if (item.itemType === 'recurring') { type = 'recurring' }

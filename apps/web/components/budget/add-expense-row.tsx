@@ -1,7 +1,7 @@
 'use client'
 import { useRef, useState, useTransition, useId } from 'react'
 import { useTranslations } from 'next-intl'
-import { addExpenseAction, addInstallmentAction } from '@/app/(app)/m/budget/actions'
+import { addExpenseAction } from '@/app/(app)/m/budget/actions'
 
 type Props = {
   monthId: string
@@ -26,12 +26,10 @@ function capitalize(s: string) {
   return s ? s.charAt(0).toUpperCase() + s.slice(1) : s
 }
 
-export function AddExpenseRow({ monthId, keywordMap, categories, cards }: Props) {
+export function AddExpenseRow({ monthId, keywordMap, categories }: Props) {
   const t = useTranslations('budget')
-  const [mode, setMode] = useState<'idle' | 'expense' | 'installment'>('idle')
-  const [itemType, setItemType] = useState<'one_time' | 'recurring' | 'subscription'>('one_time')
+  const [open, setOpen] = useState(false)
   const [category, setCategory] = useState('')
-  const [cardId, setCardId] = useState('')
   const categoryRef = useRef('')
   const wasAutoFilled = useRef(false)
   const [, startTransition] = useTransition()
@@ -65,48 +63,35 @@ export function AddExpenseRow({ monthId, keywordMap, categories, cards }: Props)
     e.preventDefault()
     const fd = new FormData(e.currentTarget)
     fd.set('monthId', monthId)
-    fd.set('itemType', itemType)
+    fd.set('itemType', 'one_time')
     fd.set('category', category)
     startTransition(async () => {
-      if (mode === 'expense') await addExpenseAction(fd)
-      else await addInstallmentAction(fd)
+      await addExpenseAction(fd)
       formRef.current?.reset()
-      setMode('idle')
-      setItemType('one_time')
+      setOpen(false)
       setCategory('')
-      setCardId('')
       categoryRef.current = ''
       wasAutoFilled.current = false
     })
   }
 
   function handleCancel() {
-    setMode('idle')
-    setItemType('one_time')
+    setOpen(false)
     setCategory('')
-    setCardId('')
     categoryRef.current = ''
     wasAutoFilled.current = false
   }
 
-  if (mode === 'idle') {
+  if (!open) {
     return (
       <tr className="border-t border-[var(--border)]">
         <td colSpan={5} className="py-2 pl-5">
-          <div className="flex gap-4">
-            <button
-              onClick={() => setMode('expense')}
-              className="text-sm text-[var(--muted-fg)] hover:text-[var(--accent)] transition-colors"
-            >
-              + {t('addExpense')}
-            </button>
-            <button
-              onClick={() => { setMode('installment'); setCardId(cards[0]?.id ?? '') }}
-              className="text-sm text-[var(--muted-fg)] hover:text-[var(--accent)] transition-colors"
-            >
-              + {t('addInstallment')}
-            </button>
-          </div>
+          <button
+            onClick={() => setOpen(true)}
+            className="text-sm text-[var(--muted-fg)] hover:text-[var(--accent)] transition-colors"
+          >
+            + {t('addExpense')}
+          </button>
         </td>
       </tr>
     )
@@ -138,73 +123,14 @@ export function AddExpenseRow({ monthId, keywordMap, categories, cards }: Props)
               <option key={cat} value={capitalize(cat)} />
             ))}
           </datalist>
-
-          {mode === 'expense' && (
-            <>
-              <input
-                name="amount"
-                type="number"
-                step="0.01"
-                min="0.01"
-                placeholder={t('amount')}
-                className={`${inputCls} w-24 flex-shrink-0`}
-              />
-              <div className="inline-flex rounded-lg border border-[var(--border)] overflow-hidden text-xs flex-shrink-0">
-                {(['one_time', 'recurring', 'subscription'] as const).map(type => (
-                  <button
-                    key={type}
-                    type="button"
-                    onClick={() => setItemType(type)}
-                    className={`px-2.5 py-1.5 font-medium transition-colors border-l border-[var(--border)] first:border-l-0 ${
-                      itemType === type
-                        ? 'bg-[var(--accent)] text-[var(--accent-fg)]'
-                        : 'text-[var(--muted-fg)] hover:bg-[var(--muted)]'
-                    }`}
-                  >
-                    {t(`${type}Badge` as Parameters<typeof t>[0])}
-                  </button>
-                ))}
-              </div>
-            </>
-          )}
-
-          {mode === 'installment' && (
-            <>
-              <select
-                name="parentId"
-                required
-                value={cardId}
-                onChange={e => setCardId(e.target.value)}
-                className={`${inputCls} flex-[1_1_8rem]`}
-              >
-                {cards.length === 0 ? (
-                  <option value="" disabled>{t('noCards')}</option>
-                ) : (
-                  cards.map(c => (
-                    <option key={c.id} value={c.id}>{c.name}</option>
-                  ))
-                )}
-              </select>
-              <input
-                name="amount"
-                type="number"
-                step="0.01"
-                min="0.01"
-                required
-                placeholder={t('perMonth')}
-                className={`${inputCls} w-24 flex-shrink-0`}
-              />
-              <input
-                name="totalPayments"
-                type="number"
-                min="2"
-                required
-                placeholder={t('paymentsCount')}
-                className={`${inputCls} w-24 flex-shrink-0`}
-              />
-            </>
-          )}
-
+          <input
+            name="amount"
+            type="number"
+            step="0.01"
+            min="0.01"
+            placeholder={t('amount')}
+            className={`${inputCls} w-24 flex-shrink-0`}
+          />
           <button
             type="submit"
             className="bg-[var(--accent)] text-[var(--accent-fg)] rounded-lg px-3 py-1.5 text-sm font-medium hover:opacity-90 transition-opacity flex-shrink-0"
