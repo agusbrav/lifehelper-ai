@@ -91,7 +91,17 @@
     "keywordPlaceholder": "keyword (e.g. uber)",
     "selectCategory": "Existing category",
     "newCategoryPlaceholder": "New category",
-    "or": "or"
+    "or": "or",
+    "currencyARS": "ARS",
+    "currencyUSD": "USD",
+    "usdBadge": "USD",
+    "usdExpenses": "USD expenses",
+    "totalARS": "Total ARS",
+    "totalUSD": "Total USD",
+    "paidARS": "Paid ARS",
+    "paidUSD": "Paid USD",
+    "pendingARS": "Pending ARS",
+    "pendingUSD": "Pending USD"
   },
   "analytics": {
     "title": "Budget Analytics",
@@ -116,7 +126,10 @@
     "uncategorized": "Uncategorized",
     "resetExclusions": "Reset",
     "byCategory": "By category",
-    "byType": "By type"
+    "byType": "By type",
+    "usdTitle": "USD Expenses",
+    "usdByCategory": "USD by category",
+    "usdMonthlyTotalTitle": "USD Monthly Total - Last 6 Months"
   },
   "chat": {
     "placeholder": "Type a message...",
