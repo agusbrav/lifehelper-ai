@@ -31,6 +31,7 @@ export function AddExpenseRow({ monthId, keywordMap, categories }: Props) {
   const [open, setOpen] = useState(false)
   const [category, setCategory] = useState('')
   const [itemType, setItemType] = useState<'one_time' | 'recurring' | 'subscription'>('one_time')
+  const [currency, setCurrency] = useState<'ARS' | 'USD'>('ARS')
   const categoryRef = useRef('')
   const wasAutoFilled = useRef(false)
   const [, startTransition] = useTransition()
@@ -66,12 +67,14 @@ export function AddExpenseRow({ monthId, keywordMap, categories }: Props) {
     fd.set('monthId', monthId)
     fd.set('itemType', itemType)
     fd.set('category', category)
+    fd.set('currency', currency)
     startTransition(async () => {
       await addExpenseAction(fd)
       formRef.current?.reset()
       setOpen(false)
       setCategory('')
       setItemType('one_time')
+      setCurrency('ARS')
       categoryRef.current = ''
       wasAutoFilled.current = false
     })
@@ -81,6 +84,7 @@ export function AddExpenseRow({ monthId, keywordMap, categories }: Props) {
     setOpen(false)
     setCategory('')
     setItemType('one_time')
+    setCurrency('ARS')
     categoryRef.current = ''
     wasAutoFilled.current = false
   }
@@ -147,6 +151,22 @@ export function AddExpenseRow({ monthId, keywordMap, categories }: Props) {
                 }`}
               >
                 {t(`${type}Badge` as Parameters<typeof t>[0])}
+              </button>
+            ))}
+          </div>
+          <div className="inline-flex rounded-lg border border-[var(--border)] overflow-hidden text-xs flex-shrink-0">
+            {(['ARS', 'USD'] as const).map(cur => (
+              <button
+                key={cur}
+                type="button"
+                onClick={() => setCurrency(cur)}
+                className={`px-2.5 py-1.5 font-medium transition-colors border-l border-[var(--border)] first:border-l-0 ${
+                  currency === cur
+                    ? 'bg-blue-500/20 text-blue-300'
+                    : 'text-[var(--muted-fg)] hover:text-[var(--fg)]'
+                }`}
+              >
+                {t(cur === 'ARS' ? 'currencyARS' : 'currencyUSD')}
               </button>
             ))}
           </div>
