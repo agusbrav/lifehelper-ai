@@ -8,7 +8,7 @@ Format: `- [ ] description` — check off when done, delete when shipped.
 ## Budget
 
 ### Features
-- [ ] Card management settings page (`/m/budget/settings`) — separate `Card` model, add/remove cards outside the monthly table
+- [x] Card management settings page (`/m/budget/settings`) — separate `Card` model, add/remove cards outside the monthly table
 - [ ] Dates per expense — allow tagging an expense with a specific date within the month
 - [ ] Custom tags alongside categories — e.g. link a food expense to a specific trip and filter by it
 - [ ] Link budget expenses to other modules (trip planner, shared expenses)
@@ -38,6 +38,10 @@ Format: `- [ ] description` — check off when done, delete when shipped.
 
 - [ ] Trip planner pocket
 - [ ] Shared expenses pocket
+- [ ] Date/plans ideas with groups or girlfriend
+- [ ] Shopping list for day-to-day
+- [ ] Investment table to manage and track capital, investment and liquid assets
+- [ ] recipe + weight + nutrition app, informed by the latest science 
 
 ---
 

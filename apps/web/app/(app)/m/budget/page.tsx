@@ -78,6 +78,12 @@ export default async function BudgetPage({ searchParams }: Props) {
           >
             {t('analyticsLink')}
           </Link>
+          <Link
+            href="/m/budget/settings"
+            className="text-sm text-[var(--muted-fg)] hover:text-[var(--fg)] transition-colors whitespace-nowrap"
+          >
+            {t('settingsLink')}
+          </Link>
           <ResetMonthButton year={year} month={month} />
         </div>
       </div>
