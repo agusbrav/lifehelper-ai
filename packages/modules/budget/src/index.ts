@@ -1,5 +1,6 @@
 export * from './types'
 export * from './card-actions'
+export * from './category-keyword-actions'
 export * from './month-logic'
 export * from './analytics'
 export * from './ownership'

@@ -54,3 +54,15 @@ model Card {
   @@index([userId])
   @@map("cards")
 }
+
+model CategoryKeyword {
+  id        String   @id @default(cuid())
+  userId    String
+  keyword   String
+  category  String
+  createdAt DateTime @default(now())
+
+  @@unique([userId, keyword])
+  @@index([userId])
+  @@map("category_keywords")
+}

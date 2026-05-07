@@ -1,0 +1,387 @@
+'use client'
+import { useState, useTransition, useRef } from 'react'
+import { useTranslations } from 'next-intl'
+import { useRouter } from 'next/navigation'
+import { addCardAction, removeCardAction, renameCardAction } from '@/app/(app)/m/budget/settings/actions'
+import { addCategoryKeywordAction, removeCategoryKeywordAction } from '@/app/(app)/m/budget/config/actions'
+import { resetMonthAction } from '@/app/(app)/m/budget/actions'
+import { RenameCardInput } from '@/app/(app)/m/budget/settings/rename-card-input'
+import { CATEGORY_SEEDS } from '@lifehelper/budget'
+
+type Card = { id: string; name: string }
+type KeywordRecord = { id: string; keyword: string; category: string }
+
+type Props = {
+  year: number
+  month: number
+  cards: Card[]
+  userKeywords: KeywordRecord[]
+}
+
+type Tab = 'tarjetas' | 'categorias'
+
+export function BudgetConfigPanel({ year, month, cards, userKeywords }: Props) {
+  const t = useTranslations('budget')
+  const router = useRouter()
+  const [open, setOpen] = useState(false)
+  const [tab, setTab] = useState<Tab>('tarjetas')
+  const [, startTransition] = useTransition()
+  const [resetConfirming, setResetConfirming] = useState(false)
+  const [resetPending, startResetTransition] = useTransition()
+
+  // Add card state
+  const [newCardName, setNewCardName] = useState('')
+
+  // Add keyword state
+  const [newKeyword, setNewKeyword] = useState('')
+  const [newCategory, setNewCategory] = useState('')
+  const [selectedCategory, setSelectedCategory] = useState('')
+  const [addingToCategory, setAddingToCategory] = useState<string | null>(null)
+  const addKwInputRef = useRef<HTMLInputElement>(null)
+
+  // Derived: all known categories (seeds + user)
+  const seedCategories = [...new Set(Object.values(CATEGORY_SEEDS))].sort()
+  const userCategories = [...new Set(userKeywords.map(r => r.category))].sort()
+  const allCategories = [...new Set([...seedCategories, ...userCategories])].sort()
+
+  // Group user keywords by category
+  const byCategory = userKeywords.reduce<Record<string, KeywordRecord[]>>((acc, r) => {
+    ;(acc[r.category] ??= []).push(r)
+    return acc
+  }, {})
+
+  function handleAddCard(e: React.FormEvent) {
+    e.preventDefault()
+    const name = newCardName.trim()
+    if (!name) return
+    const fd = new FormData()
+    fd.append('name', name)
+    setNewCardName('')
+    startTransition(() => addCardAction(fd))
+  }
+
+  function handleRemoveCard(cardId: string, cardName: string) {
+    if (!window.confirm(t('removeCardConfirm', { name: cardName }))) return
+    startTransition(() => removeCardAction(cardId))
+  }
+
+  function handleAddKeywordToCategory(category: string, keyword: string) {
+    const kw = keyword.trim()
+    if (!kw || !category) return
+    startTransition(() => addCategoryKeywordAction(kw, category))
+    setAddingToCategory(null)
+  }
+
+  function handleAddNewCategoryKeyword(e: React.FormEvent) {
+    e.preventDefault()
+    const kw = newKeyword.trim()
+    const cat = (selectedCategory || newCategory).trim()
+    if (!kw || !cat) return
+    startTransition(() => addCategoryKeywordAction(kw, cat))
+    setNewKeyword('')
+    setNewCategory('')
+    setSelectedCategory('')
+  }
+
+  function handleRemoveKeyword(id: string) {
+    startTransition(() => removeCategoryKeywordAction(id))
+  }
+
+  function handleReset() {
+    startResetTransition(async () => {
+      await resetMonthAction(year, month)
+      setOpen(false)
+      setResetConfirming(false)
+      router.push('/m/budget')
+    })
+  }
+
+  const inputCls = 'rounded-lg border border-[var(--border)] bg-[var(--bg)] text-[var(--fg)] px-2.5 py-1.5 text-sm outline-none focus:ring-1 focus:ring-[var(--accent)] min-w-0'
+  const tabCls = (active: boolean) =>
+    `px-3 py-1.5 text-sm font-medium rounded-lg transition-colors ${
+      active
+        ? 'bg-[var(--accent)] text-[var(--accent-fg)]'
+        : 'text-[var(--muted-fg)] hover:text-[var(--fg)]'
+    }`
+
+  return (
+    <>
+      {/* Gear button */}
+      <button
+        onClick={() => setOpen(true)}
+        className="p-1.5 rounded-lg text-[var(--muted-fg)] hover:text-[var(--fg)] hover:bg-[var(--border)] transition-colors"
+        title={t('configTitle')}
+      >
+        <svg width="15" height="15" viewBox="0 0 16 16" fill="currentColor">
+          <path d="M8 10.5a2.5 2.5 0 1 0 0-5 2.5 2.5 0 0 0 0 5Z"/>
+          <path fillRule="evenodd" d="M8 0a1 1 0 0 1 .97.757l.49 1.938a5.52 5.52 0 0 1 1.168.675l1.904-.604a1 1 0 0 1 1.146.48l1 1.732a1 1 0 0 1-.217 1.248l-1.505 1.257c.03.239.044.48.044.717s-.015.478-.044.717l1.505 1.257a1 1 0 0 1 .217 1.248l-1 1.732a1 1 0 0 1-1.146.48l-1.904-.604a5.52 5.52 0 0 1-1.168.675L8.97 15.243A1 1 0 0 1 7.03 15.243l-.49-1.938a5.52 5.52 0 0 1-1.168-.675l-1.904.604a1 1 0 0 1-1.146-.48l-1-1.732a1 1 0 0 1 .217-1.248l1.505-1.257A5.48 5.48 0 0 1 2 8c0-.237.015-.478.044-.717L.539 6.026a1 1 0 0 1-.217-1.248l1-1.732a1 1 0 0 1 1.146-.48l1.904.604A5.52 5.52 0 0 1 5.54 2.495L6.03.757A1 1 0 0 1 8 0Zm0 4a4 4 0 1 0 0 8A4 4 0 0 0 8 4Z"/>
+        </svg>
+      </button>
+
+      {/* Modal */}
+      {open && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
+          {/* Backdrop */}
+          <div
+            className="absolute inset-0 bg-black/50"
+            onClick={() => { setOpen(false); setResetConfirming(false) }}
+          />
+
+          {/* Panel */}
+          <div className="relative z-10 w-full max-w-md rounded-2xl border border-[var(--border)] bg-[var(--card-bg)] shadow-xl flex flex-col max-h-[85vh]">
+            {/* Header */}
+            <div className="flex items-center justify-between px-5 py-4 border-b border-[var(--border)]">
+              <h2 className="font-semibold text-[var(--fg)]">{t('configTitle')}</h2>
+              <button
+                onClick={() => { setOpen(false); setResetConfirming(false) }}
+                className="text-[var(--muted-fg)] hover:text-[var(--fg)] transition-colors text-lg leading-none"
+              >
+                ✕
+              </button>
+            </div>
+
+            {/* Tabs */}
+            <div className="flex gap-1.5 px-5 pt-3">
+              <button className={tabCls(tab === 'tarjetas')} onClick={() => setTab('tarjetas')}>
+                {t('settingsTitle')}
+              </button>
+              <button className={tabCls(tab === 'categorias')} onClick={() => setTab('categorias')}>
+                {t('categoriesTitle')}
+              </button>
+            </div>
+
+            {/* Content */}
+            <div className="overflow-y-auto flex-1 px-5 py-4">
+
+              {/* ── Tarjetas tab ── */}
+              {tab === 'tarjetas' && (
+                <div className="space-y-4">
+                  <p className="text-sm text-[var(--muted-fg)]">{t('settingsCardHint')}</p>
+
+                  <div className="rounded-xl border border-[var(--border)] overflow-hidden">
+                    {cards.length === 0 ? (
+                      <p className="py-6 text-center text-sm text-[var(--muted-fg)]">{t('noCards')}</p>
+                    ) : (
+                      <table className="w-full text-sm">
+                        <tbody>
+                          {cards.map(card => (
+                            <tr key={card.id} className="border-t border-[var(--border)] first:border-t-0 group">
+                              <td className="py-2.5 pl-4 pr-3">
+                                <div className="flex items-center gap-2">
+                                  <span className="w-2 h-2 rounded-full bg-purple-400 flex-shrink-0" />
+                                  <RenameCardInput cardId={card.id} initialName={card.name} />
+                                </div>
+                              </td>
+                              <td className="py-2.5 pr-4 text-right">
+                                <button
+                                  onClick={() => handleRemoveCard(card.id, card.name)}
+                                  className="text-xs text-[var(--muted-fg)] hover:text-rose-400 transition-colors opacity-0 group-hover:opacity-100"
+                                >
+                                  {t('delete')}
+                                </button>
+                              </td>
+                            </tr>
+                          ))}
+                        </tbody>
+                      </table>
+                    )}
+                  </div>
+
+                  <form onSubmit={handleAddCard} className="flex gap-2">
+                    <input
+                      value={newCardName}
+                      onChange={e => setNewCardName(e.target.value)}
+                      placeholder={t('cardName')}
+                      required
+                      className={`${inputCls} flex-1`}
+                    />
+                    <button
+                      type="submit"
+                      className="bg-[var(--accent)] text-[var(--accent-fg)] rounded-lg px-3 py-1.5 text-sm font-medium hover:opacity-90 transition-opacity flex-shrink-0"
+                    >
+                      {t('add')}
+                    </button>
+                  </form>
+                  <p className="text-xs text-[var(--muted-fg)]">{t('settingsRemoveHint')}</p>
+                </div>
+              )}
+
+              {/* ── Categorías tab ── */}
+              {tab === 'categorias' && (
+                <div className="space-y-4">
+                  <p className="text-sm text-[var(--muted-fg)]">{t('categoriesHint')}</p>
+
+                  {/* User-defined keywords grouped by category */}
+                  {allCategories.map(cat => {
+                    const keywords = byCategory[cat] ?? []
+                    const isAdding = addingToCategory === cat
+                    return (
+                      <div key={cat} className="rounded-xl border border-[var(--border)] overflow-hidden">
+                        <div className="flex items-center justify-between px-4 py-2 bg-[var(--bg)]">
+                          <span className="text-xs font-semibold uppercase tracking-wide text-[var(--muted-fg)] capitalize">{cat}</span>
+                          <button
+                            onClick={() => {
+                              setAddingToCategory(isAdding ? null : cat)
+                              setTimeout(() => addKwInputRef.current?.focus(), 50)
+                            }}
+                            className="text-xs text-[var(--accent)] hover:opacity-80 transition-opacity"
+                          >
+                            + palabra
+                          </button>
+                        </div>
+                        {keywords.length > 0 && (
+                          <div className="px-4 py-2 flex flex-wrap gap-1.5">
+                            {keywords.map(r => (
+                              <span
+                                key={r.id}
+                                className="group inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-xs bg-[var(--border)] text-[var(--fg)]"
+                              >
+                                {r.keyword}
+                                <button
+                                  onClick={() => handleRemoveKeyword(r.id)}
+                                  className="opacity-0 group-hover:opacity-100 text-[var(--muted-fg)] hover:text-rose-400 transition-all leading-none"
+                                >
+                                  ×
+                                </button>
+                              </span>
+                            ))}
+                          </div>
+                        )}
+                        {isAdding && (
+                          <div className="px-4 pb-3 flex gap-2">
+                            <InlineKeywordInput
+                              inputRef={addKwInputRef}
+                              onConfirm={kw => handleAddKeywordToCategory(cat, kw)}
+                              onCancel={() => setAddingToCategory(null)}
+                              inputCls={inputCls}
+                            />
+                          </div>
+                        )}
+                      </div>
+                    )
+                  })}
+
+                  {/* Add keyword to new or existing category */}
+                  <div className="rounded-xl border border-[var(--border)] p-4 space-y-2">
+                    <p className="text-xs font-semibold uppercase tracking-wide text-[var(--muted-fg)] mb-3">
+                      {t('addKeyword')}
+                    </p>
+                    <form onSubmit={handleAddNewCategoryKeyword} className="space-y-2">
+                      <input
+                        value={newKeyword}
+                        onChange={e => setNewKeyword(e.target.value)}
+                        placeholder={t('keywordPlaceholder')}
+                        required
+                        className={`${inputCls} w-full`}
+                      />
+                      <div className="flex gap-2">
+                        <select
+                          value={selectedCategory}
+                          onChange={e => { setSelectedCategory(e.target.value); setNewCategory('') }}
+                          className={`${inputCls} flex-1`}
+                        >
+                          <option value="">{t('selectCategory')}</option>
+                          {allCategories.map(c => (
+                            <option key={c} value={c}>{c}</option>
+                          ))}
+                        </select>
+                        <span className="self-center text-xs text-[var(--muted-fg)]">{t('or')}</span>
+                        <input
+                          value={newCategory}
+                          onChange={e => { setNewCategory(e.target.value); setSelectedCategory('') }}
+                          placeholder={t('newCategoryPlaceholder')}
+                          className={`${inputCls} flex-1`}
+                        />
+                      </div>
+                      <button
+                        type="submit"
+                        disabled={!newKeyword.trim() || (!selectedCategory && !newCategory.trim())}
+                        className="w-full bg-[var(--accent)] text-[var(--accent-fg)] rounded-lg px-3 py-1.5 text-sm font-medium hover:opacity-90 transition-opacity disabled:opacity-40"
+                      >
+                        {t('add')}
+                      </button>
+                    </form>
+                  </div>
+                </div>
+              )}
+            </div>
+
+            {/* Footer: danger zone */}
+            <div className="px-5 py-3 border-t border-[var(--border)]">
+              {!resetConfirming ? (
+                <button
+                  onClick={() => setResetConfirming(true)}
+                  className="text-xs text-[var(--muted-fg)] hover:text-rose-400 transition-colors"
+                >
+                  {t('resetMonth')}
+                </button>
+              ) : (
+                <span className="flex items-center gap-2 text-xs">
+                  <span className="text-[var(--muted-fg)] flex-1">{t('resetMonthConfirm')}</span>
+                  <button
+                    onClick={handleReset}
+                    disabled={resetPending}
+                    className="text-rose-400 hover:text-rose-300 font-medium transition-colors"
+                  >
+                    {resetPending ? '…' : '✓'}
+                  </button>
+                  <button
+                    onClick={() => setResetConfirming(false)}
+                    className="text-[var(--muted-fg)] hover:text-[var(--fg)] transition-colors"
+                  >
+                    ✕
+                  </button>
+                </span>
+              )}
+            </div>
+          </div>
+        </div>
+      )}
+    </>
+  )
+}
+
+function InlineKeywordInput({
+  inputRef,
+  onConfirm,
+  onCancel,
+  inputCls,
+}: {
+  inputRef: React.RefObject<HTMLInputElement | null>
+  onConfirm: (kw: string) => void
+  onCancel: () => void
+  inputCls: string
+}) {
+  const [value, setValue] = useState('')
+
+  function commit() {
+    const trimmed = value.trim()
+    if (trimmed) onConfirm(trimmed)
+    else onCancel()
+  }
+
+  return (
+    <>
+      <input
+        ref={inputRef}
+        value={value}
+        onChange={e => setValue(e.target.value)}
+        onKeyDown={e => { if (e.key === 'Enter') { e.preventDefault(); commit() } if (e.key === 'Escape') onCancel() }}
+        placeholder="nueva palabra..."
+        className={`${inputCls} flex-1`}
+      />
+      <button
+        onClick={commit}
+        className="text-xs text-[var(--accent)] hover:opacity-80 transition-opacity px-2 py-1.5 font-medium"
+      >
+        OK
+      </button>
+      <button
+        onClick={onCancel}
+        className="text-xs text-[var(--muted-fg)] hover:text-[var(--fg)] transition-colors px-1 py-1.5"
+      >
+        ✕
+      </button>
+    </>
+  )
+}

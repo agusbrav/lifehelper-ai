@@ -82,7 +82,15 @@
     "addCard": "Add card",
     "cardName": "Card name",
     "removeCardConfirm": "Remove \"{name}\"? It will stop appearing in new months.",
-    "backToBudget": "Budget"
+    "backToBudget": "Budget",
+    "configTitle": "Settings",
+    "categoriesTitle": "Categories",
+    "categoriesHint": "Custom keywords override defaults. Adding a word to a category reassigns it.",
+    "addKeyword": "Add keyword",
+    "keywordPlaceholder": "keyword (e.g. uber)",
+    "selectCategory": "Existing category",
+    "newCategoryPlaceholder": "New category",
+    "or": "or"
   },
   "analytics": {
     "title": "Budget Analytics",

@@ -1,7 +1,11 @@
 import { CATEGORY_SEEDS } from './category-seeds'
 
-export function buildKeywordMap(historyMap: Record<string, string>): Record<string, string> {
-  return { ...CATEGORY_SEEDS, ...historyMap }
+export function buildKeywordMap(
+  historyMap: Record<string, string>,
+  userKeywords: Record<string, string> = {},
+): Record<string, string> {
+  // Priority: user-defined > history > seeds
+  return { ...CATEGORY_SEEDS, ...historyMap, ...userKeywords }
 }
 
 export function matchCategory(name: string, keywordMap: Record<string, string>): string | null {

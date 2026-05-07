@@ -3,6 +3,7 @@ import { useState, useMemo } from 'react'
 import { useTranslations } from 'next-intl'
 import { ExpenseRow } from './expense-row'
 import { AddExpenseRow } from './add-expense-row'
+import { BudgetConfigPanel } from './budget-config-panel'
 
 type Item = {
   id: string
@@ -20,6 +21,9 @@ type Item = {
   children: Item[]
 }
 
+type Card = { id: string; name: string }
+type KeywordRecord = { id: string; keyword: string; category: string }
+
 type Props = {
   items: Item[]
   monthId: string
@@ -29,6 +33,8 @@ type Props = {
   year: number
   month: number
   monthContext: 'current' | 'next' | 'past'
+  cards: Card[]
+  userKeywords: KeywordRecord[]
 }
 
 type SortCol = 'name' | 'category' | 'amount'
@@ -51,7 +57,7 @@ function SortArrow({ col, sortCol, sortDir }: { col: SortCol; sortCol: SortCol |
   return <span className="ml-0.5 text-[9px]">{sortDir === 'asc' ? '▲' : '▼'}</span>
 }
 
-export function ExpenseTable({ items, monthId, keywordMap, categories, year, month, monthContext }: Props) {
+export function ExpenseTable({ items, monthId, keywordMap, categories, year, month, monthContext, cards, userKeywords }: Props) {
   const t = useTranslations('budget')
 
   const [sortCol, setSortCol] = useState<SortCol | null>(null)
@@ -171,14 +177,17 @@ export function ExpenseTable({ items, monthId, keywordMap, categories, year, mon
             </>
           )}
 
-          {hasFilters && (
-            <button
-              onClick={() => { setFilterCats(new Set()); setFilterTypes(new Set()) }}
-              className="ml-auto text-xs text-[var(--muted-fg)] hover:text-rose-400 transition-colors"
-            >
-              {t('clearFilters')}
-            </button>
-          )}
+          <span className="ml-auto flex items-center gap-2">
+            {hasFilters && (
+              <button
+                onClick={() => { setFilterCats(new Set()); setFilterTypes(new Set()) }}
+                className="text-xs text-[var(--muted-fg)] hover:text-rose-400 transition-colors"
+              >
+                {t('clearFilters')}
+              </button>
+            )}
+            <BudgetConfigPanel year={year} month={month} cards={cards} userKeywords={userKeywords} />
+          </span>
         </div>
       )}
 

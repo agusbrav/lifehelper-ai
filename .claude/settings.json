@@ -1,0 +1,9 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(pnpm type-check)",
+      "Bash(npx tsc --noEmit *)",
+      "Bash(npx tsc --noEmit)"
+    ]
+  }
+}

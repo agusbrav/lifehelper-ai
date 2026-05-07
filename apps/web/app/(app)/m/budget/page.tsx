@@ -1,12 +1,11 @@
 import { cookies } from 'next/headers'
 import { redirect } from 'next/navigation'
 import { getSession } from '@lifehelper/core'
-import { getOrCreateMonth, fetchCategoryHistory, buildKeywordMap, knownCategories, getFirstMonth } from '@lifehelper/budget'
+import { getOrCreateMonth, fetchCategoryHistory, buildKeywordMap, knownCategories, getFirstMonth, getCardsForUser, getCategoryKeywords } from '@lifehelper/budget'
 import { getTranslations } from 'next-intl/server'
 import { MonthNav } from '@/components/budget/month-nav'
 import { SummaryBar } from '@/components/budget/summary-bar'
 import { ExpenseTable } from '@/components/budget/expense-table'
-import { ResetMonthButton } from '@/components/budget/reset-month-button'
 import Link from 'next/link'
 
 type Props = { searchParams: Promise<{ year?: string; month?: string }> }
@@ -43,13 +42,16 @@ export default async function BudgetPage({ searchParams }: Props) {
     }
   }
 
-  const [budgetMonth, historyMap, t] = await Promise.all([
+  const [budgetMonth, historyMap, t, cards, userKeywordRecords] = await Promise.all([
     getOrCreateMonth(session.user.id, year, month),
     fetchCategoryHistory(session.user.id),
     getTranslations('budget'),
+    getCardsForUser(session.user.id),
+    getCategoryKeywords(session.user.id),
   ])
   const items = budgetMonth?.items ?? []
-  const keywordMap = buildKeywordMap(historyMap)
+  const userKeywords = Object.fromEntries(userKeywordRecords.map(r => [r.keyword, r.category]))
+  const keywordMap = buildKeywordMap(historyMap, userKeywords)
   const categories = knownCategories(keywordMap)
 
   type DbItem = typeof items[number]
@@ -78,13 +80,6 @@ export default async function BudgetPage({ searchParams }: Props) {
           >
             {t('analyticsLink')}
           </Link>
-          <Link
-            href="/m/budget/settings"
-            className="text-sm text-[var(--muted-fg)] hover:text-[var(--fg)] transition-colors whitespace-nowrap"
-          >
-            {t('settingsLink')}
-          </Link>
-          <ResetMonthButton year={year} month={month} />
         </div>
       </div>
 
@@ -97,6 +92,8 @@ export default async function BudgetPage({ searchParams }: Props) {
         year={year}
         month={month}
         monthContext={monthContext}
+        cards={cards}
+        userKeywords={userKeywordRecords}
       />
     </div>
   )
