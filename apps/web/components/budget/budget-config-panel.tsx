@@ -2,13 +2,13 @@
 import { useState, useTransition, useRef } from 'react'
 import { useTranslations } from 'next-intl'
 import { useRouter } from 'next/navigation'
-import { addCardAction, removeCardAction, renameCardAction } from '@/app/(app)/m/budget/settings/actions'
+import { addCardAction, removeCardAction, renameCardAction, setCardCurrencyAction } from '@/app/(app)/m/budget/settings/actions'
 import { addCategoryKeywordAction, removeCategoryKeywordAction } from '@/app/(app)/m/budget/config/actions'
 import { resetMonthAction } from '@/app/(app)/m/budget/actions'
 import { RenameCardInput } from '@/app/(app)/m/budget/settings/rename-card-input'
 import { CATEGORY_SEEDS } from '@lifehelper/budget'
 
-type Card = { id: string; name: string }
+type Card = { id: string; name: string; currency: string }
 type KeywordRecord = { id: string; keyword: string; category: string }
 
 type Props = {
@@ -66,6 +66,11 @@ export function BudgetConfigPanel({ year, month, cards, userKeywords }: Props) {
   function handleRemoveCard(cardId: string, cardName: string) {
     if (!window.confirm(t('removeCardConfirm', { name: cardName }))) return
     startTransition(() => removeCardAction(cardId))
+  }
+
+  function handleToggleCurrency(cardId: string, current: string) {
+    const next = current === 'USD' ? 'ARS' : 'USD'
+    startTransition(() => setCardCurrencyAction(cardId, next as 'ARS' | 'USD'))
   }
 
   function handleAddKeywordToCategory(category: string, raw: string) {
@@ -213,12 +218,24 @@ export function BudgetConfigPanel({ year, month, cards, userKeywords }: Props) {
                                 </div>
                               </td>
                               <td className="py-2.5 pr-4 text-right">
-                                <button
-                                  onClick={() => handleRemoveCard(card.id, card.name)}
-                                  className="text-xs text-[var(--muted-fg)] hover:text-rose-400 transition-colors opacity-0 group-hover:opacity-100"
-                                >
-                                  {t('delete')}
-                                </button>
+                                <div className="flex items-center justify-end gap-2">
+                                  <button
+                                    onClick={() => handleToggleCurrency(card.id, card.currency)}
+                                    className={`text-xs px-2 py-0.5 rounded-full border font-medium transition-colors flex-shrink-0 ${
+                                      card.currency === 'USD'
+                                        ? 'bg-blue-500/20 text-blue-400 border-blue-500/30'
+                                        : 'bg-[var(--muted)] text-[var(--muted-fg)] border-[var(--border)] hover:text-[var(--fg)]'
+                                    }`}
+                                  >
+                                    {card.currency === 'USD' ? 'USD' : 'ARS'}
+                                  </button>
+                                  <button
+                                    onClick={() => handleRemoveCard(card.id, card.name)}
+                                    className="text-xs text-[var(--muted-fg)] hover:text-rose-400 transition-colors opacity-0 group-hover:opacity-100"
+                                  >
+                                    {t('delete')}
+                                  </button>
+                                </div>
                               </td>
                             </tr>
                           ))}

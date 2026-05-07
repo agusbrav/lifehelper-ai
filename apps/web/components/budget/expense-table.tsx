@@ -21,7 +21,7 @@ type Item = {
   children: Item[]
 }
 
-type Card = { id: string; name: string }
+type Card = { id: string; name: string; currency: string }
 type KeywordRecord = { id: string; keyword: string; category: string }
 
 type Props = {
