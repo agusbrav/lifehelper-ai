@@ -84,6 +84,7 @@
     "removeCardConfirm": "¿Eliminar \"{name}\"? Dejará de aparecer en nuevos meses.",
     "backToBudget": "Presupuesto",
     "configTitle": "Configuración",
+    "generalTab": "General",
     "categoriesTitle": "Categorías",
     "categoriesHint": "Las palabras clave propias tienen prioridad sobre las predeterminadas. Asignar una palabra a una categoría la reasigna.",
     "addKeyword": "Agregar palabra clave",

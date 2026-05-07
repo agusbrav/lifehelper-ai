@@ -84,6 +84,7 @@
     "removeCardConfirm": "Remove \"{name}\"? It will stop appearing in new months.",
     "backToBudget": "Budget",
     "configTitle": "Settings",
+    "generalTab": "General",
     "categoriesTitle": "Categories",
     "categoriesHint": "Custom keywords override defaults. Adding a word to a category reassigns it.",
     "addKeyword": "Add keyword",

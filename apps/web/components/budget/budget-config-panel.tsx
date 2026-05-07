@@ -18,7 +18,7 @@ type Props = {
   userKeywords: KeywordRecord[]
 }
 
-type Tab = 'tarjetas' | 'categorias'
+type Tab = 'general' | 'tarjetas' | 'categorias'
 
 export function BudgetConfigPanel({ year, month, cards, userKeywords }: Props) {
   const t = useTranslations('budget')
@@ -39,13 +39,14 @@ export function BudgetConfigPanel({ year, month, cards, userKeywords }: Props) {
   const [addingToCategory, setAddingToCategory] = useState<string | null>(null)
   const addKwInputRef = useRef<HTMLInputElement>(null)
 
-  // Derived: all known categories (seeds + user)
+  // Derived: all known categories (seeds + user), excluding internal system category
   const seedCategories = [...new Set(Object.values(CATEGORY_SEEDS))].sort()
-  const userCategories = [...new Set(userKeywords.map(r => r.category))].sort()
+  const visibleKeywords = userKeywords.filter(r => r.category !== 'system')
+  const userCategories = [...new Set(visibleKeywords.map(r => r.category))].sort()
   const allCategories = [...new Set([...seedCategories, ...userCategories])].sort()
 
   // Group user keywords by category
-  const byCategory = userKeywords.reduce<Record<string, KeywordRecord[]>>((acc, r) => {
+  const byCategory = visibleKeywords.reduce<Record<string, KeywordRecord[]>>((acc, r) => {
     ;(acc[r.category] ??= []).push(r)
     return acc
   }, {})
@@ -68,7 +69,7 @@ export function BudgetConfigPanel({ year, month, cards, userKeywords }: Props) {
   function handleAddKeywordToCategory(category: string, raw: string) {
     const keywords = raw.split(',').map(k => k.trim()).filter(Boolean)
     if (!keywords.length || !category) return
-    startTransition(() => Promise.all(keywords.map(kw => addCategoryKeywordAction(kw, category))))
+    startTransition(async () => { await Promise.all(keywords.map(kw => addCategoryKeywordAction(kw, category))) })
     setAddingToCategory(null)
   }
 
@@ -77,7 +78,7 @@ export function BudgetConfigPanel({ year, month, cards, userKeywords }: Props) {
     const keywords = newKeyword.split(',').map(k => k.trim()).filter(Boolean)
     const cat = (selectedCategory || newCategory).trim()
     if (!keywords.length || !cat) return
-    startTransition(() => Promise.all(keywords.map(kw => addCategoryKeywordAction(kw, cat))))
+    startTransition(async () => { await Promise.all(keywords.map(kw => addCategoryKeywordAction(kw, cat))) })
     setNewKeyword('')
     setNewCategory('')
     setSelectedCategory('')
@@ -142,6 +143,9 @@ export function BudgetConfigPanel({ year, month, cards, userKeywords }: Props) {
 
             {/* Tabs */}
             <div className="flex gap-1.5 px-5 pt-3">
+              <button className={tabCls(tab === 'general')} onClick={() => { setTab('general'); setResetConfirming(false) }}>
+                {t('generalTab')}
+              </button>
               <button className={tabCls(tab === 'tarjetas')} onClick={() => setTab('tarjetas')}>
                 {t('settingsTitle')}
               </button>
@@ -152,6 +156,40 @@ export function BudgetConfigPanel({ year, month, cards, userKeywords }: Props) {
 
             {/* Content */}
             <div className="overflow-y-auto flex-1 px-5 py-4">
+
+              {/* ── General tab ── */}
+              {tab === 'general' && (
+                <div className="space-y-4">
+                  <div className="rounded-xl border border-[var(--border)] p-4">
+                    <p className="text-sm font-medium text-[var(--fg)] mb-1">{t('resetMonth')}</p>
+                    <p className="text-xs text-[var(--muted-fg)] mb-3">{t('resetMonthConfirm')}</p>
+                    {!resetConfirming ? (
+                      <button
+                        onClick={() => setResetConfirming(true)}
+                        className="text-xs text-rose-400 hover:text-rose-300 border border-rose-400/30 rounded-lg px-3 py-1.5 transition-colors"
+                      >
+                        {t('resetMonth')}
+                      </button>
+                    ) : (
+                      <span className="flex items-center gap-2 text-xs">
+                        <button
+                          onClick={handleReset}
+                          disabled={resetPending}
+                          className="text-rose-400 hover:text-rose-300 border border-rose-400/30 rounded-lg px-3 py-1.5 font-medium transition-colors"
+                        >
+                          {resetPending ? '…' : t('resetMonth') + ' ✓'}
+                        </button>
+                        <button
+                          onClick={() => setResetConfirming(false)}
+                          className="text-[var(--muted-fg)] hover:text-[var(--fg)] transition-colors"
+                        >
+                          {t('cancel')}
+                        </button>
+                      </span>
+                    )}
+                  </div>
+                </div>
+              )}
 
               {/* ── Tarjetas tab ── */}
               {tab === 'tarjetas' && (
@@ -306,34 +344,6 @@ export function BudgetConfigPanel({ year, month, cards, userKeywords }: Props) {
               )}
             </div>
 
-            {/* Footer: danger zone */}
-            <div className="px-5 py-3 border-t border-[var(--border)]">
-              {!resetConfirming ? (
-                <button
-                  onClick={() => setResetConfirming(true)}
-                  className="text-xs text-[var(--muted-fg)] hover:text-rose-400 transition-colors"
-                >
-                  {t('resetMonth')}
-                </button>
-              ) : (
-                <span className="flex items-center gap-2 text-xs">
-                  <span className="text-[var(--muted-fg)] flex-1">{t('resetMonthConfirm')}</span>
-                  <button
-                    onClick={handleReset}
-                    disabled={resetPending}
-                    className="text-rose-400 hover:text-rose-300 font-medium transition-colors"
-                  >
-                    {resetPending ? '…' : '✓'}
-                  </button>
-                  <button
-                    onClick={() => setResetConfirming(false)}
-                    className="text-[var(--muted-fg)] hover:text-[var(--fg)] transition-colors"
-                  >
-                    ✕
-                  </button>
-                </span>
-              )}
-            </div>
           </div>
         </div>
       )}
