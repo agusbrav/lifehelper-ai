@@ -34,7 +34,13 @@ export function SummaryBar({ paidArsCents, pendingArsCents, paidUsdCents, pendin
         <>
           <span className="w-px h-3.5 bg-[var(--border)] self-center" />
           <span className="text-[var(--muted-fg)]">
-            {t('totalUSD')} <strong className="text-blue-400">{fmtUsd(paidUsdCents + pendingUsdCents)}</strong>
+            {t('paid')} <strong className="text-emerald-400">{fmtUsd(paidUsdCents)}</strong>
+          </span>
+          <span className="text-[var(--muted-fg)]">
+            {t('pending')} <strong className="text-orange-300">{fmtUsd(pendingUsdCents)}</strong>
+          </span>
+          <span className="text-[var(--muted-fg)]">
+            {t('total')} <strong className="text-blue-400">{fmtUsd(paidUsdCents + pendingUsdCents)}</strong>
           </span>
         </>
       )}
