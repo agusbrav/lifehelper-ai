@@ -7,10 +7,13 @@ import {
 } from '../analytics'
 
 type ItemSlim = {
+  id?: string
   name: string
   category: string | null
   amount: number | null
   recurring: boolean
+  itemType?: string
+  isCard?: boolean
   installmentTotal: number | null
   installmentNumber: number | null
   installmentGroupId: string | null
@@ -32,8 +35,8 @@ describe('computeCategoryTotals', () => {
       { name: 'Unknown', category: null, amount: 10000, recurring: false, installmentTotal: null, installmentNumber: null, installmentGroupId: null, parentId: null },
     ]
     const result = computeCategoryTotals(items)
-    expect(result.find(c => c.category === 'Housing')?.total).toBe(120000)
-    expect(result.find(c => c.category === 'Transport')?.total).toBe(30000)
+    expect(result.find(c => c.category === 'housing')?.total).toBe(120000)
+    expect(result.find(c => c.category === 'transport')?.total).toBe(30000)
     expect(result.find(c => c.category === null)?.total).toBe(10000)
   })
 
@@ -57,7 +60,7 @@ describe('computeRollingAverage', () => {
       { year: 2025, month: 3, items: [{ name: 'Rent', category: 'Housing', amount: 120000, recurring: true, installmentTotal: null, installmentNumber: null, installmentGroupId: null, parentId: null }] },
     ]
     const result = computeRollingAverage(months, 3)
-    expect(result.find(c => c.category === 'Housing')?.avg).toBe(110000)
+    expect(result.find(c => c.category === 'housing')?.avg).toBe(110000)
   })
 
   it('uses only the last N months when more are provided', () => {
@@ -69,7 +72,7 @@ describe('computeRollingAverage', () => {
     ]
     // Only last 3: 100k, 110k, 120k → avg 110k (month 1 excluded)
     const result = computeRollingAverage(months, 3)
-    expect(result.find(c => c.category === 'Housing')?.avg).toBe(110000)
+    expect(result.find(c => c.category === 'housing')?.avg).toBe(110000)
   })
 })
 
