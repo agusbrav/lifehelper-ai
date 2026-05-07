@@ -4,6 +4,7 @@ import { getSession } from '@lifehelper/core'
 import {
   getItemsForAnalytics,
   computeCategoryTotals,
+  computeUsdCategoryTotals,
   computeTypeTotals,
   computeRollingAverage,
   computeInflationAlerts,
@@ -78,6 +79,10 @@ export default async function BudgetAnalyticsPage({
   const inflationAlerts = computeInflationAlerts(currentItems, threeMonthsAgoItems)
   const installments = computeInstallmentOverview(currentItems)
 
+  const usdCategoryTotals = computeUsdCategoryTotals(currentItems)
+  const usdAvg3mo = computeRollingAverage(last6, 3, computeUsdCategoryTotals)
+  const usdAvg6mo = computeRollingAverage(last6, 6, computeUsdCategoryTotals)
+
   const monthsForChart = availableMonths
     .filter(m => m.year < selectedYear || (m.year === selectedYear && m.month <= selectedMonth))
     .slice(0, 6)
@@ -86,6 +91,11 @@ export default async function BudgetAnalyticsPage({
   const monthlyTotals = monthsForChart.map(m => ({
     label: new Date(m.year, m.month - 1, 1).toLocaleString(locale, { month: 'short' }),
     totalCents: computeCategoryTotals(monthMap.get(`${m.year}-${m.month}`) ?? []).reduce((sum, c) => sum + c.total, 0),
+  }))
+
+  const usdMonthlyTotals = monthsForChart.map(m => ({
+    label: new Date(m.year, m.month - 1, 1).toLocaleString(locale, { month: 'short' }),
+    totalCents: computeUsdCategoryTotals(monthMap.get(`${m.year}-${m.month}`) ?? []).reduce((sum, c) => sum + c.total, 0),
   }))
 
   return (
@@ -111,6 +121,10 @@ export default async function BudgetAnalyticsPage({
         inflationAlerts={inflationAlerts}
         installments={installments}
         monthlyTotals={monthlyTotals}
+        usdCategoryTotals={usdCategoryTotals}
+        usdAvg3mo={usdAvg3mo}
+        usdAvg6mo={usdAvg6mo}
+        usdMonthlyTotals={usdMonthlyTotals}
       />
     </div>
   )
