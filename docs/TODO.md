@@ -13,6 +13,11 @@ Format: `- [ ] description` — check off when done, delete when shipped.
 - [ ] Custom tags alongside categories — e.g. link a food expense to a specific trip and filter by it
 - [ ] Link budget expenses to other modules (trip planner, shared expenses)
 
+### AI / Chat Integration
+- [ ] Hook AI prompts in the chat box to interact with the expenses table (add, edit, query expenses via natural language)
+- [ ] Accept image and PDF inputs in the chat box — analyze them (e.g. receipts, bank statements) and extract expenses
+- [ ] Show a preview of extracted expenses before committing them to the table
+
 ### UX / Polish
 - [ ] Audit and clean up any dead or duplicated code across the budget module
 
