@@ -3,6 +3,7 @@ type ItemSlim = {
   name: string
   category: string | null
   amount: number | null
+  currency: string
   recurring: boolean
   itemType: string
   isCard: boolean
@@ -45,9 +46,11 @@ export type InstallmentSummary = {
   totalRemaining: number
 }
 
+// ARS top-level expenses only (no card containers, no children, no USD)
 export function computeCategoryTotals(items: ItemSlim[]): CategoryTotal[] {
   const map = new Map<string, number>()
   for (const item of items) {
+    if ((item.currency ?? 'ARS') === 'USD') continue
     if (item.parentId !== null || item.amount === null || item.isCard) continue
     const key = item.category?.toLowerCase() ?? '__null__'
     map.set(key, (map.get(key) ?? 0) + item.amount)
@@ -58,11 +61,31 @@ export function computeCategoryTotals(items: ItemSlim[]): CategoryTotal[] {
   }))
 }
 
-export function computeRollingAverage(months: MonthData[], windowSize: number): RollingAvgResult[] {
+// USD items only — includes card charges (parentId not null), excludes card containers
+export function computeUsdCategoryTotals(items: ItemSlim[]): CategoryTotal[] {
+  const map = new Map<string, number>()
+  for (const item of items) {
+    if (item.currency !== 'USD') continue
+    if (item.isCard) continue
+    if (item.amount === null) continue
+    const key = item.category?.toLowerCase() ?? '__null__'
+    map.set(key, (map.get(key) ?? 0) + item.amount)
+  }
+  return Array.from(map.entries()).map(([key, total]) => ({
+    category: key === '__null__' ? null : key,
+    total,
+  }))
+}
+
+export function computeRollingAverage(
+  months: MonthData[],
+  windowSize: number,
+  totalize: (items: ItemSlim[]) => CategoryTotal[] = computeCategoryTotals,
+): RollingAvgResult[] {
   const recent = months.slice(-windowSize)
   const map = new Map<string, number[]>()
   for (const m of recent) {
-    for (const { category, total } of computeCategoryTotals(m.items)) {
+    for (const { category, total } of totalize(m.items)) {
       const key = category ?? '__null__'
       if (!map.has(key)) map.set(key, [])
       map.get(key)!.push(total)
@@ -105,6 +128,7 @@ export type TypeTotal = {
 
 const TYPE_ORDER: TypeTotal['type'][] = ['recurring', 'subscription', 'installment', 'card', 'one-time']
 
+// ARS items only — excludes USD card charges and USD top-level items
 export function computeTypeTotals(items: ItemSlim[]): TypeTotal[] {
   const idIsCard = new Map(
     items.filter(i => i.parentId === null).map(i => [i.id, i.isCard]),
@@ -113,13 +137,14 @@ export function computeTypeTotals(items: ItemSlim[]): TypeTotal[] {
   const map = new Map<string, number>()
   for (const item of items) {
     if (item.amount === null) continue
+    if ((item.currency ?? 'ARS') === 'USD') continue
 
     let type: TypeTotal['type']
     if (item.parentId !== null) {
       if (!idIsCard.get(item.parentId)) continue
       type = 'card'
     } else {
-      if (item.isCard) continue // card container: amount is sum of charges, counted via children above
+      if (item.isCard) continue
       if (item.installmentTotal !== null) { type = 'installment' }
       else if (item.itemType === 'subscription') { type = 'subscription' }
       else if (item.itemType === 'recurring') { type = 'recurring' }
