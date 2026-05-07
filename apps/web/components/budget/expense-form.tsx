@@ -32,7 +32,6 @@ type Props = {
   withInstallment?: boolean
   theme?: 'default' | 'purple'
   namePlaceholder?: string
-  nameAutoComplete?: string
   onDone: () => void
 }
 
@@ -45,7 +44,6 @@ export function ExpenseForm({
   withInstallment = false,
   theme = 'default',
   namePlaceholder,
-  nameAutoComplete,
   onDone,
 }: Props) {
   const t = useTranslations('budget')
@@ -135,7 +133,7 @@ export function ExpenseForm({
         required
         placeholder={namePlaceholder ?? t('name')}
         autoFocus
-        autoComplete={nameAutoComplete}
+        autoComplete="off"
         onChange={handleNameChange}
         className={`${inputCls} flex-[2_1_8rem]`}
       />

@@ -375,7 +375,6 @@ export function ExpenseRow({ item, depth = 0, monthId, keywordMap, categories, y
               withInstallment
               theme="purple"
               namePlaceholder={t('chargeDescription')}
-              nameAutoComplete="off"
               onDone={() => setAddingCharge(false)}
             />
           </td>
