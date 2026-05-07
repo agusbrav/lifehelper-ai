@@ -17,6 +17,7 @@ const PALETTE = [
 
 const TYPE_COLORS: Record<string, string> = {
   recurring: '#3b82f6',
+  subscription: '#ec4899',
   installment: '#f59e0b',
   card: '#a855f7',
   'one-time': '#64748b',
@@ -89,6 +90,7 @@ export function AnalyticsDashboard({
 
   const typeLabels: Record<string, string> = {
     recurring: tBudget('recurringBadge'),
+    subscription: tBudget('subscriptionBadge'),
     installment: tBudget('installmentBadge'),
     card: tBudget('addChargeBadge'),
     'one-time': tBudget('oneTimeBadge'),

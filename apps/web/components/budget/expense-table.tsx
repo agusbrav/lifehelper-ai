@@ -12,6 +12,7 @@ type Item = {
   amountCarried: boolean
   paid: boolean
   recurring: boolean
+  itemType: string
   installmentTotal: number | null
   installmentNumber: number | null
   parentId: string | null
@@ -32,11 +33,10 @@ type Props = {
 type SortCol = 'name' | 'category' | 'amount'
 type SortDir = 'asc' | 'desc'
 
-function itemType(item: Item): string {
+function resolvedType(item: Item): string {
   if (item.category === 'tarjeta') return 'card'
   if (item.installmentTotal !== null) return 'installment'
-  if (item.recurring) return 'recurring'
-  return 'one-time'
+  return item.itemType // 'recurring' | 'subscription' | 'one_time'
 }
 
 function effectiveAmount(item: Item): number {
@@ -95,7 +95,7 @@ export function ExpenseTable({ items, monthId, keywordMap, categories, year, mon
     if (filterCats.size > 0)
       result = result.filter(i => filterCats.has(i.category ?? ''))
     if (filterTypes.size > 0)
-      result = result.filter(i => filterTypes.has(itemType(i)))
+      result = result.filter(i => filterTypes.has(resolvedType(i)))
 
     if (sortCol) {
       result.sort((a, b) => {
@@ -118,10 +118,11 @@ export function ExpenseTable({ items, monthId, keywordMap, categories, year, mon
   const inactiveCls = 'bg-transparent text-[var(--muted-fg)] border-[var(--border)] hover:text-[var(--fg)]'
 
   const typeFilters = [
-    { key: 'recurring',    label: t('recurringBadge'),  activeCls: 'bg-blue-500/15   text-blue-400   border-blue-500/30'   },
-    { key: 'installment',  label: t('installmentBadge'), activeCls: 'bg-amber-500/15  text-amber-400  border-amber-500/30'  },
-    { key: 'card',         label: t('addChargeBadge'),  activeCls: 'bg-purple-500/15 text-purple-400 border-purple-500/30' },
-    { key: 'one-time',     label: t('oneTimeBadge'),    activeCls: 'bg-[var(--muted-fg)]/10 text-[var(--muted-fg)] border-[var(--muted-fg)]/20' },
+    { key: 'recurring',     label: t('recurringBadge'),     activeCls: 'bg-blue-500/15   text-blue-400   border-blue-500/30'   },
+    { key: 'subscription',  label: t('subscriptionBadge'),  activeCls: 'bg-pink-500/15   text-pink-400   border-pink-500/30'   },
+    { key: 'installment',   label: t('installmentBadge'),   activeCls: 'bg-amber-500/15  text-amber-400  border-amber-500/30'  },
+    { key: 'card',          label: t('addChargeBadge'),     activeCls: 'bg-purple-500/15 text-purple-400 border-purple-500/30' },
+    { key: 'one_time',      label: t('oneTimeBadge'),       activeCls: 'bg-[var(--muted-fg)]/10 text-[var(--muted-fg)] border-[var(--muted-fg)]/20' },
   ]
 
   return (

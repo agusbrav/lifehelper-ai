@@ -21,6 +21,7 @@ function carryItem(item: SourceItem, gap: number): CarryItem {
     amount: item.amount,
     amountCarried: item.amount !== null,
     recurring: item.recurring,
+    itemType: item.itemType,
     installmentTotal: isLastPayment ? null : item.installmentTotal,
     installmentNumber: isLastPayment ? null : nextNumber,
     installmentGroupId: isLastPayment ? null : item.installmentGroupId,

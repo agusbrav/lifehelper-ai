@@ -15,6 +15,7 @@ type Item = {
   amountCarried: boolean
   paid: boolean
   recurring: boolean
+  itemType: string
   installmentTotal: number | null
   installmentNumber: number | null
   parentId: string | null
@@ -63,16 +64,18 @@ export function ExpenseRow({ item, depth = 0, monthId, keywordMap, categories, y
     ? 'bg-purple-400'
     : item.installmentTotal !== null
       ? 'bg-amber-400'
-      : item.recurring
-        ? 'bg-blue-400'
-        : 'bg-[var(--muted-fg)] opacity-40'
+      : item.itemType === 'subscription'
+        ? 'bg-pink-400'
+        : item.itemType === 'recurring'
+          ? 'bg-blue-400'
+          : 'bg-[var(--muted-fg)] opacity-40'
 
   const displayName =
     item.installmentTotal !== null && item.installmentNumber !== null
       ? `${item.name} (${item.installmentNumber}/${item.installmentTotal})`
       : item.name
 
-  const showInflationBtn = monthContext !== 'past' && item.recurring && !isCard && item.amount !== null
+  const showInflationBtn = monthContext !== 'past' && (item.itemType === 'recurring' || item.itemType === 'subscription') && !isCard && item.amount !== null
 
   const inflationCurrentAmount = item.amount ?? 0
   const inflationNumVal = parseFloat(inflationValue) || 0
@@ -123,7 +126,7 @@ export function ExpenseRow({ item, depth = 0, monthId, keywordMap, categories, y
     const fd = new FormData(e.currentTarget)
     fd.set('monthId', monthId)
     fd.set('parentId', item.id)
-    fd.set('recurring', chargeRecurring ? 'true' : 'false')
+    fd.set('itemType', chargeRecurring ? 'recurring' : 'one_time')
     e.currentTarget.reset()
     startTransition(async () => {
       await addExpenseAction(fd)
@@ -164,12 +167,17 @@ export function ExpenseRow({ item, depth = 0, monthId, keywordMap, categories, y
                 {t('installmentBadge')}
               </span>
             )}
-            {!isCard && item.installmentTotal === null && item.recurring && !isSubItem && (
+            {!isCard && item.installmentTotal === null && item.itemType === 'recurring' && !isSubItem && (
               <span className="text-xs px-1.5 py-0.5 rounded-full bg-blue-500/15 text-blue-400 font-medium flex-shrink-0">
                 {t('recurringBadge')}
               </span>
             )}
-            {!isCard && item.installmentTotal === null && !item.recurring && !isSubItem && (
+            {!isCard && item.installmentTotal === null && item.itemType === 'subscription' && !isSubItem && (
+              <span className="text-xs px-1.5 py-0.5 rounded-full bg-pink-500/15 text-pink-400 font-medium flex-shrink-0">
+                {t('subscriptionBadge')}
+              </span>
+            )}
+            {!isCard && item.installmentTotal === null && item.itemType === 'one_time' && !isSubItem && (
               <span className="text-xs px-1.5 py-0.5 rounded-full bg-[var(--muted-fg)]/15 text-[var(--muted-fg)] font-medium flex-shrink-0">
                 {t('oneTimeBadge')}
               </span>

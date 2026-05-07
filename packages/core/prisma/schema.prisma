@@ -115,6 +115,7 @@ model BudgetItem {
   paid               Boolean      @default(false)
   paidAt             DateTime?
   recurring          Boolean      @default(false)
+  itemType           String       @default("one_time")
   installmentTotal   Int?
   installmentNumber  Int?
   installmentGroupId String?

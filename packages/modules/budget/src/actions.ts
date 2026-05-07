@@ -4,13 +4,13 @@ import { assertOwnsMonth, assertOwnsItem } from './ownership'
 import { computeCarryItems } from './month-logic'
 
 const DEFAULT_SEED = [
-  { name: 'Alquiler', category: 'vivienda', recurring: true },
-  { name: 'Expensas', category: 'vivienda', recurring: true },
-  { name: 'Cochera', category: 'vivienda', recurring: true },
-  { name: 'Luz', category: 'servicios', recurring: true },
-  { name: 'Internet', category: 'servicios', recurring: true },
-  { name: 'Tarjeta de crédito (Visa)', category: 'tarjeta', recurring: true },
-  { name: 'Tarjeta de crédito (American Express)', category: 'tarjeta', recurring: true },
+  { name: 'Alquiler', category: 'vivienda', recurring: true, itemType: 'recurring' },
+  { name: 'Expensas', category: 'vivienda', recurring: true, itemType: 'recurring' },
+  { name: 'Cochera', category: 'vivienda', recurring: true, itemType: 'recurring' },
+  { name: 'Luz', category: 'servicios', recurring: true, itemType: 'recurring' },
+  { name: 'Internet', category: 'servicios', recurring: true, itemType: 'subscription' },
+  { name: 'Tarjeta de crédito (Visa)', category: 'tarjeta', recurring: true, itemType: 'recurring' },
+  { name: 'Tarjeta de crédito (American Express)', category: 'tarjeta', recurring: true, itemType: 'recurring' },
 ] as const
 
 export async function getOrCreateMonth(userId: string, year: number, month: number) {
@@ -62,6 +62,7 @@ export async function getOrCreateMonth(userId: string, year: number, month: numb
         category: i.category,
         amount: i.amount,
         recurring: i.recurring,
+        itemType: i.itemType,
         installmentTotal: i.installmentTotal,
         installmentNumber: i.installmentNumber,
         installmentGroupId: i.installmentGroupId,
@@ -70,6 +71,7 @@ export async function getOrCreateMonth(userId: string, year: number, month: numb
           category: c.category,
           amount: c.amount,
           recurring: c.recurring,
+          itemType: c.itemType,
           installmentTotal: c.installmentTotal,
           installmentNumber: c.installmentNumber,
           installmentGroupId: c.installmentGroupId,
@@ -89,6 +91,7 @@ export async function getOrCreateMonth(userId: string, year: number, month: numb
           amount: item.amount,
           amountCarried: item.amountCarried,
           recurring: item.recurring,
+          itemType: item.itemType,
           installmentTotal: item.installmentTotal,
           installmentNumber: item.installmentNumber,
           installmentGroupId: item.installmentGroupId,
@@ -105,6 +108,7 @@ export async function getOrCreateMonth(userId: string, year: number, month: numb
             amount: child.amount,
             amountCarried: child.amountCarried,
             recurring: child.recurring,
+            itemType: child.itemType,
             installmentTotal: child.installmentTotal,
             installmentNumber: child.installmentNumber,
             installmentGroupId: child.installmentGroupId,
@@ -157,6 +161,7 @@ type AddExpenseInput = {
   category?: string
   amount?: number
   recurring?: boolean
+  itemType?: string
   parentId?: string
 }
 
@@ -165,6 +170,7 @@ type CarryableItem = {
   category: string | null
   amount: number | null
   recurring: boolean
+  itemType: string
   installmentTotal: number | null
   installmentNumber: number | null
   installmentGroupId: string | null
@@ -222,6 +228,7 @@ async function propagateToNextMonth(userId: string, monthId: string, item: Carry
       amount: carried.amount,
       amountCarried: carried.amountCarried,
       recurring: carried.recurring,
+      itemType: carried.itemType,
       installmentTotal: carried.installmentTotal,
       installmentNumber: carried.installmentNumber,
       installmentGroupId: carried.installmentGroupId,
@@ -231,6 +238,8 @@ async function propagateToNextMonth(userId: string, monthId: string, item: Carry
 
 export async function addExpense(input: AddExpenseInput) {
   await assertOwnsMonth(input.userId, input.monthId)
+  const itemType = input.itemType ?? 'one_time'
+  const recurring = input.recurring ?? (itemType === 'recurring' || itemType === 'subscription')
   const item = await db.budgetItem.create({
     data: {
       monthId: input.monthId,
@@ -239,11 +248,12 @@ export async function addExpense(input: AddExpenseInput) {
       name: input.name,
       category: input.category ?? null,
       amount: input.amount ?? null,
-      recurring: input.recurring ?? false,
+      recurring,
+      itemType,
     },
   })
   if (item.recurring) {
-    await propagateToNextMonth(input.userId, input.monthId, item)
+    await propagateToNextMonth(input.userId, input.monthId, { ...item, itemType: item.itemType })
   }
   return item
 }
@@ -348,6 +358,7 @@ export async function getItemsForAnalytics(userId: string) {
       category: true,
       amount: true,
       recurring: true,
+      itemType: true,
       installmentTotal: true,
       installmentNumber: true,
       installmentGroupId: true,

@@ -29,7 +29,7 @@ function capitalize(s: string) {
 export function AddExpenseRow({ monthId, keywordMap, categories, cards }: Props) {
   const t = useTranslations('budget')
   const [mode, setMode] = useState<'idle' | 'expense' | 'installment'>('idle')
-  const [recurring, setRecurring] = useState(false)
+  const [itemType, setItemType] = useState<'one_time' | 'recurring' | 'subscription'>('one_time')
   const [category, setCategory] = useState('')
   const [cardId, setCardId] = useState('')
   const categoryRef = useRef('')
@@ -65,14 +65,14 @@ export function AddExpenseRow({ monthId, keywordMap, categories, cards }: Props)
     e.preventDefault()
     const fd = new FormData(e.currentTarget)
     fd.set('monthId', monthId)
-    fd.set('recurring', recurring ? 'true' : 'false')
+    fd.set('itemType', itemType)
     fd.set('category', category)
     startTransition(async () => {
       if (mode === 'expense') await addExpenseAction(fd)
       else await addInstallmentAction(fd)
       formRef.current?.reset()
       setMode('idle')
-      setRecurring(false)
+      setItemType('one_time')
       setCategory('')
       setCardId('')
       categoryRef.current = ''
@@ -82,7 +82,7 @@ export function AddExpenseRow({ monthId, keywordMap, categories, cards }: Props)
 
   function handleCancel() {
     setMode('idle')
-    setRecurring(false)
+    setItemType('one_time')
     setCategory('')
     setCardId('')
     categoryRef.current = ''
@@ -149,15 +149,22 @@ export function AddExpenseRow({ monthId, keywordMap, categories, cards }: Props)
                 placeholder={t('amount')}
                 className={`${inputCls} w-24 flex-shrink-0`}
               />
-              <label className="flex items-center gap-1.5 text-sm text-[var(--muted-fg)] cursor-pointer select-none flex-shrink-0">
-                <input
-                  type="checkbox"
-                  checked={recurring}
-                  onChange={e => setRecurring(e.target.checked)}
-                  className="accent-[var(--accent)]"
-                />
-                {t('recurring')}
-              </label>
+              <div className="inline-flex rounded-lg border border-[var(--border)] overflow-hidden text-xs flex-shrink-0">
+                {(['one_time', 'recurring', 'subscription'] as const).map(type => (
+                  <button
+                    key={type}
+                    type="button"
+                    onClick={() => setItemType(type)}
+                    className={`px-2.5 py-1.5 font-medium transition-colors border-l border-[var(--border)] first:border-l-0 ${
+                      itemType === type
+                        ? 'bg-[var(--accent)] text-[var(--accent-fg)]'
+                        : 'text-[var(--muted-fg)] hover:bg-[var(--muted)]'
+                    }`}
+                  >
+                    {t(`${type}Badge` as Parameters<typeof t>[0])}
+                  </button>
+                ))}
+              </div>
             </>
           )}
 

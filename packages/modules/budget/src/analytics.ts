@@ -4,6 +4,7 @@ type ItemSlim = {
   category: string | null
   amount: number | null
   recurring: boolean
+  itemType: string
   installmentTotal: number | null
   installmentNumber: number | null
   installmentGroupId: string | null
@@ -97,11 +98,11 @@ export function computeInflationAlerts(
 }
 
 export type TypeTotal = {
-  type: 'recurring' | 'installment' | 'card' | 'one-time'
+  type: 'recurring' | 'subscription' | 'installment' | 'card' | 'one-time'
   total: number
 }
 
-const TYPE_ORDER: TypeTotal['type'][] = ['recurring', 'installment', 'card', 'one-time']
+const TYPE_ORDER: TypeTotal['type'][] = ['recurring', 'subscription', 'installment', 'card', 'one-time']
 
 export function computeTypeTotals(items: ItemSlim[]): TypeTotal[] {
   // Build id→category map so card charges (children) can resolve their parent's type
@@ -120,9 +121,10 @@ export function computeTypeTotals(items: ItemSlim[]): TypeTotal[] {
       type = 'card'
     } else {
       if (item.category === 'tarjeta') continue // container has no own amount
-      type = item.installmentTotal !== null ? 'installment'
-           : item.recurring ? 'recurring'
-           : 'one-time'
+      if (item.installmentTotal !== null) { type = 'installment' }
+      else if (item.itemType === 'subscription') { type = 'subscription' }
+      else if (item.itemType === 'recurring') { type = 'recurring' }
+      else { type = 'one-time' }
     }
     map.set(type, (map.get(type) ?? 0) + item.amount)
   }

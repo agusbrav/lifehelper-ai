@@ -17,11 +17,12 @@ export async function addExpenseAction(formData: FormData) {
   const monthId = formData.get('monthId') as string
   const name = formData.get('name') as string
   const category = (formData.get('category') as string) || undefined
-  const recurring = formData.get('recurring') === 'true'
+  const itemType = (formData.get('itemType') as string) || 'one_time'
+  const recurring = itemType === 'recurring' || itemType === 'subscription'
   const parentId = (formData.get('parentId') as string) || undefined
   const rawAmount = formData.get('amount') as string
   const amount = rawAmount ? Math.round(parseFloat(rawAmount) * 100) : undefined
-  await addExpense({ userId, monthId, name, category, recurring, parentId, amount })
+  await addExpense({ userId, monthId, name, category, recurring, itemType, parentId, amount })
   revalidatePath('/m/budget')
 }
 
