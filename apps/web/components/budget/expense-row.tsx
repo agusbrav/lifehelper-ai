@@ -17,6 +17,7 @@ type Item = {
   recurring: boolean
   itemType: string
   isCard: boolean
+  currency: string
   installmentTotal: number | null
   installmentNumber: number | null
   parentId: string | null
@@ -37,8 +38,12 @@ type Props = {
 export function ExpenseRow({ item, depth = 0, monthId, keywordMap, categories, year, month, monthContext }: Props) {
   const t = useTranslations('budget')
   const format = useFormatter()
-  const fmt = (cents: number) =>
+  const fmtArs = (cents: number) =>
     format.number(cents / 100, { style: 'currency', currency: 'ARS', minimumFractionDigits: 0, maximumFractionDigits: 0 })
+  const fmtUsd = (cents: number) =>
+    'USD ' + format.number(cents / 100, { minimumFractionDigits: 2, maximumFractionDigits: 2 })
+  const itemCurrency = item.currency ?? 'ARS'
+  const fmt = itemCurrency === 'USD' ? fmtUsd : fmtArs
   const [editing, setEditing] = useState(false)
   const [collapsed, setCollapsed] = useState(item.isCard)
   const [addingCharge, setAddingCharge] = useState(false)
@@ -77,7 +82,11 @@ export function ExpenseRow({ item, depth = 0, monthId, keywordMap, categories, y
       ? `${item.name} (${item.installmentNumber}/${item.installmentTotal})`
       : item.name
 
-  const showInflationBtn = monthContext !== 'past' && (item.itemType === 'recurring' || item.itemType === 'subscription') && !isCard && item.amount !== null
+  const showInflationBtn = monthContext !== 'past'
+    && (item.itemType === 'recurring' || item.itemType === 'subscription')
+    && !isCard
+    && item.amount !== null
+    && itemCurrency !== 'USD'
 
   const inflationCurrentAmount = item.amount ?? 0
   const inflationNumVal = parseFloat(inflationValue) || 0
@@ -128,6 +137,7 @@ export function ExpenseRow({ item, depth = 0, monthId, keywordMap, categories, y
     const fd = new FormData(e.currentTarget)
     fd.set('monthId', monthId)
     fd.set('parentId', item.id)
+    fd.set('currency', item.currency ?? 'ARS')
     e.currentTarget.reset()
     startTransition(async () => {
       if (chargeType === 'installment') {
@@ -190,6 +200,11 @@ export function ExpenseRow({ item, depth = 0, monthId, keywordMap, categories, y
                 {t('oneTimeBadge')}
               </span>
             )}
+            {itemCurrency === 'USD' && (
+              <span className="text-xs px-1.5 py-0.5 rounded-full bg-blue-500/15 text-blue-400 font-medium flex-shrink-0">
+                {t('usdBadge')}
+              </span>
+            )}
 
             <span className="ml-auto flex-shrink-0 flex items-center gap-2">
               {item.amountCarried && !isCard && (
@@ -242,7 +257,15 @@ export function ExpenseRow({ item, depth = 0, monthId, keywordMap, categories, y
             <button
               onClick={handleAmountClick}
               disabled={isSubItem || isCard}
-              className={`font-medium tabular-nums ${isSubItem || isCard ? 'cursor-default' : 'hover:text-[var(--accent)] transition-colors'} ${displayAmount === null ? 'text-[var(--muted-fg)] italic font-normal' : isCard ? 'text-purple-400' : 'text-[var(--fg)]'}`}
+              className={`font-medium tabular-nums ${isSubItem || isCard ? 'cursor-default' : 'hover:text-[var(--accent)] transition-colors'} ${
+                displayAmount === null
+                  ? 'text-[var(--muted-fg)] italic font-normal'
+                  : itemCurrency === 'USD'
+                    ? 'text-blue-400'
+                    : isCard
+                      ? 'text-purple-400'
+                      : 'text-[var(--fg)]'
+              }`}
             >
               {displayAmount !== null ? fmt(displayAmount) : '-'}
             </button>
