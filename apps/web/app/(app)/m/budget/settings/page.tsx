@@ -6,6 +6,7 @@ import { getTranslations } from 'next-intl/server'
 import Link from 'next/link'
 import { addCardAction } from './actions'
 import { DeleteCardButton } from './delete-card-button'
+import { RenameCardInput } from './rename-card-input'
 
 export default async function BudgetSettingsPage() {
   const cookieStore = await cookies()
@@ -42,11 +43,8 @@ export default async function BudgetSettingsPage() {
                   <td className="py-3 pl-4 pr-3">
                     <div className="flex items-center gap-2">
                       <span className="w-2 h-2 rounded-full bg-purple-400 flex-shrink-0" />
-                      <span className="font-medium text-[var(--fg)]">{card.name}</span>
+                      <RenameCardInput cardId={card.id} initialName={card.name} />
                     </div>
-                  </td>
-                  <td className="py-3 px-3 text-[var(--muted-fg)] capitalize text-sm">
-                    {card.category ?? ''}
                   </td>
                   <td className="py-3 pr-4 text-right">
                     <DeleteCardButton
@@ -70,11 +68,6 @@ export default async function BudgetSettingsPage() {
           required
           placeholder={t('cardName')}
           className={`${inputCls} flex-[2_1_10rem]`}
-        />
-        <input
-          name="category"
-          placeholder={t('category')}
-          className={`${inputCls} flex-[1_1_7rem]`}
         />
         <button
           type="submit"

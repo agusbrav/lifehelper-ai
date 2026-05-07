@@ -2,7 +2,7 @@
 import { revalidatePath } from 'next/cache'
 import { cookies } from 'next/headers'
 import { getSession } from '@lifehelper/core'
-import { addCard, removeCard } from '@lifehelper/budget'
+import { addCard, removeCard, renameCard } from '@lifehelper/budget'
 
 async function getUserId() {
   const cookieStore = await cookies()
@@ -15,8 +15,16 @@ async function getUserId() {
 export async function addCardAction(formData: FormData) {
   const userId = await getUserId()
   const name = (formData.get('name') as string).trim()
-  const category = (formData.get('category') as string)?.trim() || undefined
-  await addCard({ userId, name, category })
+  await addCard({ userId, name })
+  revalidatePath('/m/budget/settings')
+  revalidatePath('/m/budget')
+}
+
+export async function renameCardAction(cardId: string, name: string) {
+  const userId = await getUserId()
+  const trimmed = name.trim()
+  if (!trimmed) return
+  await renameCard({ userId, cardId, name: trimmed })
   revalidatePath('/m/budget/settings')
   revalidatePath('/m/budget')
 }
