@@ -22,6 +22,7 @@ model BudgetItem {
   name               String
   category           String?
   amount             Int?
+  currency           String       @default("ARS")
   amountCarried      Boolean      @default(false)
   paid               Boolean      @default(false)
   paidAt             DateTime?
@@ -48,6 +49,7 @@ model Card {
   userId    String
   name      String
   category  String?
+  currency  String   @default("ARS")
   createdAt DateTime @default(now())
 
   @@unique([userId, name])
