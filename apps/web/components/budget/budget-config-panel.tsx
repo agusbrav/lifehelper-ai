@@ -131,7 +131,7 @@ export function BudgetConfigPanel({ year, month, cards, userKeywords }: Props) {
           />
 
           {/* Panel */}
-          <div className="relative z-10 w-full max-w-md rounded-2xl border border-[var(--border)] bg-[var(--card-bg)] shadow-xl flex flex-col max-h-[85vh]">
+          <div className="relative z-10 w-full max-w-md rounded-2xl border border-[var(--border)] bg-[var(--card-bg)] shadow-xl flex flex-col h-[520px]">
             {/* Header */}
             <div className="flex items-center justify-between px-5 py-4 border-b border-[var(--border)]">
               <h2 className="font-semibold text-[var(--fg)]">{t('configTitle')}</h2>
