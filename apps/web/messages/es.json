@@ -74,14 +74,7 @@
     "inflationPct": "%",
     "inflationDirect": "$ directo",
     "inflationApply": "Aplicar en {month}",
-    "inflationCancel": "Cancelar",
-    "legend": {
-      "recurring": "Recurrente",
-      "installments": "Cuotas",
-      "card": "Tarjeta",
-      "oneTime": "Único",
-      "carriedAmount": "monto del mes anterior"
-    }
+    "inflationCancel": "Cancelar"
   },
   "analytics": {
     "title": "Análisis de Presupuesto",

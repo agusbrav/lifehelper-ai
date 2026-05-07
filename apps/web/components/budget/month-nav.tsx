@@ -29,30 +29,17 @@ export function MonthNav({ year, month, firstYear, firstMonth }: Props) {
     router.push(`/m/budget?year=${y}&month=${m}`)
   }
 
+  const btnCls = 'border border-[var(--border)] rounded-lg px-3 py-1.5 text-sm text-[var(--muted-fg)] hover:text-[var(--fg)] hover:bg-[var(--accent-muted)] transition-colors disabled:opacity-30 disabled:cursor-not-allowed disabled:hover:bg-transparent disabled:hover:text-[var(--muted-fg)]'
+
   return (
     <div className="flex items-center gap-2">
-      <button
-        onClick={() => navigate(-1)}
-        disabled={isFirstMonth}
-        className="border border-[var(--border)] rounded-lg px-3 py-1 text-sm text-[var(--muted-fg)] hover:text-[var(--fg)] hover:bg-[var(--accent-muted)] transition-colors disabled:opacity-30 disabled:cursor-not-allowed disabled:hover:bg-transparent disabled:hover:text-[var(--muted-fg)]"
-      >
-        ←
-      </button>
-      <span className="text-base font-semibold text-[var(--fg)] min-w-[130px] text-center capitalize">
+      <button onClick={() => navigate(-1)} disabled={isFirstMonth} className={btnCls}>←</button>
+      <span className="text-base font-semibold text-[var(--fg)] min-w-[160px] text-center capitalize">
         {monthLabel} {year}
       </span>
-      <button
-        onClick={() => navigate(1)}
-        disabled={isMaxMonth}
-        className="border border-[var(--border)] rounded-lg px-3 py-1 text-sm text-[var(--muted-fg)] hover:text-[var(--fg)] hover:bg-[var(--accent-muted)] transition-colors disabled:opacity-30 disabled:cursor-not-allowed disabled:hover:bg-transparent disabled:hover:text-[var(--muted-fg)]"
-      >
-        →
-      </button>
+      <button onClick={() => navigate(1)} disabled={isMaxMonth} className={btnCls}>→</button>
       {!isCurrentMonth && (
-        <button
-          onClick={() => router.push('/m/budget')}
-          className="ml-1 border border-[var(--border)] rounded-lg px-3 py-1 text-xs text-[var(--muted-fg)] hover:text-[var(--fg)] hover:bg-[var(--accent-muted)] transition-colors"
-        >
+        <button onClick={() => router.push('/m/budget')} className={`ml-1 ${btnCls} text-xs`}>
           {t('today')}
         </button>
       )}

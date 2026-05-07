@@ -68,7 +68,7 @@ export function ExpenseRow({ item, depth = 0, monthId, keywordMap, categories, y
         ? 'bg-pink-400'
         : item.itemType === 'recurring'
           ? 'bg-blue-400'
-          : 'bg-[var(--muted-fg)] opacity-40'
+          : 'bg-cyan-400'
 
   const displayName =
     item.installmentTotal !== null && item.installmentNumber !== null
@@ -178,7 +178,7 @@ export function ExpenseRow({ item, depth = 0, monthId, keywordMap, categories, y
               </span>
             )}
             {!isCard && item.installmentTotal === null && item.itemType === 'one_time' && !isSubItem && (
-              <span className="text-xs px-1.5 py-0.5 rounded-full bg-[var(--muted-fg)]/15 text-[var(--muted-fg)] font-medium flex-shrink-0">
+              <span className="text-xs px-1.5 py-0.5 rounded-full bg-cyan-500/15 text-cyan-400 font-medium flex-shrink-0">
                 {t('oneTimeBadge')}
               </span>
             )}

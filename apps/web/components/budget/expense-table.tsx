@@ -122,7 +122,7 @@ export function ExpenseTable({ items, monthId, keywordMap, categories, year, mon
     { key: 'subscription',  label: t('subscriptionBadge'),  activeCls: 'bg-pink-500/15   text-pink-400   border-pink-500/30'   },
     { key: 'installment',   label: t('installmentBadge'),   activeCls: 'bg-amber-500/15  text-amber-400  border-amber-500/30'  },
     { key: 'card',          label: t('addChargeBadge'),     activeCls: 'bg-purple-500/15 text-purple-400 border-purple-500/30' },
-    { key: 'one_time',      label: t('oneTimeBadge'),       activeCls: 'bg-[var(--muted-fg)]/10 text-[var(--muted-fg)] border-[var(--muted-fg)]/20' },
+    { key: 'one_time',      label: t('oneTimeBadge'),       activeCls: 'bg-cyan-500/15 text-cyan-400 border-cyan-500/30' },
   ]
 
   return (
@@ -229,25 +229,6 @@ export function ExpenseTable({ items, monthId, keywordMap, categories, year, mon
         </div>
       )}
 
-      <div className="px-4 py-2.5 border-t border-[var(--border)] flex flex-wrap gap-x-4 gap-y-1 text-xs text-[var(--muted-fg)]">
-        <span className="flex items-center gap-1.5">
-          <span className="inline-block w-2 h-2 rounded-full bg-blue-400" />
-          {t('legend.recurring')}
-        </span>
-        <span className="flex items-center gap-1.5">
-          <span className="inline-block w-2 h-2 rounded-full bg-amber-400" />
-          {t('legend.installments')}
-        </span>
-        <span className="flex items-center gap-1.5">
-          <span className="inline-block w-2 h-2 rounded-full bg-purple-400" />
-          {t('legend.card')}
-        </span>
-        <span className="flex items-center gap-1.5">
-          <span className="inline-block w-2 h-2 rounded-full bg-[var(--muted-fg)] opacity-50" />
-          {t('legend.oneTime')}
-        </span>
-        <span className="ml-auto">&#8629; {t('legend.carriedAmount')}</span>
-      </div>
     </div>
   )
 }

@@ -78,9 +78,14 @@ export default async function BudgetAnalyticsPage({
   const inflationAlerts = computeInflationAlerts(currentItems, threeMonthsAgoItems)
   const installments = computeInstallmentOverview(currentItems)
 
-  const monthlyTotals = last6.map(m => ({
+  const monthsForChart = availableMonths
+    .filter(m => m.year < selectedYear || (m.year === selectedYear && m.month <= selectedMonth))
+    .slice(0, 6)
+    .reverse()
+
+  const monthlyTotals = monthsForChart.map(m => ({
     label: new Date(m.year, m.month - 1, 1).toLocaleString(locale, { month: 'short' }),
-    totalCents: computeCategoryTotals(m.items).reduce((sum, c) => sum + c.total, 0),
+    totalCents: computeCategoryTotals(monthMap.get(`${m.year}-${m.month}`) ?? []).reduce((sum, c) => sum + c.total, 0),
   }))
 
   return (

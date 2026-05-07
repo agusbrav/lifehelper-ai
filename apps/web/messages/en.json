@@ -74,14 +74,7 @@
     "inflationPct": "%",
     "inflationDirect": "$ direct",
     "inflationApply": "Apply in {month}",
-    "inflationCancel": "Cancel",
-    "legend": {
-      "recurring": "Recurring",
-      "installments": "Installments",
-      "card": "Card",
-      "oneTime": "One-time",
-      "carriedAmount": "carried amount from previous month"
-    }
+    "inflationCancel": "Cancel"
   },
   "analytics": {
     "title": "Budget Analytics",

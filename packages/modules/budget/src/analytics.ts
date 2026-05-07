@@ -48,7 +48,7 @@ export function computeCategoryTotals(items: ItemSlim[]): CategoryTotal[] {
   const map = new Map<string, number>()
   for (const item of items) {
     if (item.parentId !== null || item.amount === null) continue
-    const key = item.category ?? '__null__'
+    const key = item.category?.toLowerCase() ?? '__null__'
     map.set(key, (map.get(key) ?? 0) + item.amount)
   }
   return Array.from(map.entries()).map(([key, total]) => ({

@@ -2,6 +2,7 @@
 import { useState, useMemo } from 'react'
 import { useTranslations, useLocale } from 'next-intl'
 import { DonutChart } from './donut-chart'
+import { ClickableRow } from '@/components/clickable-row'
 import type {
   CategoryTotal,
   TypeTotal,
@@ -20,7 +21,7 @@ const TYPE_COLORS: Record<string, string> = {
   subscription: '#ec4899',
   installment: '#f59e0b',
   card: '#a855f7',
-  'one-time': '#64748b',
+  'one-time': '#06b6d4',
 }
 
 function buildColorMap(items: { category: string | null }[]): Map<string | null, string> {
@@ -253,12 +254,10 @@ export function AnalyticsDashboard({
                     ? Math.round(((item.total - item.avg3!) / item.avg3!) * 100)
                     : 0
                   return (
-                    <tr
+                    <ClickableRow
                       key={item.key}
                       onClick={() => toggle(item.key)}
-                      className={`border-t border-[var(--border)] cursor-pointer transition-opacity ${
-                        isExcluded ? 'opacity-40' : 'hover:bg-[var(--muted)]/40'
-                      }`}
+                      excluded={isExcluded}
                     >
                       <td className="py-3 pl-5 font-medium text-[var(--fg)]">
                         <span className="flex items-center gap-2">
@@ -302,7 +301,7 @@ export function AnalyticsDashboard({
                           )}
                         </div>
                       </td>
-                    </tr>
+                    </ClickableRow>
                   )
                 })}
               </tbody>
@@ -316,7 +315,8 @@ export function AnalyticsDashboard({
         </div>
       </section>
 
-      {/* Monthly trend */}
+      {/* Monthly trend — only when 3+ months have data */}
+      {monthlyTotals.length >= 3 && (
       <section>
         <h2 className="text-xs font-semibold text-[var(--muted-fg)] mb-3 uppercase tracking-wide">
           {t('monthlyTotalTitle')}
@@ -346,6 +346,7 @@ export function AnalyticsDashboard({
           )}
         </div>
       </section>
+      )}
 
       {/* Inflation alerts */}
       {inflationAlerts.length > 0 && (
