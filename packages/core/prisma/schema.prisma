@@ -131,3 +131,15 @@ model BudgetItem {
   @@index([userId])
   @@index([monthId])
 }
+
+model Card {
+  id        String   @id @default(cuid())
+  userId    String
+  name      String
+  category  String?
+  createdAt DateTime @default(now())
+
+  @@unique([userId, name])
+  @@index([userId])
+  @@map("cards")
+}
