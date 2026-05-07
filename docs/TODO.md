@@ -15,9 +15,10 @@ Format: `- [ ] description` — check off when done, delete when shipped.
 - [ ] Hook AI prompts in the chat box to interact with the expenses table (add, edit, query expenses via natural language)
 - [ ] Accept image and PDF inputs in the chat box — analyze them (e.g. receipts, bank statements) and extract expenses
 - [ ] Show a preview of extracted expenses before committing them to the table
-- [ ] USD currency support: currency field per expense (ARS default, USD for native cards); per-card USD-native setting (e.g. Amex)
-- [ ] Summary bar shows ARS total and USD total as separate values (no conversion)
+- [x] USD currency support: currency field per expense (ARS default, USD for native cards); per-card USD-native setting (e.g. Amex)
+- [x] Summary bar shows ARS total and USD total as separate values (no conversion)
 - [ ] Analytics: dynamic layout where user can toggle which panels to show — gastos ARS por categoría, gastos USD, suscripciones total, etc.
+- [ ] Consider removing paid/pending tracking — simplify to expense ledger + past statistics only; keep `paid` field in schema but hide the UI
 
 ---
 
