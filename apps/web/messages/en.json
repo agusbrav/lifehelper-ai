@@ -74,7 +74,15 @@
     "inflationPct": "%",
     "inflationDirect": "$ direct",
     "inflationApply": "Apply in {month}",
-    "inflationCancel": "Cancel"
+    "inflationCancel": "Cancel",
+    "settingsTitle": "Cards",
+    "settingsLink": "Cards",
+    "settingsCardHint": "Cards appear in every month and carry forward automatically.",
+    "settingsRemoveHint": "Removing a card stops it from appearing in new months. Existing month data is preserved.",
+    "addCard": "Add card",
+    "cardName": "Card name",
+    "removeCardConfirm": "Remove \"{name}\"? It will stop appearing in new months.",
+    "backToBudget": "Budget"
   },
   "analytics": {
     "title": "Budget Analytics",

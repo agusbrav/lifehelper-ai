@@ -74,7 +74,15 @@
     "inflationPct": "%",
     "inflationDirect": "$ directo",
     "inflationApply": "Aplicar en {month}",
-    "inflationCancel": "Cancelar"
+    "inflationCancel": "Cancelar",
+    "settingsTitle": "Tarjetas",
+    "settingsLink": "Tarjetas",
+    "settingsCardHint": "Las tarjetas aparecen en todos los meses y se propagan automáticamente.",
+    "settingsRemoveHint": "Eliminar una tarjeta evita que aparezca en nuevos meses. El historial existente no se modifica.",
+    "addCard": "Agregar tarjeta",
+    "cardName": "Nombre de la tarjeta",
+    "removeCardConfirm": "¿Eliminar \"{name}\"? Dejará de aparecer en nuevos meses.",
+    "backToBudget": "Presupuesto"
   },
   "analytics": {
     "title": "Análisis de Presupuesto",
