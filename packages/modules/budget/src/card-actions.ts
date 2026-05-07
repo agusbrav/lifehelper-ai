@@ -31,12 +31,20 @@ export async function renameCard(input: { userId: string; cardId: string; name: 
   const card = await db.card.findUnique({ where: { id: input.cardId } })
   if (!card || card.userId !== input.userId) throw new Error('Forbidden')
   await db.card.update({ where: { id: input.cardId }, data: { name: input.name } })
+  await db.budgetItem.updateMany({
+    where: { userId: input.userId, isCard: true, name: card.name },
+    data: { name: input.name },
+  })
 }
 
 export async function setCurrency(input: { userId: string; cardId: string; currency: string }): Promise<void> {
   const card = await db.card.findUnique({ where: { id: input.cardId } })
   if (!card || card.userId !== input.userId) throw new Error('Forbidden')
   await db.card.update({ where: { id: input.cardId }, data: { currency: input.currency } })
+  await db.budgetItem.updateMany({
+    where: { userId: input.userId, isCard: true, name: card.name },
+    data: { currency: input.currency },
+  })
 }
 
 export async function removeCard(input: { userId: string; cardId: string }): Promise<void> {

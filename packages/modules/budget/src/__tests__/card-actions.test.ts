@@ -9,10 +9,13 @@ vi.mock('@lifehelper/core', () => ({
       delete: vi.fn(),
       findUnique: vi.fn(),
     },
+    budgetItem: {
+      updateMany: vi.fn().mockResolvedValue({ count: 0 }),
+    },
   },
 }))
 
-import { getCardsForUser, addCard, setCurrency, removeCard } from '../card-actions'
+import { getCardsForUser, addCard, setCurrency, renameCard, removeCard } from '../card-actions'
 import { db } from '@lifehelper/core'
 
 const mockDb = db as unknown as {
@@ -22,6 +25,9 @@ const mockDb = db as unknown as {
     update: ReturnType<typeof vi.fn>
     delete: ReturnType<typeof vi.fn>
     findUnique: ReturnType<typeof vi.fn>
+  }
+  budgetItem: {
+    updateMany: ReturnType<typeof vi.fn>
   }
 }
 
@@ -63,12 +69,34 @@ describe('addCard', () => {
   })
 })
 
+describe('renameCard', () => {
+  it('updates the card name and propagates to budget items', async () => {
+    mockDb.card.findUnique.mockResolvedValue({ id: 'c1', userId: 'u1', name: 'Visa', currency: 'ARS', createdAt: new Date() })
+    mockDb.card.update.mockResolvedValue({})
+    await renameCard({ userId: 'u1', cardId: 'c1', name: 'Visa Galicia' })
+    expect(mockDb.card.update).toHaveBeenCalledWith({ where: { id: 'c1' }, data: { name: 'Visa Galicia' } })
+    expect(mockDb.budgetItem.updateMany).toHaveBeenCalledWith({
+      where: { userId: 'u1', isCard: true, name: 'Visa' },
+      data: { name: 'Visa Galicia' },
+    })
+  })
+
+  it('throws if the card does not belong to the user', async () => {
+    mockDb.card.findUnique.mockResolvedValue({ id: 'c1', userId: 'other', name: 'Visa', currency: 'ARS', createdAt: new Date() })
+    await expect(renameCard({ userId: 'u1', cardId: 'c1', name: 'Visa Galicia' })).rejects.toThrow('Forbidden')
+  })
+})
+
 describe('setCurrency', () => {
-  it('updates the card currency after verifying ownership', async () => {
+  it('updates the card currency and propagates to budget items', async () => {
     mockDb.card.findUnique.mockResolvedValue({ id: 'c1', userId: 'u1', name: 'Amex', currency: 'ARS', createdAt: new Date() })
     mockDb.card.update.mockResolvedValue({})
     await setCurrency({ userId: 'u1', cardId: 'c1', currency: 'USD' })
     expect(mockDb.card.update).toHaveBeenCalledWith({ where: { id: 'c1' }, data: { currency: 'USD' } })
+    expect(mockDb.budgetItem.updateMany).toHaveBeenCalledWith({
+      where: { userId: 'u1', isCard: true, name: 'Amex' },
+      data: { currency: 'USD' },
+    })
   })
 
   it('throws if the card does not belong to the user', async () => {
