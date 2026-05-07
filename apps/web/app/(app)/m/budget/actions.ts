@@ -22,7 +22,8 @@ export async function addExpenseAction(formData: FormData) {
   const parentId = (formData.get('parentId') as string) || undefined
   const rawAmount = formData.get('amount') as string
   const amount = rawAmount ? Math.round(parseFloat(rawAmount) * 100) : undefined
-  await addExpense({ userId, monthId, name, category, recurring, itemType, parentId, amount })
+  const currency = (formData.get('currency') as string) || 'ARS'
+  await addExpense({ userId, monthId, name, category, recurring, itemType, parentId, amount, currency })
   revalidatePath('/m/budget')
 }
 
