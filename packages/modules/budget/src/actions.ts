@@ -343,6 +343,7 @@ export async function getItemsForAnalytics(userId: string) {
   return db.budgetItem.findMany({
     where: { userId },
     select: {
+      id: true,
       name: true,
       category: true,
       amount: true,
