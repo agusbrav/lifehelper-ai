@@ -149,3 +149,24 @@ pnpm test
 - Index: `MEMORY.md` in that directory.
 - Load memory at session start to avoid re-briefing.
 - Save new feedback/project decisions immediately after they're established.
+
+---
+
+## 13. Planning & Docs Conventions
+
+- Implementation plans go in `docs/superpowers/plans/` — this folder is gitignored, never commit it.
+- Design specs go in `docs/superpowers/specs/` — also gitignored.
+- `docs/TODO.md` is the only planning artifact that IS committed — use it to track pending features/fixes by scope.
+- Never create plans or specs outside `docs/superpowers/`.
+
+
+## 12. Directory Navigation Guidelines:
+- Before any file operation, confirm you are in the correct directory with `pwd`
+- NEVER use `git reset --hard` or `git clean -fd` without explicit user confirmation
+- Use absolute paths for critical operations
+- NEVER use cd commands to change directories during interactions. This is a STRICT rule with NO exceptions. Instead:
+  - Use relative or absolute paths directly in commands (e.g., ls ./subdirectory or grep pattern ./subdirectory/file.txt instead of cd ./subdirectory && ls or cd ./subdirectory && grep pattern file.txt)
+  - If you need to run multiple commands in a specific directory, use subshells: (cd /path/to/dir && command1 && command2) which contain the directory change
+  - When needing to reference multiple files in the same directory, use pattern matching: /path/to/dir/*.* instead of changing into that directory
+  - NEVER combine cd with command execution using && or ; outside of a subshell
+  - If a user explicitly requests you to use cd, explain this policy and suggest the alternatives above
