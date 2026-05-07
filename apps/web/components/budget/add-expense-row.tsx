@@ -30,6 +30,7 @@ export function AddExpenseRow({ monthId, keywordMap, categories }: Props) {
   const t = useTranslations('budget')
   const [open, setOpen] = useState(false)
   const [category, setCategory] = useState('')
+  const [itemType, setItemType] = useState<'one_time' | 'recurring' | 'subscription'>('one_time')
   const categoryRef = useRef('')
   const wasAutoFilled = useRef(false)
   const [, startTransition] = useTransition()
@@ -63,13 +64,14 @@ export function AddExpenseRow({ monthId, keywordMap, categories }: Props) {
     e.preventDefault()
     const fd = new FormData(e.currentTarget)
     fd.set('monthId', monthId)
-    fd.set('itemType', 'one_time')
+    fd.set('itemType', itemType)
     fd.set('category', category)
     startTransition(async () => {
       await addExpenseAction(fd)
       formRef.current?.reset()
       setOpen(false)
       setCategory('')
+      setItemType('one_time')
       categoryRef.current = ''
       wasAutoFilled.current = false
     })
@@ -78,6 +80,7 @@ export function AddExpenseRow({ monthId, keywordMap, categories }: Props) {
   function handleCancel() {
     setOpen(false)
     setCategory('')
+    setItemType('one_time')
     categoryRef.current = ''
     wasAutoFilled.current = false
   }
@@ -131,6 +134,22 @@ export function AddExpenseRow({ monthId, keywordMap, categories }: Props) {
             placeholder={t('amount')}
             className={`${inputCls} w-24 flex-shrink-0`}
           />
+          <div className="inline-flex rounded-lg border border-[var(--border)] overflow-hidden text-xs flex-shrink-0">
+            {(['one_time', 'recurring', 'subscription'] as const).map(type => (
+              <button
+                key={type}
+                type="button"
+                onClick={() => setItemType(type)}
+                className={`px-2.5 py-1.5 font-medium transition-colors border-l border-[var(--border)] first:border-l-0 ${
+                  itemType === type
+                    ? 'bg-[var(--accent)] text-[var(--accent-fg)]'
+                    : 'text-[var(--muted-fg)] hover:text-[var(--fg)]'
+                }`}
+              >
+                {t(`${type}Badge` as Parameters<typeof t>[0])}
+              </button>
+            ))}
+          </div>
           <button
             type="submit"
             className="bg-[var(--accent)] text-[var(--accent-fg)] rounded-lg px-3 py-1.5 text-sm font-medium hover:opacity-90 transition-opacity flex-shrink-0"
