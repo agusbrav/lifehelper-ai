@@ -92,12 +92,10 @@ export function ExpenseTable({ items, monthId, keywordMap, categories, year, mon
 
   const visibleExpenses = useMemo(() => {
     let result = [...expenseItems]
-
     if (filterCats.size > 0)
       result = result.filter(i => filterCats.has(i.category ?? ''))
     if (filterTypes.size > 0)
       result = result.filter(i => filterTypes.has(resolvedType(i)))
-
     if (sortCol) {
       result.sort((a, b) => {
         let cmp = 0
@@ -110,141 +108,151 @@ export function ExpenseTable({ items, monthId, keywordMap, categories, year, mon
         return sortDir === 'asc' ? cmp : -cmp
       })
     }
-
     return result
   }, [expenseItems, sortCol, sortDir, filterCats, filterTypes])
+
+  // Cards show unless a non-card type filter or any category filter is active
+  const showCards = cardItems.length > 0
+    && (filterTypes.size === 0 || filterTypes.has('card'))
+    && filterCats.size === 0
+
+  // Expenses show unless the only active type filter is 'card'
+  const showExpenses = !(filterTypes.size === 1 && filterTypes.has('card'))
 
   const hasFilters = filterCats.size > 0 || filterTypes.size > 0
 
   const inactiveCls = 'bg-transparent text-[var(--muted-fg)] border-[var(--border)] hover:text-[var(--fg)]'
 
   const typeFilters = [
-    { key: 'recurring',    label: t('recurringBadge'),    activeCls: 'bg-blue-500/15   text-blue-400   border-blue-500/30'  },
-    { key: 'subscription', label: t('subscriptionBadge'), activeCls: 'bg-pink-500/15   text-pink-400   border-pink-500/30'  },
-    { key: 'installment',  label: t('installmentBadge'),  activeCls: 'bg-amber-500/15  text-amber-400  border-amber-500/30' },
-    { key: 'one_time',     label: t('oneTimeBadge'),      activeCls: 'bg-cyan-500/15   text-cyan-400   border-cyan-500/30'  },
+    { key: 'recurring',    label: t('recurringBadge'),    activeCls: 'bg-blue-500/15   text-blue-400   border-blue-500/30'   },
+    { key: 'subscription', label: t('subscriptionBadge'), activeCls: 'bg-pink-500/15   text-pink-400   border-pink-500/30'   },
+    { key: 'installment',  label: t('installmentBadge'),  activeCls: 'bg-amber-500/15  text-amber-400  border-amber-500/30'  },
+    { key: 'card',         label: t('addChargeBadge'),    activeCls: 'bg-purple-500/15 text-purple-400 border-purple-500/30' },
+    { key: 'one_time',     label: t('oneTimeBadge'),      activeCls: 'bg-cyan-500/15   text-cyan-400   border-cyan-500/30'   },
   ]
 
   const sharedRowProps = { monthId, keywordMap, categories, year, month, monthContext }
+  const totalVisible = (showCards ? cardItems.length : 0) + (showExpenses ? visibleExpenses.length : 0)
 
   return (
-    <div className="flex flex-col gap-4">
+    <div className="rounded-2xl border border-[var(--border)] bg-[var(--card-bg)] overflow-hidden">
 
-      {/* Credit cards — visually separated infrastructure section */}
-      {cardItems.length > 0 && (
-        <div className="rounded-2xl border border-purple-500/30 bg-purple-500/5 overflow-hidden">
-          <div className="px-4 py-2 border-b border-purple-500/20">
-            <span className="text-xs font-semibold text-purple-400 uppercase tracking-wide">
-              {t('addChargeBadge')}s
-            </span>
-          </div>
-          <div className="overflow-x-auto">
-            <table className="w-full border-collapse text-sm">
-              <tbody>
-                {cardItems.map(item => (
-                  <ExpenseRow key={item.id} item={item} {...sharedRowProps} />
-                ))}
-              </tbody>
-            </table>
-          </div>
+      {/* Filter bar */}
+      {items.length > 0 && (
+        <div className="px-4 py-2 border-b border-[var(--border)] flex flex-wrap gap-1.5 items-center">
+          {typeFilters.map(f => (
+            <button
+              key={f.key}
+              onClick={() => toggleType(f.key)}
+              className={`px-2 py-0.5 rounded-full text-xs font-medium border transition-colors ${
+                filterTypes.has(f.key) ? f.activeCls : inactiveCls
+              }`}
+            >
+              {f.label}
+            </button>
+          ))}
+
+          {uniqueCategories.length > 0 && (
+            <>
+              <span className="w-px h-3.5 bg-[var(--border)] mx-0.5 self-center" />
+              {uniqueCategories.map(cat => (
+                <button
+                  key={cat}
+                  onClick={() => toggleCat(cat)}
+                  className={`px-2 py-0.5 rounded-full text-xs font-medium border capitalize transition-colors ${
+                    filterCats.has(cat)
+                      ? 'bg-[var(--accent)] text-[var(--accent-fg)] border-[var(--accent)]'
+                      : inactiveCls
+                  }`}
+                >
+                  {cat}
+                </button>
+              ))}
+            </>
+          )}
+
+          {hasFilters && (
+            <button
+              onClick={() => { setFilterCats(new Set()); setFilterTypes(new Set()) }}
+              className="ml-auto text-xs text-[var(--muted-fg)] hover:text-rose-400 transition-colors"
+            >
+              {t('clearFilters')}
+            </button>
+          )}
         </div>
       )}
 
-      {/* Expenses table */}
-      <div className="rounded-2xl border border-[var(--border)] bg-[var(--card-bg)] overflow-hidden">
-
-        {/* Filter bar */}
-        {expenseItems.length > 0 && (
-          <div className="px-4 py-2 border-b border-[var(--border)] flex flex-wrap gap-1.5 items-center">
-            {typeFilters.map(f => (
-              <button
-                key={f.key}
-                onClick={() => toggleType(f.key)}
-                className={`px-2 py-0.5 rounded-full text-xs font-medium border transition-colors ${
-                  filterTypes.has(f.key) ? f.activeCls : inactiveCls
-                }`}
-              >
-                {f.label}
-              </button>
-            ))}
-
-            {uniqueCategories.length > 0 && (
+      <div className="overflow-x-auto">
+        <table className="w-full border-collapse text-sm">
+          <thead>
+            <tr className="bg-[var(--muted)]">
+              <th className="text-left py-2.5 pl-4 pr-3 text-xs font-medium text-[var(--muted-fg)] uppercase tracking-wide">
+                <button onClick={() => toggleSort('name')} className="flex items-center hover:text-[var(--fg)] transition-colors">
+                  {t('expense')}
+                  <SortArrow col="name" sortCol={sortCol} sortDir={sortDir} />
+                </button>
+              </th>
+              <th className="hidden md:table-cell text-center py-2.5 px-3 text-xs font-medium text-[var(--muted-fg)] uppercase tracking-wide w-36">
+                <button onClick={() => toggleSort('category')} className="flex items-center justify-center w-full hover:text-[var(--fg)] transition-colors">
+                  {t('category')}
+                  <SortArrow col="category" sortCol={sortCol} sortDir={sortDir} />
+                </button>
+              </th>
+              <th className="text-right py-2.5 px-3 text-xs font-medium text-[var(--muted-fg)] uppercase tracking-wide w-28">
+                <button onClick={() => toggleSort('amount')} className="flex items-center justify-end w-full hover:text-[var(--fg)] transition-colors">
+                  {t('amount')}
+                  <SortArrow col="amount" sortCol={sortCol} sortDir={sortDir} />
+                </button>
+              </th>
+              <th className="text-center py-2.5 px-2 text-xs font-medium text-[var(--muted-fg)] uppercase tracking-wide w-14">{t('paid')}</th>
+              <th className="py-2.5 pr-3 w-10" />
+            </tr>
+          </thead>
+          <tbody>
+            {/* Cards group — pinned at top */}
+            {showCards && (
               <>
-                <span className="w-px h-3.5 bg-[var(--border)] mx-0.5 self-center" />
-                {uniqueCategories.map(cat => (
-                  <button
-                    key={cat}
-                    onClick={() => toggleCat(cat)}
-                    className={`px-2 py-0.5 rounded-full text-xs font-medium border capitalize transition-colors ${
-                      filterCats.has(cat)
-                        ? 'bg-[var(--accent)] text-[var(--accent-fg)] border-[var(--accent)]'
-                        : inactiveCls
-                    }`}
-                  >
-                    {cat}
-                  </button>
+                <tr className="bg-purple-500/5 border-t border-[var(--border)]">
+                  <td colSpan={5} className="py-1 pl-4 text-[10px] font-semibold text-purple-400 uppercase tracking-widest">
+                    {t('addChargeBadge')}s
+                  </td>
+                </tr>
+                {cardItems.map(item => (
+                  <ExpenseRow key={item.id} item={item} {...sharedRowProps} />
                 ))}
               </>
             )}
 
-            {hasFilters && (
-              <button
-                onClick={() => { setFilterCats(new Set()); setFilterTypes(new Set()) }}
-                className="ml-auto text-xs text-[var(--muted-fg)] hover:text-rose-400 transition-colors"
-              >
-                {t('clearFilters')}
-              </button>
-            )}
-          </div>
-        )}
-
-        <div className="overflow-x-auto">
-          <table className="w-full border-collapse text-sm">
-            <thead>
-              <tr className="bg-[var(--muted)]">
-                <th className="text-left py-2.5 pl-4 pr-3 text-xs font-medium text-[var(--muted-fg)] uppercase tracking-wide">
-                  <button onClick={() => toggleSort('name')} className="flex items-center hover:text-[var(--fg)] transition-colors">
-                    {t('expense')}
-                    <SortArrow col="name" sortCol={sortCol} sortDir={sortDir} />
-                  </button>
-                </th>
-                <th className="hidden md:table-cell text-center py-2.5 px-3 text-xs font-medium text-[var(--muted-fg)] uppercase tracking-wide w-36">
-                  <button onClick={() => toggleSort('category')} className="flex items-center justify-center w-full hover:text-[var(--fg)] transition-colors">
-                    {t('category')}
-                    <SortArrow col="category" sortCol={sortCol} sortDir={sortDir} />
-                  </button>
-                </th>
-                <th className="text-right py-2.5 px-3 text-xs font-medium text-[var(--muted-fg)] uppercase tracking-wide w-28">
-                  <button onClick={() => toggleSort('amount')} className="flex items-center justify-end w-full hover:text-[var(--fg)] transition-colors">
-                    {t('amount')}
-                    <SortArrow col="amount" sortCol={sortCol} sortDir={sortDir} />
-                  </button>
-                </th>
-                <th className="text-center py-2.5 px-2 text-xs font-medium text-[var(--muted-fg)] uppercase tracking-wide w-14">{t('paid')}</th>
-                <th className="py-2.5 pr-3 w-10" />
+            {/* Divider between cards and expenses */}
+            {showCards && showExpenses && visibleExpenses.length > 0 && (
+              <tr className="bg-[var(--muted)]/60 border-t border-[var(--border)]">
+                <td colSpan={5} className="py-1 pl-4 text-[10px] font-semibold text-[var(--muted-fg)] uppercase tracking-widest">
+                  {t('expense')}s
+                </td>
               </tr>
-            </thead>
-            <tbody>
-              {visibleExpenses.map(item => (
-                <ExpenseRow key={item.id} item={item} {...sharedRowProps} />
-              ))}
-              <AddExpenseRow monthId={monthId} keywordMap={keywordMap} categories={categories} cards={allCards} />
-            </tbody>
-          </table>
-        </div>
+            )}
 
-        {expenseItems.length === 0 && (
-          <div className="py-8 text-center text-sm text-[var(--muted-fg)]">
-            {t('noExpenses')}
-          </div>
-        )}
+            {/* Regular expenses */}
+            {showExpenses && visibleExpenses.map(item => (
+              <ExpenseRow key={item.id} item={item} {...sharedRowProps} />
+            ))}
 
-        {expenseItems.length > 0 && visibleExpenses.length === 0 && (
-          <div className="py-6 text-center text-sm text-[var(--muted-fg)]">
-            {t('noFilterResults')}
-          </div>
-        )}
+            <AddExpenseRow monthId={monthId} keywordMap={keywordMap} categories={categories} cards={allCards} />
+          </tbody>
+        </table>
       </div>
+
+      {items.length === 0 && (
+        <div className="py-8 text-center text-sm text-[var(--muted-fg)]">
+          {t('noExpenses')}
+        </div>
+      )}
+
+      {items.length > 0 && totalVisible === 0 && (
+        <div className="py-6 text-center text-sm text-[var(--muted-fg)]">
+          {t('noFilterResults')}
+        </div>
+      )}
     </div>
   )
 }
