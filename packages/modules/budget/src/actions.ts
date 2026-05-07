@@ -27,6 +27,7 @@ async function syncCardsToMonth(userId: string, monthId: string): Promise<void> 
         userId,
         name: card.name,
         category: card.category,
+        currency: card.currency,
         amount: null,
         recurring: true,
         itemType: 'recurring',
@@ -94,6 +95,7 @@ export async function getOrCreateMonth(userId: string, year: number, month: numb
         name: i.name,
         category: i.category,
         amount: i.amount,
+        currency: i.currency,
         recurring: i.recurring,
         itemType: i.itemType,
         isCard: i.isCard,
@@ -104,6 +106,7 @@ export async function getOrCreateMonth(userId: string, year: number, month: numb
           name: c.name,
           category: c.category,
           amount: c.amount,
+          currency: c.currency,
           recurring: c.recurring,
           itemType: c.itemType,
           isCard: c.isCard,
@@ -123,6 +126,7 @@ export async function getOrCreateMonth(userId: string, year: number, month: numb
           userId,
           name: item.name,
           category: item.category,
+          currency: item.currency,
           amount: item.amount,
           amountCarried: item.amountCarried,
           recurring: item.recurring,
@@ -141,6 +145,7 @@ export async function getOrCreateMonth(userId: string, year: number, month: numb
             parentId: created.id,
             name: child.name,
             category: child.category,
+            currency: child.currency,
             amount: child.amount,
             amountCarried: child.amountCarried,
             recurring: child.recurring,
@@ -193,6 +198,7 @@ type AddExpenseInput = {
   name: string
   category?: string
   amount?: number
+  currency?: string
   recurring?: boolean
   itemType?: string
   parentId?: string
@@ -202,6 +208,7 @@ type CarryableItem = {
   name: string
   category: string | null
   amount: number | null
+  currency: string
   recurring: boolean
   itemType: string
   isCard: boolean
@@ -265,6 +272,7 @@ async function propagateToNextMonth(userId: string, monthId: string, item: Carry
         parentId: nextParentId,
         name: carried.name,
         category: carried.category,
+        currency: carried.currency,
         amount: carried.amount,
         amountCarried: carried.amountCarried,
         recurring: carried.recurring,
@@ -292,6 +300,7 @@ export async function addExpense(input: AddExpenseInput) {
       parentId: input.parentId ?? null,
       name: input.name,
       category: input.category ?? null,
+      currency: input.currency ?? 'ARS',
       amount: input.amount ?? null,
       recurring,
       itemType,
@@ -402,6 +411,7 @@ export async function getItemsForAnalytics(userId: string) {
       name: true,
       category: true,
       amount: true,
+      currency: true,
       recurring: true,
       itemType: true,
       isCard: true,

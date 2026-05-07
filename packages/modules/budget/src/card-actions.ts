@@ -5,6 +5,7 @@ export type CardRecord = {
   userId: string
   name: string
   category: string | null
+  currency: string
   createdAt: Date
 }
 
@@ -15,12 +16,13 @@ export async function getCardsForUser(userId: string): Promise<CardRecord[]> {
   })
 }
 
-export async function addCard(input: { userId: string; name: string }): Promise<CardRecord> {
+export async function addCard(input: { userId: string; name: string; currency?: string }): Promise<CardRecord> {
   return db.card.create({
     data: {
       userId: input.userId,
       name: input.name,
       category: 'tarjetas',
+      currency: input.currency ?? 'ARS',
     },
   })
 }
@@ -29,6 +31,12 @@ export async function renameCard(input: { userId: string; cardId: string; name: 
   const card = await db.card.findUnique({ where: { id: input.cardId } })
   if (!card || card.userId !== input.userId) throw new Error('Forbidden')
   await db.card.update({ where: { id: input.cardId }, data: { name: input.name } })
+}
+
+export async function setCurrency(input: { userId: string; cardId: string; currency: string }): Promise<void> {
+  const card = await db.card.findUnique({ where: { id: input.cardId } })
+  if (!card || card.userId !== input.userId) throw new Error('Forbidden')
+  await db.card.update({ where: { id: input.cardId }, data: { currency: input.currency } })
 }
 
 export async function removeCard(input: { userId: string; cardId: string }): Promise<void> {

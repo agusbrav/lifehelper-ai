@@ -4,6 +4,7 @@ export type SourceItem = {
   name: string
   category: string | null
   amount: number | null
+  currency: string
   recurring: boolean
   itemType: string
   isCard: boolean
@@ -17,6 +18,7 @@ export type CarryItem = {
   name: string
   category: string | null
   amount: number | null
+  currency: string
   amountCarried: boolean
   recurring: boolean
   itemType: string
