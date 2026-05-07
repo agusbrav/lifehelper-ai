@@ -1,6 +1,7 @@
 import type { SourceItem, CarryItem } from './types'
 
 function shouldCarry(item: SourceItem, gap: number): boolean {
+  if (item.isCard) return false
   if (item.recurring) return true
   if (item.installmentTotal !== null && item.installmentNumber !== null) {
     if (gap === 1) return true  // gap-1 path: carry including the final-payment → one-time conversion

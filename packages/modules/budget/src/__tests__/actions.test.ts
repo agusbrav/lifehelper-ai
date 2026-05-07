@@ -6,6 +6,7 @@ vi.mock('@lifehelper/core', () => ({
       findUnique: vi.fn(),
       findFirst: vi.fn(),
       create: vi.fn(),
+      count: vi.fn(),
     },
     budgetItem: {
       findUnique: vi.fn(),
@@ -15,6 +16,10 @@ vi.mock('@lifehelper/core', () => ({
       createMany: vi.fn(),
       update: vi.fn(),
       delete: vi.fn(),
+      deleteMany: vi.fn(),
+    },
+    card: {
+      findMany: vi.fn(),
     },
   },
 }))
@@ -133,5 +138,42 @@ describe('fetchCategoryHistory', () => {
     ] as never)
     const result = await fetchCategoryHistory('u1')
     expect(Object.keys(result)).toHaveLength(0)
+  })
+})
+
+describe('getOrCreateMonth - card sync', () => {
+  beforeEach(() => vi.clearAllMocks())
+
+  const month = { id: 'm1', userId: 'u1', year: 2025, month: 5, compacted: false, compactedSummary: null, createdAt: new Date(), items: [] }
+
+  it('creates a BudgetItem for each Card not yet in the month', async () => {
+    vi.mocked(db.budgetMonth.findUnique)
+      .mockResolvedValueOnce({ ...month, items: [] } as never)
+      .mockResolvedValueOnce({ ...month, items: [] } as never)
+    vi.mocked((db as any).card.findMany).mockResolvedValue([
+      { id: 'card1', userId: 'u1', name: 'Visa', category: 'tarjeta', createdAt: new Date() },
+    ])
+    vi.mocked(db.budgetItem.findFirst).mockResolvedValue(null as never)
+    vi.mocked(db.budgetItem.create).mockResolvedValue({} as never)
+
+    await getOrCreateMonth('u1', 2025, 5)
+
+    expect(db.budgetItem.create).toHaveBeenCalledWith(
+      expect.objectContaining({ data: expect.objectContaining({ name: 'Visa', isCard: true, recurring: true }) })
+    )
+  })
+
+  it('does not duplicate a Card already present in the month', async () => {
+    vi.mocked(db.budgetMonth.findUnique)
+      .mockResolvedValueOnce({ ...month, items: [] } as never)
+      .mockResolvedValueOnce({ ...month, items: [] } as never)
+    vi.mocked((db as any).card.findMany).mockResolvedValue([
+      { id: 'card1', userId: 'u1', name: 'Visa', category: 'tarjeta', createdAt: new Date() },
+    ])
+    vi.mocked(db.budgetItem.findFirst).mockResolvedValue({ id: 'item1' } as never)
+
+    await getOrCreateMonth('u1', 2025, 5)
+
+    expect(db.budgetItem.create).not.toHaveBeenCalled()
   })
 })

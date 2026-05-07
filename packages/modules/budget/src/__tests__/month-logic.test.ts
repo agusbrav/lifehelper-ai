@@ -7,6 +7,8 @@ const base: SourceItem = {
   category: 'Housing',
   amount: 120000,
   recurring: true,
+  itemType: 'recurring',
+  isCard: false,
   installmentTotal: null,
   installmentNumber: null,
   installmentGroupId: null,
@@ -104,6 +106,7 @@ describe('computeCarryItems', () => {
   it('does not carry an installment after its last payment', () => {
     const item: SourceItem = {
       name: 'Phone', category: 'Tech', amount: 10000, recurring: false,
+      itemType: 'one_time', isCard: false,
       installmentTotal: null, installmentNumber: 12, installmentGroupId: 'grp-1', children: [],
     }
     const result = computeCarryItems([item])
@@ -114,5 +117,22 @@ describe('computeCarryItems', () => {
     const result = computeCarryItems([{ ...base, amount: null }])
     expect(result[0]!.amount).toBeNull()
     expect(result[0]!.amountCarried).toBe(false)
+  })
+
+  it('does not carry an isCard item (cards come from Card table)', () => {
+    const card: SourceItem = {
+      name: 'Visa',
+      category: 'tarjeta',
+      amount: null,
+      recurring: true,
+      itemType: 'recurring',
+      isCard: true,
+      installmentTotal: null,
+      installmentNumber: null,
+      installmentGroupId: null,
+      children: [],
+    }
+    const result = computeCarryItems([card])
+    expect(result).toHaveLength(0)
   })
 })

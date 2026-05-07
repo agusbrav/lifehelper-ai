@@ -13,18 +13,48 @@ const DEFAULT_SEED = [
   { name: 'Tarjeta de crédito (American Express)', category: 'tarjeta', recurring: true, itemType: 'recurring', isCard: true },
 ] as const
 
+async function syncCardsToMonth(userId: string, monthId: string): Promise<void> {
+  const cards = await db.card.findMany({ where: { userId }, orderBy: { createdAt: 'asc' } })
+  for (const card of cards) {
+    const exists = await db.budgetItem.findFirst({
+      where: { monthId, userId, isCard: true, name: card.name },
+    })
+    if (exists) continue
+    await db.budgetItem.create({
+      data: {
+        monthId,
+        userId,
+        name: card.name,
+        category: card.category,
+        amount: null,
+        recurring: true,
+        itemType: 'recurring',
+        isCard: true,
+      },
+    })
+  }
+}
+
+const MONTH_INCLUDE = {
+  items: {
+    where: { parentId: null },
+    include: { children: true },
+    orderBy: [{ createdAt: 'asc' as const }, { id: 'asc' as const }],
+  },
+}
+
 export async function getOrCreateMonth(userId: string, year: number, month: number) {
   const existing = await db.budgetMonth.findUnique({
     where: { userId_year_month: { userId, year, month } },
-    include: {
-      items: {
-        where: { parentId: null },
-        include: { children: true },
-        orderBy: [{ createdAt: 'asc' }, { id: 'asc' }],
-      },
-    },
+    include: MONTH_INCLUDE,
   })
-  if (existing) return existing
+  if (existing) {
+    await syncCardsToMonth(userId, existing.id)
+    return db.budgetMonth.findUnique({
+      where: { userId_year_month: { userId, year, month } },
+      include: MONTH_INCLUDE,
+    })
+  }
 
   const prev = await db.budgetMonth.findFirst({
     where: {
@@ -146,15 +176,11 @@ export async function getOrCreateMonth(userId: string, year: number, month: numb
     }
   }
 
+  await syncCardsToMonth(userId, newMonth.id)
+
   return db.budgetMonth.findUnique({
     where: { id: newMonth.id },
-    include: {
-      items: {
-        where: { parentId: null },
-        include: { children: true },
-        orderBy: [{ createdAt: 'asc' }, { id: 'asc' }],
-      },
-    },
+    include: MONTH_INCLUDE,
   })
 }
 
