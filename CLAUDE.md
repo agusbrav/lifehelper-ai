@@ -170,3 +170,23 @@ pnpm test
 - Design specs go in `docs/superpowers/specs/` — also gitignored.
 - `docs/TODO.md` is the only planning artifact that IS committed — use it to track pending features/fixes by scope.
 - Never create plans or specs outside `docs/superpowers/`.
+
+---
+
+## 14. UI Design Principles
+
+### Responsiveness — always dynamic, never fixed
+- Never use fixed pixel heights on containers that hold variable content. Use `h-[Xpx] max-h-[85dvh]` when a stable size is needed so the panel shrinks gracefully on small screens and high zoom.
+- Prefer `dvh`/`svh` over `vh` for viewport-relative units — they account for mobile browser chrome (address bar show/hide).
+- Modals and panels must scroll their content internally (`overflow-y-auto` on the content area) rather than growing unbounded.
+- Width constraints use `max-w-*` not `w-*` so they shrink on narrow viewports.
+
+### Minimalism — less is more
+- Every UI element must earn its place. If something is rarely used or situational, put it behind a tab, collapse, or secondary action — not in the primary view.
+- Default state should be clean. Controls, labels, and actions appear on hover or inside panels when appropriate.
+- Avoid decorative elements that don't carry information.
+
+### Information architecture — related things together, unrelated things apart
+- Before adding any new control, setting, or action, ask: *where does this conceptually belong?* If it doesn't belong in the current view, find or create the right tab/section.
+- Tabs separate orthogonal concerns (e.g. General / Tarjetas / Categorías). Do not add a setting to a tab it doesn't belong to just because it's convenient.
+- When a feature request comes in, explicitly reason about placement before writing any code. If the right home isn't obvious, ask before implementing.
