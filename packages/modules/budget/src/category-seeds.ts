@@ -18,16 +18,17 @@ export const CATEGORY_SEEDS: Record<string, string> = {
   carniceria: 'comida',
   cafeteria: 'comida',
   cafe: 'comida',
-  // transporte
-  uber: 'transporte',
-  cabify: 'transporte',
-  taxi: 'transporte',
-  remis: 'transporte',
-  sube: 'transporte',
-  combustible: 'transporte',
-  nafta: 'transporte',
-  estacionamiento: 'transporte',
-  peaje: 'transporte',
+  // movilidad
+  uber: 'movilidad',
+  cabify: 'movilidad',
+  taxi: 'movilidad',
+  remis: 'movilidad',
+  auto: 'movilidad',
+  sube: 'movilidad',
+  combustible: 'movilidad',
+  nafta: 'movilidad',
+  estacionamiento: 'movilidad',
+  peaje: 'movilidad',
   // vivienda
   alquiler: 'vivienda',
   expensas: 'vivienda',
@@ -80,9 +81,9 @@ export const CATEGORY_SEEDS: Record<string, string> = {
   valija: 'viajes',
   pasaje: 'viajes',
   excursion: 'viajes',
-  // tarjeta
-  tarjeta: 'tarjeta',
-  visa: 'tarjeta',
-  mastercard: 'tarjeta',
-  amex: 'tarjeta',
+  // tarjetas
+  tarjeta: 'tarjetas',
+  visa: 'tarjetas',
+  mastercard: 'tarjetas',
+  amex: 'tarjetas',
 }

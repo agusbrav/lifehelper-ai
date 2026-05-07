@@ -2,6 +2,7 @@ import { db } from '@lifehelper/core'
 import { resolveContributions } from '@lifehelper/integrations'
 import { assertOwnsMonth, assertOwnsItem } from './ownership'
 import { computeCarryItems } from './month-logic'
+import { seedDefaultCategoryKeywords } from './category-keyword-actions'
 
 const DEFAULT_SEED = [
   { name: 'Alquiler', category: 'vivienda', recurring: true, itemType: 'recurring' },
@@ -44,6 +45,8 @@ const MONTH_INCLUDE = {
 }
 
 export async function getOrCreateMonth(userId: string, year: number, month: number) {
+  await seedDefaultCategoryKeywords(userId)
+
   const existing = await db.budgetMonth.findUnique({
     where: { userId_year_month: { userId, year, month } },
     include: MONTH_INCLUDE,
