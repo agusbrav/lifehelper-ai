@@ -109,7 +109,7 @@ export function AddExpenseRow({ monthId, keywordMap, categories }: Props) {
   return (
     <tr className="border-t border-[var(--border)] bg-[var(--muted)]">
       <td colSpan={5} className="py-3 px-4">
-        <form ref={formRef} onSubmit={handleSubmit} className="flex flex-wrap gap-2 items-center">
+        <form ref={formRef} onSubmit={handleSubmit} onKeyDown={e => { if (e.key === 'Escape') handleCancel() }} className="flex flex-wrap gap-2 items-center">
           <input
             name="name"
             required

@@ -35,7 +35,8 @@ export async function addInstallmentAction(formData: FormData) {
   const totalPayments = parseInt(formData.get('totalPayments') as string)
   const category = (formData.get('category') as string) || undefined
   const parentId = (formData.get('parentId') as string) || undefined
-  await addInstallment({ userId, monthId, name, amountCents, totalPayments, category, parentId })
+  const currency = (formData.get('currency') as string) || 'ARS'
+  await addInstallment({ userId, monthId, name, amountCents, totalPayments, category, parentId, currency })
   revalidatePath('/m/budget')
 }
 

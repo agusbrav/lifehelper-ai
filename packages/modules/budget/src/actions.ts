@@ -20,7 +20,12 @@ async function syncCardsToMonth(userId: string, monthId: string): Promise<void> 
     const exists = await db.budgetItem.findFirst({
       where: { monthId, userId, isCard: true, name: card.name },
     })
-    if (exists) continue
+    if (exists) {
+      if (exists.currency !== card.currency) {
+        await db.budgetItem.update({ where: { id: exists.id }, data: { currency: card.currency } })
+      }
+      continue
+    }
     await db.budgetItem.create({
       data: {
         monthId,
@@ -320,6 +325,7 @@ type AddInstallmentInput = {
   amountCents: number
   totalPayments: number
   parentId?: string
+  currency?: string
 }
 
 export async function addInstallment(input: AddInstallmentInput) {
@@ -338,6 +344,7 @@ export async function addInstallment(input: AddInstallmentInput) {
       installmentTotal: input.totalPayments,
       installmentNumber: 1,
       installmentGroupId,
+      currency: input.currency ?? 'ARS',
     },
   })
   await propagateToNextMonth(input.userId, input.monthId, item)

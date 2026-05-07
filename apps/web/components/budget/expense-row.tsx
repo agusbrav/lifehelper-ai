@@ -48,6 +48,7 @@ export function ExpenseRow({ item, depth = 0, monthId, keywordMap, categories, y
   const [collapsed, setCollapsed] = useState(item.isCard)
   const [addingCharge, setAddingCharge] = useState(false)
   const [chargeType, setChargeType] = useState<'one_time' | 'recurring' | 'subscription' | 'installment'>('one_time')
+  const [chargeCurrency, setChargeCurrency] = useState<'ARS' | 'USD'>(itemCurrency === 'USD' ? 'USD' : 'ARS')
   const [chargeTotalPayments, setChargeTotalPayments] = useState('')
   const [inflationOpen, setInflationOpen] = useState(false)
   const [inflationMode, setInflationMode] = useState<'pct' | 'direct'>('pct')
@@ -137,7 +138,7 @@ export function ExpenseRow({ item, depth = 0, monthId, keywordMap, categories, y
     const fd = new FormData(e.currentTarget)
     fd.set('monthId', monthId)
     fd.set('parentId', item.id)
-    fd.set('currency', item.currency ?? 'ARS')
+    fd.set('currency', chargeCurrency)
     e.currentTarget.reset()
     startTransition(async () => {
       if (chargeType === 'installment') {
@@ -149,6 +150,7 @@ export function ExpenseRow({ item, depth = 0, monthId, keywordMap, categories, y
       }
       setAddingCharge(false)
       setChargeType('one_time')
+      setChargeCurrency(itemCurrency === 'USD' ? 'USD' : 'ARS')
       setChargeTotalPayments('')
     })
   }
@@ -393,7 +395,7 @@ export function ExpenseRow({ item, depth = 0, monthId, keywordMap, categories, y
       {isCard && addingCharge && (
         <tr className="border-t border-purple-500/20 bg-purple-500/5">
           <td colSpan={5} className="py-2.5 pl-10 pr-4">
-            <form onSubmit={handleAddCharge} className="flex gap-2 items-center flex-wrap">
+            <form onSubmit={handleAddCharge} onKeyDown={e => { if (e.key === 'Escape') { setAddingCharge(false); setChargeType('one_time'); setChargeTotalPayments('') } }} className="flex gap-2 items-center flex-wrap">
               <input
                 name="name"
                 required
@@ -445,6 +447,22 @@ export function ExpenseRow({ item, depth = 0, monthId, keywordMap, categories, y
                     }`}
                   >
                     {t(`${type}Badge` as Parameters<typeof t>[0])}
+                  </button>
+                ))}
+              </div>
+              <div className="inline-flex rounded-lg border border-[var(--border)] overflow-hidden text-xs flex-shrink-0">
+                {(['ARS', 'USD'] as const).map(cur => (
+                  <button
+                    key={cur}
+                    type="button"
+                    onClick={() => setChargeCurrency(cur)}
+                    className={`px-2.5 py-1.5 font-medium transition-colors border-l border-[var(--border)] first:border-l-0 ${
+                      chargeCurrency === cur
+                        ? 'bg-blue-500/20 text-blue-300'
+                        : 'text-[var(--muted-fg)] hover:text-[var(--fg)]'
+                    }`}
+                  >
+                    {cur}
                   </button>
                 ))}
               </div>
