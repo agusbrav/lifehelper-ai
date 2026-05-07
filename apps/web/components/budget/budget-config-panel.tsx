@@ -65,19 +65,19 @@ export function BudgetConfigPanel({ year, month, cards, userKeywords }: Props) {
     startTransition(() => removeCardAction(cardId))
   }
 
-  function handleAddKeywordToCategory(category: string, keyword: string) {
-    const kw = keyword.trim()
-    if (!kw || !category) return
-    startTransition(() => addCategoryKeywordAction(kw, category))
+  function handleAddKeywordToCategory(category: string, raw: string) {
+    const keywords = raw.split(',').map(k => k.trim()).filter(Boolean)
+    if (!keywords.length || !category) return
+    startTransition(() => Promise.all(keywords.map(kw => addCategoryKeywordAction(kw, category))))
     setAddingToCategory(null)
   }
 
   function handleAddNewCategoryKeyword(e: React.FormEvent) {
     e.preventDefault()
-    const kw = newKeyword.trim()
+    const keywords = newKeyword.split(',').map(k => k.trim()).filter(Boolean)
     const cat = (selectedCategory || newCategory).trim()
-    if (!kw || !cat) return
-    startTransition(() => addCategoryKeywordAction(kw, cat))
+    if (!keywords.length || !cat) return
+    startTransition(() => Promise.all(keywords.map(kw => addCategoryKeywordAction(kw, cat))))
     setNewKeyword('')
     setNewCategory('')
     setSelectedCategory('')
@@ -367,7 +367,7 @@ function InlineKeywordInput({
         value={value}
         onChange={e => setValue(e.target.value)}
         onKeyDown={e => { if (e.key === 'Enter') { e.preventDefault(); commit() } if (e.key === 'Escape') onCancel() }}
-        placeholder="nueva palabra..."
+        placeholder="palabra, otra, más..."
         className={`${inputCls} flex-1`}
       />
       <button
