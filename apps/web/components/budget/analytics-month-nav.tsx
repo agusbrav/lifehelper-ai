@@ -16,12 +16,14 @@ export function AnalyticsMonthNav({ availableMonths, selectedYear, selectedMonth
   if (availableMonths.length === 0) return null
 
   const now = new Date()
-  const isCurrentMonth = selectedYear === now.getFullYear() && selectedMonth === now.getMonth() + 1
+  const nowYear = now.getFullYear()
+  const nowMonth = now.getMonth() + 1
+  const isCurrentMonth = selectedYear === nowYear && selectedMonth === nowMonth
 
-  const newest = availableMonths[0]!
   const oldest = availableMonths[availableMonths.length - 1]!
-  const isNewest = selectedYear === newest.year && selectedMonth === newest.month
   const isOldest = selectedYear === oldest.year && selectedMonth === oldest.month
+  // cap forward navigation at the current real month regardless of what's in availableMonths
+  const isNewest = selectedYear > nowYear || (selectedYear === nowYear && selectedMonth >= nowMonth)
 
   const monthLabel = format.dateTime(new Date(selectedYear, selectedMonth - 1, 1), { month: 'long' })
 
