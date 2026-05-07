@@ -49,6 +49,9 @@ export function ExpenseRow({ item, depth = 0, monthId, keywordMap, categories, y
   const [addingCharge, setAddingCharge] = useState(false)
   const [chargeType, setChargeType] = useState<'one_time' | 'recurring' | 'subscription' | 'installment'>('one_time')
   const [chargeCurrency, setChargeCurrency] = useState<'ARS' | 'USD'>(itemCurrency === 'USD' ? 'USD' : 'ARS')
+  const [chargeCategory, setChargeCategory] = useState('')
+  const chargeCategoryRef = useRef('')
+  const wasChargeAutoFilled = useRef(false)
   const [chargeTotalPayments, setChargeTotalPayments] = useState('')
   const [inflationOpen, setInflationOpen] = useState(false)
   const [inflationMode, setInflationMode] = useState<'pct' | 'direct'>('pct')
@@ -133,12 +136,46 @@ export function ExpenseRow({ item, depth = 0, monthId, keywordMap, categories, y
     if (e.key === 'Escape') setEditing(false)
   }
 
+  function handleChargeNameChange(e: React.ChangeEvent<HTMLInputElement>) {
+    const value = e.target.value
+    if (wasChargeAutoFilled.current || chargeCategoryRef.current === '') {
+      const lower = value.toLowerCase().trim()
+      let matched: string | null = null
+      if (lower && lower in keywordMap) {
+        matched = keywordMap[lower]!
+      } else if (lower) {
+        const keys = Object.keys(keywordMap).sort((a, b) => b.length - a.length)
+        for (const kw of keys) {
+          const pattern = new RegExp(`\\b${kw.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')}\\b`, 'i')
+          if (pattern.test(lower)) { matched = keywordMap[kw]!; break }
+        }
+      }
+      if (matched !== null) {
+        const cap = capitalize(matched)
+        setChargeCategory(cap)
+        chargeCategoryRef.current = cap
+        wasChargeAutoFilled.current = true
+      } else if (wasChargeAutoFilled.current) {
+        setChargeCategory('')
+        chargeCategoryRef.current = ''
+        wasChargeAutoFilled.current = false
+      }
+    }
+  }
+
+  function handleChargeCategoryChange(e: React.ChangeEvent<HTMLInputElement>) {
+    setChargeCategory(e.target.value)
+    chargeCategoryRef.current = e.target.value
+    wasChargeAutoFilled.current = false
+  }
+
   function handleAddCharge(e: React.FormEvent<HTMLFormElement>) {
     e.preventDefault()
     const fd = new FormData(e.currentTarget)
     fd.set('monthId', monthId)
     fd.set('parentId', item.id)
     fd.set('currency', chargeCurrency)
+    fd.set('category', chargeCategory)
     e.currentTarget.reset()
     startTransition(async () => {
       if (chargeType === 'installment') {
@@ -151,6 +188,9 @@ export function ExpenseRow({ item, depth = 0, monthId, keywordMap, categories, y
       setAddingCharge(false)
       setChargeType('one_time')
       setChargeCurrency(itemCurrency === 'USD' ? 'USD' : 'ARS')
+      setChargeCategory('')
+      chargeCategoryRef.current = ''
+      wasChargeAutoFilled.current = false
       setChargeTotalPayments('')
     })
   }
@@ -395,18 +435,21 @@ export function ExpenseRow({ item, depth = 0, monthId, keywordMap, categories, y
       {isCard && addingCharge && (
         <tr className="border-t border-purple-500/20 bg-purple-500/5">
           <td colSpan={5} className="py-2.5 pl-10 pr-4">
-            <form onSubmit={handleAddCharge} onKeyDown={e => { if (e.key === 'Escape') { setAddingCharge(false); setChargeType('one_time'); setChargeTotalPayments('') } }} className="flex gap-2 items-center flex-wrap">
+            <form onSubmit={handleAddCharge} onKeyDown={e => { if (e.key === 'Escape') { setAddingCharge(false); setChargeType('one_time'); setChargeCategory(''); chargeCategoryRef.current = ''; wasChargeAutoFilled.current = false; setChargeTotalPayments('') } }} className="flex gap-2 items-center flex-wrap">
               <input
                 name="name"
                 required
                 placeholder={t('chargeDescription')}
                 autoFocus
+                onChange={handleChargeNameChange}
                 className="rounded-lg border border-[var(--border)] bg-[var(--card-bg)] text-[var(--fg)] px-2.5 py-1.5 text-sm outline-none focus:ring-1 focus:ring-purple-400 flex-[2_1_8rem] min-w-0"
               />
               <input
                 name="category"
                 list={chargeDatalistId}
                 placeholder={t('category')}
+                value={chargeCategory}
+                onChange={handleChargeCategoryChange}
                 className="rounded-lg border border-[var(--border)] bg-[var(--card-bg)] text-[var(--fg)] px-2.5 py-1.5 text-sm outline-none focus:ring-1 focus:ring-purple-400 flex-[1_1_6rem] min-w-0 capitalize"
               />
               <datalist id={chargeDatalistId}>
@@ -474,7 +517,7 @@ export function ExpenseRow({ item, depth = 0, monthId, keywordMap, categories, y
               </button>
               <button
                 type="button"
-                onClick={() => { setAddingCharge(false); setChargeType('one_time'); setChargeTotalPayments('') }}
+                onClick={() => { setAddingCharge(false); setChargeType('one_time'); setChargeCategory(''); chargeCategoryRef.current = ''; wasChargeAutoFilled.current = false; setChargeTotalPayments('') }}
                 className="text-sm text-[var(--muted-fg)] hover:text-[var(--fg)] transition-colors flex-shrink-0"
               >
                 {t('cancel')}
