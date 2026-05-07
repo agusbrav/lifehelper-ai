@@ -15,6 +15,7 @@ type Item = {
   recurring: boolean
   itemType: string
   isCard: boolean
+  currency: string
   installmentTotal: number | null
   installmentNumber: number | null
   parentId: string | null
