@@ -52,11 +52,12 @@ describe('createSession', () => {
     const token = await createSession('user-1')
 
     expect(token).toBe('abc-token')
-    const call = vi.mocked(db.session.create).mock.calls[0][0]
+    const call = vi.mocked(db.session.create).mock.calls[0]![0]!
     expect(call.data.userId).toBe('user-1')
     const expectedExpiry = Date.now() + 7 * 24 * 60 * 60 * 1000
-    expect(call.data.expiresAt.getTime()).toBeGreaterThan(expectedExpiry - 5000)
-    expect(call.data.expiresAt.getTime()).toBeLessThan(expectedExpiry + 5000)
+    const expiresAt = call.data.expiresAt as Date
+    expect(expiresAt.getTime()).toBeGreaterThan(expectedExpiry - 5000)
+    expect(expiresAt.getTime()).toBeLessThan(expectedExpiry + 5000)
   })
 })
 
@@ -80,7 +81,7 @@ describe('getSession', () => {
       expiresAt: new Date('2020-01-01'),
       createdAt: new Date(),
       user: { id: 'user-1', email: 'a@b.com', hashedPassword: 'hash', locale: 'es', createdAt: new Date() },
-    })
+    } as any)
 
     const result = await getSession('expired')
     expect(result).toBeNull()
@@ -95,7 +96,7 @@ describe('getSession', () => {
       expiresAt: new Date(Date.now() + 1000000),
       createdAt: new Date(),
       user: { id: 'user-1', email: 'a@b.com', hashedPassword: 'hash', locale: 'es', createdAt: new Date() },
-    })
+    } as any)
 
     const result = await getSession('valid')
     expect(result).not.toBeNull()
