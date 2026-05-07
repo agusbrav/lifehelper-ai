@@ -1,4 +1,7 @@
 {
+  "env": {
+    "BRAINSTORM_PORT": "50000"
+  },
   "permissions": {
     "allow": [
       "Bash(pnpm type-check)",

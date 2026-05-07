@@ -131,9 +131,14 @@ pnpm test
 - Human-style messages: short, accurate, no AI attribution.
 - Never commit: `.env`, `docs/superpowers/`, `*.tsbuildinfo`, `.next/`, `node_modules/`.
 - One logical change per commit. Bug fix = one commit, feature = one commit per meaningful unit.
-- Before committing: verify `tsc --noEmit` passes and tests pass.
 - Check for em dashes (`—`) in code and replace with regular dashes (`-`). Exception: migration SQL files are immutable.
 - Push only after confirming no broken tests or type errors.
+
+**Pre-commit gate — all four steps required, no exceptions:**
+1. `pnpm type-check` — TypeScript must be clean across all packages.
+2. `pnpm test` — full Vitest suite must pass.
+3. `pnpm db:generate` — required whenever any `.prisma` file was touched; regenerates the client so runtime field access matches the schema.
+4. **Manual browser test** — start the dev server, exercise the golden path for whatever changed, and verify no regressions in adjacent features. Unit tests passing is not sufficient; browser confirmation is mandatory.
 
 ---
 
