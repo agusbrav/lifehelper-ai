@@ -39,9 +39,11 @@ export function BudgetConfigPanel({ year, month, cards, userKeywords }: Props) {
   const [addingToCategory, setAddingToCategory] = useState<string | null>(null)
   const addKwInputRef = useRef<HTMLInputElement>(null)
 
-  // Derived: all known categories (seeds + user), excluding internal system category
-  const seedCategories = [...new Set(Object.values(CATEGORY_SEEDS))].sort()
-  const visibleKeywords = userKeywords.filter(r => r.category !== 'system')
+  const HIDDEN_CATEGORIES = new Set(['system', 'tarjetas'])
+
+  // Derived: all known categories (seeds + user), excluding internal/managed ones
+  const seedCategories = [...new Set(Object.values(CATEGORY_SEEDS))].filter(c => !HIDDEN_CATEGORIES.has(c)).sort()
+  const visibleKeywords = userKeywords.filter(r => !HIDDEN_CATEGORIES.has(r.category))
   const userCategories = [...new Set(visibleKeywords.map(r => r.category))].sort()
   const allCategories = [...new Set([...seedCategories, ...userCategories])].sort()
 
