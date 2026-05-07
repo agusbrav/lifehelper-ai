@@ -20,7 +20,7 @@ export async function getOrCreateMonth(userId: string, year: number, month: numb
       items: {
         where: { parentId: null },
         include: { children: true },
-        orderBy: { createdAt: 'asc' },
+        orderBy: [{ createdAt: 'asc' }, { id: 'asc' }],
       },
     },
   })
@@ -152,7 +152,7 @@ export async function getOrCreateMonth(userId: string, year: number, month: numb
       items: {
         where: { parentId: null },
         include: { children: true },
-        orderBy: { createdAt: 'asc' },
+        orderBy: [{ createdAt: 'asc' }, { id: 'asc' }],
       },
     },
   })
