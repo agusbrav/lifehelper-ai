@@ -247,7 +247,7 @@ export function ExpenseTable({ items, monthId, keywordMap, categories, year, mon
               <ExpenseRow key={item.id} item={item} {...sharedRowProps} />
             ))}
 
-            <AddExpenseRow monthId={monthId} keywordMap={keywordMap} categories={categories} cards={allCards} />
+            <AddExpenseRow monthId={monthId} keywordMap={keywordMap} categories={categories} />
           </tbody>
         </table>
       </div>
