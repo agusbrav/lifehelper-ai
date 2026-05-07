@@ -177,63 +177,73 @@ type CarryableItem = {
   parentId: string | null
 }
 
+// Walks forward through all already-existing months, placing the carried item in each one.
+// This handles the case where future months were created before the item was added.
 async function propagateToNextMonth(userId: string, monthId: string, item: CarryableItem) {
-  const currentMonth = await db.budgetMonth.findUnique({
-    where: { id: monthId },
-    select: { year: true, month: true },
-  })
-  if (!currentMonth) return
+  let currentMonthId = monthId
+  let currentItem: CarryableItem = item
 
-  const nextYear = currentMonth.month === 12 ? currentMonth.year + 1 : currentMonth.year
-  const nextMonth = currentMonth.month === 12 ? 1 : currentMonth.month + 1
-
-  const nextMonthRecord = await db.budgetMonth.findUnique({
-    where: { userId_year_month: { userId, year: nextYear, month: nextMonth } },
-    select: { id: true },
-  })
-  if (!nextMonthRecord) return
-
-  const [carried] = computeCarryItems([{ ...item, children: [] }], 1)
-  if (!carried) return
-
-  const alreadyExists = await db.budgetItem.findFirst({
-    where: item.installmentGroupId
-      ? { monthId: nextMonthRecord.id, installmentGroupId: carried.installmentGroupId }
-      : { monthId: nextMonthRecord.id, name: carried.name, recurring: true },
-  })
-  if (alreadyExists) return
-
-  let nextParentId: string | null = null
-  if (item.parentId) {
-    const currentParent = await db.budgetItem.findUnique({
-      where: { id: item.parentId },
-      select: { name: true },
+  while (true) {
+    const currentMonth = await db.budgetMonth.findUnique({
+      where: { id: currentMonthId },
+      select: { year: true, month: true },
     })
-    if (currentParent) {
-      const nextParent = await db.budgetItem.findFirst({
-        where: { monthId: nextMonthRecord.id, name: currentParent.name, parentId: null },
-        select: { id: true },
-      })
-      nextParentId = nextParent?.id ?? null
-    }
-  }
+    if (!currentMonth) break
 
-  await db.budgetItem.create({
-    data: {
-      monthId: nextMonthRecord.id,
-      userId,
-      parentId: nextParentId,
-      name: carried.name,
-      category: carried.category,
-      amount: carried.amount,
-      amountCarried: carried.amountCarried,
-      recurring: carried.recurring,
-      itemType: carried.itemType,
-      installmentTotal: carried.installmentTotal,
-      installmentNumber: carried.installmentNumber,
-      installmentGroupId: carried.installmentGroupId,
-    },
-  })
+    const nextYear = currentMonth.month === 12 ? currentMonth.year + 1 : currentMonth.year
+    const nextMonthNum = currentMonth.month === 12 ? 1 : currentMonth.month + 1
+
+    const nextMonthRecord = await db.budgetMonth.findUnique({
+      where: { userId_year_month: { userId, year: nextYear, month: nextMonthNum } },
+      select: { id: true },
+    })
+    if (!nextMonthRecord) break
+
+    const [carried] = computeCarryItems([{ ...currentItem, children: [] }], 1)
+    if (!carried) break
+
+    const alreadyExists = await db.budgetItem.findFirst({
+      where: currentItem.installmentGroupId
+        ? { monthId: nextMonthRecord.id, installmentGroupId: carried.installmentGroupId }
+        : { monthId: nextMonthRecord.id, name: carried.name, recurring: true },
+    })
+    if (alreadyExists) break
+
+    let nextParentId: string | null = null
+    if (currentItem.parentId) {
+      const currentParent = await db.budgetItem.findUnique({
+        where: { id: currentItem.parentId },
+        select: { name: true },
+      })
+      if (currentParent) {
+        const nextParent = await db.budgetItem.findFirst({
+          where: { monthId: nextMonthRecord.id, name: currentParent.name, parentId: null },
+          select: { id: true },
+        })
+        nextParentId = nextParent?.id ?? null
+      }
+    }
+
+    const created = await db.budgetItem.create({
+      data: {
+        monthId: nextMonthRecord.id,
+        userId,
+        parentId: nextParentId,
+        name: carried.name,
+        category: carried.category,
+        amount: carried.amount,
+        amountCarried: carried.amountCarried,
+        recurring: carried.recurring,
+        itemType: carried.itemType,
+        installmentTotal: carried.installmentTotal,
+        installmentNumber: carried.installmentNumber,
+        installmentGroupId: carried.installmentGroupId,
+      },
+    })
+
+    currentMonthId = nextMonthRecord.id
+    currentItem = { ...carried, parentId: created.parentId }
+  }
 }
 
 export async function addExpense(input: AddExpenseInput) {
