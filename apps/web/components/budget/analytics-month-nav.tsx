@@ -22,8 +22,10 @@ export function AnalyticsMonthNav({ availableMonths, selectedYear, selectedMonth
 
   const oldest = availableMonths[availableMonths.length - 1]!
   const isOldest = selectedYear === oldest.year && selectedMonth === oldest.month
-  // cap forward navigation at the current real month regardless of what's in availableMonths
-  const isNewest = selectedYear > nowYear || (selectedYear === nowYear && selectedMonth >= nowMonth)
+  // cap forward navigation at one month ahead of today, matching the budget table behaviour
+  const maxYear = nowMonth === 12 ? nowYear + 1 : nowYear
+  const maxMonth = nowMonth === 12 ? 1 : nowMonth + 1
+  const isNewest = selectedYear > maxYear || (selectedYear === maxYear && selectedMonth >= maxMonth)
 
   const monthLabel = format.dateTime(new Date(selectedYear, selectedMonth - 1, 1), { month: 'long' })
 
