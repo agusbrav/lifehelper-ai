@@ -1,0 +1,138 @@
+// packages/modules/budget/src/tools.ts
+import { db } from '@lifehelper/core'
+import { addExpense, addInstallment, setAmount, getOrCreateMonth, getItemsForAnalytics } from './actions'
+import { computeCategoryTotals, computeUsdCategoryTotals, computeInflationAlerts } from './analytics'
+
+export type ToolContext = { year: number; month: number }
+
+export async function executeBudgetTool(
+  name: string,
+  input: Record<string, unknown>,
+  userId: string,
+  context: ToolContext,
+): Promise<string> {
+  switch (name) {
+    case 'add_expense':       return toolAddExpense(userId, context, input)
+    case 'add_installment':   return toolAddInstallment(userId, context, input)
+    case 'set_amount':        return toolSetAmount(userId, context, input)
+    case 'add_month':         return toolAddMonth(userId, input)
+    case 'get_summary':       return toolGetSummary(userId, context, input)
+    case 'get_inflation_report': return toolGetInflationReport(userId, context, input)
+    default: throw new Error(`Unknown budget tool: ${name}`)
+  }
+}
+
+async function toolAddExpense(
+  userId: string,
+  context: ToolContext,
+  input: Record<string, unknown>,
+): Promise<string> {
+  const month = await getOrCreateMonth(userId, context.year, context.month)
+  if (!month) throw new Error('Could not get or create month')
+  const name = input.name as string
+  const rawAmount = input.amount as number
+  const category = input.category as string
+  const currency = (input.currency as string | undefined) ?? 'ARS'
+  await addExpense({
+    userId,
+    monthId: month.id,
+    name,
+    amount: Math.round(rawAmount * 100),
+    category,
+    currency,
+  })
+  return `Added ${name} — $${rawAmount.toLocaleString()} ${currency} in ${category}`
+}
+
+async function toolAddInstallment(
+  userId: string,
+  context: ToolContext,
+  input: Record<string, unknown>,
+): Promise<string> {
+  const month = await getOrCreateMonth(userId, context.year, context.month)
+  if (!month) throw new Error('Could not get or create month')
+  const name = input.name as string
+  const rawAmount = input.amount as number
+  const totalPayments = input.totalPayments as number
+  const category = input.category as string
+  const currency = (input.currency as string | undefined) ?? 'ARS'
+  await addInstallment({
+    userId,
+    monthId: month.id,
+    name,
+    amountCents: Math.round(rawAmount * 100),
+    totalPayments,
+    category,
+    currency,
+  })
+  return `Added ${name} — $${rawAmount.toLocaleString()} ${currency} x ${totalPayments} installments in ${category}`
+}
+
+async function toolSetAmount(
+  userId: string,
+  context: ToolContext,
+  input: Record<string, unknown>,
+): Promise<string> {
+  const name = input.name as string
+  const rawAmount = input.amount as number
+  const budgetMonth = await db.budgetMonth.findUnique({
+    where: { userId_year_month: { userId, year: context.year, month: context.month } },
+    select: { id: true },
+  })
+  if (!budgetMonth) return `Month ${context.year}-${context.month} not found`
+  const item = await db.budgetItem.findFirst({
+    where: { userId, monthId: budgetMonth.id, name: { contains: name, mode: 'insensitive' } },
+    select: { id: true, name: true },
+  })
+  if (!item) return `Could not find an expense matching "${name}" in this month`
+  await setAmount({ userId, itemId: item.id, amountCents: Math.round(rawAmount * 100) })
+  return `Updated ${item.name} to $${rawAmount.toLocaleString()}`
+}
+
+async function toolAddMonth(userId: string, input: Record<string, unknown>): Promise<string> {
+  const year = input.year as number
+  const month = input.month as number
+  await getOrCreateMonth(userId, year, month)
+  return `Created ${year}-${String(month).padStart(2, '0')}`
+}
+
+async function toolGetSummary(
+  userId: string,
+  context: ToolContext,
+  input: Record<string, unknown>,
+): Promise<string> {
+  const year = (input.year as number | undefined) ?? context.year
+  const month = (input.month as number | undefined) ?? context.month
+  const allItems = await getItemsForAnalytics(userId)
+  const monthItems = allItems.filter(i => i.month.year === year && i.month.month === month)
+  const arsTotals = computeCategoryTotals(monthItems).sort((a, b) => b.total - a.total)
+  const usdTotals = computeUsdCategoryTotals(monthItems).sort((a, b) => b.total - a.total)
+  const arsTotal = arsTotals.reduce((s, c) => s + c.total, 0)
+  const usdTotal = usdTotals.reduce((s, c) => s + c.total, 0)
+  const topArs = arsTotals
+    .slice(0, 4)
+    .map(c => `${c.category ?? 'uncategorized'}: $${(c.total / 100).toLocaleString()}`)
+    .join(', ')
+  const usdLine = usdTotal > 0 ? ` | USD: $${(usdTotal / 100).toFixed(2)}` : ''
+  return `ARS: $${(arsTotal / 100).toLocaleString()}${usdLine} | Top: ${topArs}`
+}
+
+async function toolGetInflationReport(
+  userId: string,
+  context: ToolContext,
+  input: Record<string, unknown>,
+): Promise<string> {
+  const year = (input.year as number | undefined) ?? context.year
+  const month = (input.month as number | undefined) ?? context.month
+  const allItems = await getItemsForAnalytics(userId)
+  const currentItems = allItems.filter(i => i.month.year === year && i.month.month === month)
+  let prevMonth = month - 3
+  let prevYear = year
+  while (prevMonth <= 0) { prevMonth += 12; prevYear-- }
+  const prevItems = allItems.filter(i => i.month.year === prevYear && i.month.month === prevMonth)
+  const alerts = computeInflationAlerts(currentItems, prevItems)
+  if (alerts.length === 0) return 'No significant price changes vs 3 months ago'
+  return alerts
+    .map(a => `${a.name}: ${a.changePct > 0 ? '+' : ''}${a.changePct}% (was $${(a.previousAmount / 100).toLocaleString()}, now $${(a.currentAmount / 100).toLocaleString()})`)
+    .join('; ')
+}
