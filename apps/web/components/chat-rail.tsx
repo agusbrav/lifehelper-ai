@@ -38,6 +38,8 @@ export function ChatRail() {
 
   const isBudget = context.module === 'budget'
   const meta = context.metadata as { year?: number; month?: number }
+  const storageKey =
+    isBudget && meta.year && meta.month ? `chat-budget-${meta.year}-${meta.month}` : null
 
   const monthLabel =
     isBudget && meta.year && meta.month
@@ -51,10 +53,41 @@ export function ChatRail() {
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' })
   }, [messages, loading])
 
+  // Auto-open when entering budget module
   useEffect(() => {
-    setMessages([])
-    welcomeSentRef.current = false
-  }, [context.module, meta.year, meta.month])
+    if (isBudget) setOpen(true)
+  }, [isBudget])
+
+  // Load history from sessionStorage when context changes; skip welcome if history exists
+  useEffect(() => {
+    if (!storageKey) {
+      setMessages([])
+      welcomeSentRef.current = false
+      return
+    }
+    try {
+      const stored = sessionStorage.getItem(storageKey)
+      if (stored) {
+        setMessages(JSON.parse(stored) as ChatMessage[])
+        welcomeSentRef.current = true
+      } else {
+        setMessages([])
+        welcomeSentRef.current = false
+      }
+    } catch {
+      setMessages([])
+      welcomeSentRef.current = false
+    }
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [storageKey])
+
+  // Persist messages to sessionStorage on every update
+  useEffect(() => {
+    if (!storageKey || messages.length === 0) return
+    try {
+      sessionStorage.setItem(storageKey, JSON.stringify(messages))
+    } catch {}
+  }, [messages, storageKey])
 
   useEffect(() => {
     if (!open || !isBudget || welcomeSentRef.current) return
