@@ -20,6 +20,7 @@ Format: `- [ ] description` — check off when done, delete when shipped.
 - [x] USD currency support: currency field per expense (ARS default, USD for native cards); per-card USD-native setting (e.g. Amex)
 - [x] Summary bar shows ARS total and USD total as separate values (no conversion)
 - [ ] Analytics: dynamic layout where user can toggle which panels to show — gastos ARS por categoría, gastos USD, suscripciones total, etc.
+- [ ] Analytics: per-card breakdown — spending totals and charge history per credit card
 - [x] Consider removing paid/pending tracking — simplify to expense ledger + past statistics only; keep `paid` field in schema but hide the UI
 
 ---
