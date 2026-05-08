@@ -3,29 +3,27 @@ import { useRouter } from 'next/navigation'
 import { useFormatter, useTranslations } from 'next-intl'
 
 type Props = {
-  availableMonths: { year: number; month: number }[]
   selectedYear: number
   selectedMonth: number
+  firstYear: number
+  firstMonth: number
 }
 
-export function AnalyticsMonthNav({ availableMonths, selectedYear, selectedMonth }: Props) {
+export function AnalyticsMonthNav({ selectedYear, selectedMonth, firstYear, firstMonth }: Props) {
   const router = useRouter()
   const format = useFormatter()
   const t = useTranslations('budget')
-
-  if (availableMonths.length === 0) return null
 
   const now = new Date()
   const nowYear = now.getFullYear()
   const nowMonth = now.getMonth() + 1
   const isCurrentMonth = selectedYear === nowYear && selectedMonth === nowMonth
 
-  const oldest = availableMonths[availableMonths.length - 1]!
-  const isOldest = selectedYear === oldest.year && selectedMonth === oldest.month
-  // cap forward navigation at one month ahead of today, matching the budget table behaviour
+  const isFirstMonth = selectedYear === firstYear && selectedMonth === firstMonth
+
   const maxYear = nowMonth === 12 ? nowYear + 1 : nowYear
   const maxMonth = nowMonth === 12 ? 1 : nowMonth + 1
-  const isNewest = selectedYear > maxYear || (selectedYear === maxYear && selectedMonth >= maxMonth)
+  const isMaxMonth = selectedYear === maxYear && selectedMonth >= maxMonth
 
   const monthLabel = format.dateTime(new Date(selectedYear, selectedMonth - 1, 1), { month: 'long' })
 
@@ -41,11 +39,11 @@ export function AnalyticsMonthNav({ availableMonths, selectedYear, selectedMonth
 
   return (
     <div className="flex items-center gap-2">
-      <button onClick={() => navigate(-1)} disabled={isOldest} className={btnCls}>←</button>
+      <button onClick={() => navigate(-1)} disabled={isFirstMonth} className={btnCls}>←</button>
       <span className="text-base font-semibold text-[var(--fg)] min-w-[160px] text-center capitalize">
         {monthLabel} {selectedYear}
       </span>
-      <button onClick={() => navigate(1)} disabled={isNewest} className={btnCls}>→</button>
+      <button onClick={() => navigate(1)} disabled={isMaxMonth} className={btnCls}>→</button>
       {!isCurrentMonth && (
         <button onClick={() => router.push('/m/budget/analytics')} className={`ml-1 ${btnCls} text-xs`}>
           {t('today')}

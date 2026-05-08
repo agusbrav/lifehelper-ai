@@ -78,10 +78,10 @@ export default async function BudgetAnalyticsPage({
   const oldestAvailable = availableMonths[availableMonths.length - 1]
   const dataIndex = oldestAvailable ? oldestAvailable.year * 12 + oldestAvailable.month : nowIndex
   const floorIndex = Math.min(dataIndex, nowIndex)
+  const floorYear = Math.floor((floorIndex - 1) / 12)
+  const floorMonth = floorIndex - floorYear * 12
   if (selectedYear * 12 + selectedMonth < floorIndex && floorIndex <= maxIndex) {
-    const fy = Math.floor((floorIndex - 1) / 12)
-    const fm = floorIndex - fy * 12
-    redirect(`/m/budget/analytics?year=${fy}&month=${fm}`)
+    redirect(`/m/budget/analytics?year=${floorYear}&month=${floorMonth}`)
   }
 
   // 6-month window ending at selectedMonth
@@ -126,9 +126,10 @@ export default async function BudgetAnalyticsPage({
     <div className="p-6">
       <div className="flex items-center justify-between mb-4">
         <AnalyticsMonthNav
-          availableMonths={availableMonths}
           selectedYear={selectedYear}
           selectedMonth={selectedMonth}
+          firstYear={floorYear}
+          firstMonth={floorMonth}
         />
         <Link
           href="/m/budget"
