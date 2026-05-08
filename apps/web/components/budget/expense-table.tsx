@@ -15,13 +15,14 @@ type Item = {
   recurring: boolean
   itemType: string
   isCard: boolean
+  currency: string
   installmentTotal: number | null
   installmentNumber: number | null
   parentId: string | null
   children: Item[]
 }
 
-type Card = { id: string; name: string }
+type Card = { id: string; name: string; currency: string }
 type KeywordRecord = { id: string; keyword: string; category: string }
 
 type Props = {
@@ -246,7 +247,7 @@ export function ExpenseTable({ items, monthId, keywordMap, categories, year, mon
               <ExpenseRow key={item.id} item={item} {...sharedRowProps} />
             ))}
 
-            <AddExpenseRow monthId={monthId} keywordMap={keywordMap} categories={categories} cards={allCards} />
+            <AddExpenseRow monthId={monthId} keywordMap={keywordMap} categories={categories} />
           </tbody>
         </table>
       </div>

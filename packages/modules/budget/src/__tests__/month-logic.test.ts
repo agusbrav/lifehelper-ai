@@ -6,6 +6,7 @@ const base: SourceItem = {
   name: 'Rent',
   category: 'Housing',
   amount: 120000,
+  currency: 'ARS',
   recurring: true,
   itemType: 'recurring',
   isCard: false,
@@ -34,7 +35,8 @@ describe('computeCarryItems', () => {
       ...base,
       name: 'Credit Card Visa',
       children: [
-        { name: 'Netflix', category: 'Subscriptions', amount: 1800, recurring: true,
+        { name: 'Netflix', category: 'Subscriptions', amount: 1800, currency: 'ARS', recurring: true,
+          itemType: 'subscription', isCard: false,
           installmentTotal: null, installmentNumber: null, installmentGroupId: null, children: [] },
       ],
     }
@@ -48,7 +50,8 @@ describe('computeCarryItems', () => {
     const parent: SourceItem = {
       ...base,
       children: [
-        { name: 'One-off charge', category: null, amount: 500, recurring: false,
+        { name: 'One-off charge', category: null, amount: 500, currency: 'ARS', recurring: false,
+          itemType: 'one_time', isCard: false,
           installmentTotal: null, installmentNumber: null, installmentGroupId: null, children: [] },
       ],
     }
@@ -58,7 +61,8 @@ describe('computeCarryItems', () => {
 
   it('increments installmentNumber on carry', () => {
     const item: SourceItem = {
-      name: 'Phone', category: 'Tech', amount: 10000, recurring: false,
+      name: 'Phone', category: 'Tech', amount: 10000, currency: 'ARS', recurring: false,
+      itemType: 'one_time', isCard: false,
       installmentTotal: 12, installmentNumber: 3, installmentGroupId: 'grp-1', children: [],
     }
     const result = computeCarryItems([item])
@@ -68,7 +72,8 @@ describe('computeCarryItems', () => {
 
   it('carries the final installment once and then stops (sets installmentTotal null)', () => {
     const item: SourceItem = {
-      name: 'Phone', category: 'Tech', amount: 10000, recurring: false,
+      name: 'Phone', category: 'Tech', amount: 10000, currency: 'ARS', recurring: false,
+      itemType: 'one_time', isCard: false,
       installmentTotal: 12, installmentNumber: 12, installmentGroupId: 'grp-1', children: [],
     }
     const result = computeCarryItems([item])
@@ -80,7 +85,8 @@ describe('computeCarryItems', () => {
 
   it('preserves installmentGroupId on non-final carry', () => {
     const item: SourceItem = {
-      name: 'Phone', category: 'Tech', amount: 10000, recurring: false,
+      name: 'Phone', category: 'Tech', amount: 10000, currency: 'ARS', recurring: false,
+      itemType: 'one_time', isCard: false,
       installmentTotal: 12, installmentNumber: 3, installmentGroupId: 'grp-1', children: [],
     }
     const result = computeCarryItems([item])
@@ -89,7 +95,8 @@ describe('computeCarryItems', () => {
 
   it('full installment lifecycle: last payment carry is not re-carried', () => {
     const lastPayment: SourceItem = {
-      name: 'Phone', category: 'Tech', amount: 10000, recurring: false,
+      name: 'Phone', category: 'Tech', amount: 10000, currency: 'ARS', recurring: false,
+      itemType: 'one_time', isCard: false,
       installmentTotal: 12, installmentNumber: 12, installmentGroupId: 'grp-1', children: [],
     }
     // Month N: carry the last payment
@@ -105,7 +112,7 @@ describe('computeCarryItems', () => {
 
   it('does not carry an installment after its last payment', () => {
     const item: SourceItem = {
-      name: 'Phone', category: 'Tech', amount: 10000, recurring: false,
+      name: 'Phone', category: 'Tech', amount: 10000, currency: 'ARS', recurring: false,
       itemType: 'one_time', isCard: false,
       installmentTotal: null, installmentNumber: 12, installmentGroupId: 'grp-1', children: [],
     }
@@ -124,6 +131,7 @@ describe('computeCarryItems', () => {
       name: 'Visa',
       category: 'tarjeta',
       amount: null,
+      currency: 'ARS',
       recurring: true,
       itemType: 'recurring',
       isCard: true,

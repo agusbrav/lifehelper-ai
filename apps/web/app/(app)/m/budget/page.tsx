@@ -60,8 +60,13 @@ export default async function BudgetPage({ searchParams }: Props) {
     if (ch.length > 0) return ch.reduce((s, c) => s + (c.amount ?? 0), 0)
     return i.amount ?? 0
   }
-  const paidCents = items.filter(i => i.paid).reduce((sum, i) => sum + effectiveAmount(i), 0)
-  const pendingCents = items.filter(i => !i.paid).reduce((sum, i) => sum + effectiveAmount(i), 0)
+
+  const arsItems = items.filter(i => (i.currency ?? 'ARS') !== 'USD')
+  const usdItems = items.filter(i => i.currency === 'USD')
+  const paidArsCents = arsItems.filter(i => i.paid).reduce((s, i) => s + effectiveAmount(i), 0)
+  const pendingArsCents = arsItems.filter(i => !i.paid).reduce((s, i) => s + effectiveAmount(i), 0)
+  const paidUsdCents = usdItems.filter(i => i.paid).reduce((s, i) => s + effectiveAmount(i), 0)
+  const pendingUsdCents = usdItems.filter(i => !i.paid).reduce((s, i) => s + effectiveAmount(i), 0)
 
   // Children from the DB query are one level deep and never have sub-children;
   // cast to satisfy the recursive Item type expected by ExpenseTable.
@@ -73,7 +78,12 @@ export default async function BudgetPage({ searchParams }: Props) {
       <div className="flex flex-wrap items-center gap-x-4 gap-y-3 mb-6">
         <MonthNav year={year} month={month} firstYear={firstMonth?.year} firstMonth={firstMonth?.month} />
         <div className="flex flex-wrap items-center gap-x-4 gap-y-2 ml-auto">
-          <SummaryBar paidCents={paidCents} pendingCents={pendingCents} />
+          <SummaryBar
+            paidArsCents={paidArsCents}
+            pendingArsCents={pendingArsCents}
+            paidUsdCents={paidUsdCents}
+            pendingUsdCents={pendingUsdCents}
+          />
           <Link
             href="/m/budget/analytics"
             className="text-sm text-[var(--accent)] hover:opacity-80 font-medium whitespace-nowrap"

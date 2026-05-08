@@ -64,14 +64,17 @@ Budget (or any target) calls resolveContributions() → receives contributions p
 
 - Schema lives in `packages/core/prisma/schema.prisma` (merged at build time).
 - Each module owns a fragment: `packages/modules/{id}/prisma/schema.prisma`.
-- **Always run `pnpm merge-schemas` before `pnpm db:migrate`.**
+- **Always run `pnpm merge-schemas` before any schema operation.**
 - Commands (run from workspace root):
   ```
   pnpm merge-schemas          # merge module fragments into core schema
   pnpm db:generate            # prisma generate
   pnpm db:migrate             # prisma migrate dev
   pnpm db:studio              # prisma studio
+  npx prisma db push --schema packages/core/prisma/schema.prisma   # push without migration history (dev only)
   ```
+- **Double-merge prevention**: `merge-schemas` appends the module fragment to the core schema. If the fragment was already appended (e.g. from a previous run), running it again duplicates the models. **Before running `pnpm merge-schemas`, always restore `packages/core/prisma/schema.prisma` to its base content** (datasource + generator + core models only, up to and including `ModuleContextCache`). The easiest way: `git checkout packages/core/prisma/schema.prisma` to restore it from git, then run `pnpm merge-schemas`.
+- **Migration history drift**: This project has used `db push` for some schema changes, which bypasses migration history. If `pnpm db:migrate` fails with "drift detected", use `npx prisma db push --schema packages/core/prisma/schema.prisma` instead — it syncs the DB to the current schema without caring about migration history. Only use this in dev.
 - Prisma is pinned to **6.x**. Do not upgrade to 7.x without a dedicated migration (datasource url moved to prisma.config.ts in v7).
 - `@prisma/client` must be in `apps/web` dependencies (not just `packages/core`) for `serverExternalPackages` to resolve the native binary.
 
@@ -128,9 +131,14 @@ pnpm test
 - Human-style messages: short, accurate, no AI attribution.
 - Never commit: `.env`, `docs/superpowers/`, `*.tsbuildinfo`, `.next/`, `node_modules/`.
 - One logical change per commit. Bug fix = one commit, feature = one commit per meaningful unit.
-- Before committing: verify `tsc --noEmit` passes and tests pass.
 - Check for em dashes (`—`) in code and replace with regular dashes (`-`). Exception: migration SQL files are immutable.
 - Push only after confirming no broken tests or type errors.
+
+**Pre-commit gate — all four steps required, no exceptions:**
+1. `pnpm type-check` — TypeScript must be clean across all packages.
+2. `pnpm test` — full Vitest suite must pass.
+3. `pnpm db:generate` — required whenever any `.prisma` file was touched; regenerates the client so runtime field access matches the schema.
+4. **Manual browser test** — start the dev server, exercise the golden path for whatever changed, and verify no regressions in adjacent features. Unit tests passing is not sufficient; browser confirmation is mandatory.
 
 ---
 

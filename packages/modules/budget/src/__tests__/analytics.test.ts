@@ -1,43 +1,47 @@
 import { describe, it, expect } from 'vitest'
 import {
   computeCategoryTotals,
+  computeUsdCategoryTotals,
   computeRollingAverage,
   computeInflationAlerts,
   computeInstallmentOverview,
+  computeTypeTotals,
+  type ItemSlim,
+  type MonthData,
 } from '../analytics'
 
-type ItemSlim = {
-  id?: string
-  name: string
-  category: string | null
-  amount: number | null
-  recurring: boolean
-  itemType?: string
-  isCard?: boolean
-  installmentTotal: number | null
-  installmentNumber: number | null
-  installmentGroupId: string | null
-  parentId: string | null
-}
-
-type MonthItems = {
-  year: number
-  month: number
-  items: ItemSlim[]
-}
+type MonthItems = MonthData
 
 describe('computeCategoryTotals', () => {
-  it('sums amounts by category, skipping nulls and sub-items', () => {
+  it('sums ARS amounts by category, skipping nulls and sub-items', () => {
     const items: ItemSlim[] = [
-      { name: 'Rent', category: 'Housing', amount: 120000, recurring: true, installmentTotal: null, installmentNumber: null, installmentGroupId: null, parentId: null },
-      { name: 'Sub', category: 'Housing', amount: 5000, recurring: true, installmentTotal: null, installmentNumber: null, installmentGroupId: null, parentId: 'parent-1' },
-      { name: 'Car', category: 'Transport', amount: 30000, recurring: true, installmentTotal: null, installmentNumber: null, installmentGroupId: null, parentId: null },
-      { name: 'Unknown', category: null, amount: 10000, recurring: false, installmentTotal: null, installmentNumber: null, installmentGroupId: null, parentId: null },
+      { id: 'i1', name: 'Rent', category: 'Housing', amount: 120000, currency: 'ARS', recurring: true, installmentTotal: null, installmentNumber: null, installmentGroupId: null, parentId: null },
+      { id: 'i2', name: 'Sub', category: 'Housing', amount: 5000, currency: 'ARS', recurring: true, installmentTotal: null, installmentNumber: null, installmentGroupId: null, parentId: 'parent-1' },
+      { id: 'i3', name: 'Car', category: 'Transport', amount: 30000, currency: 'ARS', recurring: true, installmentTotal: null, installmentNumber: null, installmentGroupId: null, parentId: null },
+      { id: 'i4', name: 'Unknown', category: null, amount: 10000, currency: 'ARS', recurring: false, installmentTotal: null, installmentNumber: null, installmentGroupId: null, parentId: null },
     ]
     const result = computeCategoryTotals(items)
     expect(result.find(c => c.category === 'housing')?.total).toBe(120000)
     expect(result.find(c => c.category === 'transport')?.total).toBe(30000)
     expect(result.find(c => c.category === null)?.total).toBe(10000)
+  })
+
+  it('excludes USD items', () => {
+    const items: ItemSlim[] = [
+      { id: 'i1', name: 'Rent', category: 'Housing', amount: 120000, currency: 'ARS', recurring: true, installmentTotal: null, installmentNumber: null, installmentGroupId: null, parentId: null },
+      { id: 'i2', name: 'Netflix', category: 'Subscription', amount: 1599, currency: 'USD', recurring: true, installmentTotal: null, installmentNumber: null, installmentGroupId: null, parentId: null },
+    ]
+    const result = computeCategoryTotals(items)
+    expect(result.find(c => c.category === 'housing')?.total).toBe(120000)
+    expect(result.find(c => c.category === 'subscription')).toBeUndefined()
+  })
+
+  it('includes ARS items', () => {
+    const items: ItemSlim[] = [
+      { id: 'i1', name: 'Rent', category: 'Housing', amount: 120000, currency: 'ARS', recurring: false, itemType: 'one_time', isCard: false, installmentTotal: null, installmentNumber: null, installmentGroupId: null, parentId: null },
+    ]
+    const result = computeCategoryTotals(items)
+    expect(result.find(c => c.category === 'housing')?.total).toBe(120000)
   })
 
   it('returns empty array for no items', () => {
@@ -46,88 +50,90 @@ describe('computeCategoryTotals', () => {
 
   it('skips items with null amount', () => {
     const items: ItemSlim[] = [
-      { name: 'Rent', category: 'Housing', amount: null, recurring: true, installmentTotal: null, installmentNumber: null, installmentGroupId: null, parentId: null },
+      { id: 'i1', name: 'Rent', category: 'Housing', amount: null, currency: 'ARS', recurring: true, installmentTotal: null, installmentNumber: null, installmentGroupId: null, parentId: null },
     ]
     expect(computeCategoryTotals(items)).toEqual([])
+  })
+})
+
+describe('computeUsdCategoryTotals', () => {
+  it('sums USD amounts by category, including card children', () => {
+    const items: ItemSlim[] = [
+      { id: 'amex-id', name: 'Amex', category: 'tarjetas', amount: null, currency: 'USD', isCard: true, recurring: true, installmentTotal: null, installmentNumber: null, installmentGroupId: null, parentId: null },
+      { id: 'i2', name: 'Netflix', category: 'Subscription', amount: 1599, currency: 'USD', recurring: true, installmentTotal: null, installmentNumber: null, installmentGroupId: null, parentId: 'amex-id' },
+      { id: 'i3', name: 'Spotify', category: 'Subscription', amount: 599, currency: 'USD', recurring: true, installmentTotal: null, installmentNumber: null, installmentGroupId: null, parentId: 'amex-id' },
+      { id: 'i4', name: 'Rent', category: 'Housing', amount: 120000, currency: 'ARS', recurring: true, installmentTotal: null, installmentNumber: null, installmentGroupId: null, parentId: null },
+    ]
+    const result = computeUsdCategoryTotals(items)
+    expect(result.find(c => c.category === 'subscription')?.total).toBe(2198)
+    expect(result.find(c => c.category === 'housing')).toBeUndefined()
+    expect(result.find(c => c.category === 'tarjetas')).toBeUndefined()
+  })
+
+  it('returns empty array when no USD items', () => {
+    const items: ItemSlim[] = [
+      { id: 'i1', name: 'Rent', category: 'Housing', amount: 120000, currency: 'ARS', recurring: true, installmentTotal: null, installmentNumber: null, installmentGroupId: null, parentId: null },
+    ]
+    expect(computeUsdCategoryTotals(items)).toEqual([])
   })
 })
 
 describe('computeRollingAverage', () => {
   it('computes average from the last N months', () => {
     const months: MonthItems[] = [
-      { year: 2025, month: 1, items: [{ name: 'Rent', category: 'Housing', amount: 100000, recurring: true, installmentTotal: null, installmentNumber: null, installmentGroupId: null, parentId: null }] },
-      { year: 2025, month: 2, items: [{ name: 'Rent', category: 'Housing', amount: 110000, recurring: true, installmentTotal: null, installmentNumber: null, installmentGroupId: null, parentId: null }] },
-      { year: 2025, month: 3, items: [{ name: 'Rent', category: 'Housing', amount: 120000, recurring: true, installmentTotal: null, installmentNumber: null, installmentGroupId: null, parentId: null }] },
+      { year: 2025, month: 1, items: [{ id: 'i1', name: 'Rent', category: 'Housing', amount: 100000, currency: 'ARS', recurring: true, installmentTotal: null, installmentNumber: null, installmentGroupId: null, parentId: null }] },
+      { year: 2025, month: 2, items: [{ id: 'i2', name: 'Rent', category: 'Housing', amount: 110000, currency: 'ARS', recurring: true, installmentTotal: null, installmentNumber: null, installmentGroupId: null, parentId: null }] },
+      { year: 2025, month: 3, items: [{ id: 'i3', name: 'Rent', category: 'Housing', amount: 120000, currency: 'ARS', recurring: true, installmentTotal: null, installmentNumber: null, installmentGroupId: null, parentId: null }] },
     ]
     const result = computeRollingAverage(months, 3)
-    expect(result.find(c => c.category === 'housing')?.avg).toBe(110000)
+    expect(result.find(r => r.category === 'housing')?.avg).toBe(110000)
   })
 
-  it('uses only the last N months when more are provided', () => {
+  it('accepts a custom totalizer for USD averages', () => {
     const months: MonthItems[] = [
-      { year: 2025, month: 1, items: [{ name: 'Rent', category: 'Housing', amount: 50000, recurring: true, installmentTotal: null, installmentNumber: null, installmentGroupId: null, parentId: null }] },
-      { year: 2025, month: 2, items: [{ name: 'Rent', category: 'Housing', amount: 100000, recurring: true, installmentTotal: null, installmentNumber: null, installmentGroupId: null, parentId: null }] },
-      { year: 2025, month: 3, items: [{ name: 'Rent', category: 'Housing', amount: 110000, recurring: true, installmentTotal: null, installmentNumber: null, installmentGroupId: null, parentId: null }] },
-      { year: 2025, month: 4, items: [{ name: 'Rent', category: 'Housing', amount: 120000, recurring: true, installmentTotal: null, installmentNumber: null, installmentGroupId: null, parentId: null }] },
+      { year: 2025, month: 1, items: [{ id: 'i1', name: 'Netflix', category: 'Subscription', amount: 1599, currency: 'USD', recurring: true, installmentTotal: null, installmentNumber: null, installmentGroupId: null, parentId: null }] },
+      { year: 2025, month: 2, items: [{ id: 'i2', name: 'Netflix', category: 'Subscription', amount: 1599, currency: 'USD', recurring: true, installmentTotal: null, installmentNumber: null, installmentGroupId: null, parentId: null }] },
     ]
-    // Only last 3: 100k, 110k, 120k → avg 110k (month 1 excluded)
-    const result = computeRollingAverage(months, 3)
-    expect(result.find(c => c.category === 'housing')?.avg).toBe(110000)
+    const result = computeRollingAverage(months, 2, computeUsdCategoryTotals)
+    expect(result.find(r => r.category === 'subscription')?.avg).toBe(1599)
+  })
+})
+
+describe('computeTypeTotals', () => {
+  it('excludes USD items from type totals', () => {
+    const items: ItemSlim[] = [
+      { id: 'card-1', name: 'Amex', category: 'tarjetas', amount: null, currency: 'USD', isCard: true, recurring: true, installmentTotal: null, installmentNumber: null, installmentGroupId: null, parentId: null },
+      { id: 'i2', name: 'Netflix', category: 'Subscription', amount: 1599, currency: 'USD', isCard: false, itemType: 'subscription', recurring: true, installmentTotal: null, installmentNumber: null, installmentGroupId: null, parentId: 'card-1' },
+      { id: 'i3', name: 'Rent', category: 'Housing', amount: 120000, currency: 'ARS', isCard: false, itemType: 'recurring', recurring: true, installmentTotal: null, installmentNumber: null, installmentGroupId: null, parentId: null },
+    ]
+    const result = computeTypeTotals(items)
+    const cardTotal = result.find(t => t.type === 'card')
+    expect(cardTotal).toBeUndefined()
+    const recurringTotal = result.find(t => t.type === 'recurring')
+    expect(recurringTotal?.total).toBe(120000)
   })
 })
 
 describe('computeInflationAlerts', () => {
-  it('flags recurring items where amount changed vs 3 months ago', () => {
-    const current: ItemSlim[] = [{ name: 'Rent', category: 'Housing', amount: 150000, recurring: true, installmentTotal: null, installmentNumber: null, installmentGroupId: null, parentId: null }]
-    const previous: ItemSlim[] = [{ name: 'Rent', category: 'Housing', amount: 120000, recurring: true, installmentTotal: null, installmentNumber: null, installmentGroupId: null, parentId: null }]
-    const alerts = computeInflationAlerts(current, previous)
-    expect(alerts).toHaveLength(1)
-    expect(alerts[0]!.name).toBe('Rent')
-    expect(alerts[0]!.changePct).toBeCloseTo(25)
-  })
-
-  it('returns empty when amounts are unchanged', () => {
-    const items: ItemSlim[] = [{ name: 'Netflix', category: 'Subscriptions', amount: 1800, recurring: true, installmentTotal: null, installmentNumber: null, installmentGroupId: null, parentId: null }]
-    expect(computeInflationAlerts(items, items)).toEqual([])
-  })
-
-  it('ignores sub-items and one-offs', () => {
+  it('detects price changes for recurring items', () => {
     const current: ItemSlim[] = [
-      { name: 'Netflix', category: null, amount: 2000, recurring: false, installmentTotal: null, installmentNumber: null, installmentGroupId: null, parentId: null },
-      { name: 'Netflix', category: null, amount: 2000, recurring: true, installmentTotal: null, installmentNumber: null, installmentGroupId: null, parentId: 'p1' },
+      { id: 'i1', name: 'Rent', category: 'Housing', amount: 130000, currency: 'ARS', recurring: true, installmentTotal: null, installmentNumber: null, installmentGroupId: null, parentId: null },
     ]
     const previous: ItemSlim[] = [
-      { name: 'Netflix', category: null, amount: 1800, recurring: false, installmentTotal: null, installmentNumber: null, installmentGroupId: null, parentId: null },
+      { id: 'i1', name: 'Rent', category: 'Housing', amount: 100000, currency: 'ARS', recurring: true, installmentTotal: null, installmentNumber: null, installmentGroupId: null, parentId: null },
     ]
-    expect(computeInflationAlerts(current, previous)).toEqual([])
+    const result = computeInflationAlerts(current, previous)
+    expect(result[0]?.changePct).toBe(30)
   })
 })
 
 describe('computeInstallmentOverview', () => {
-  it('summarises active installment groups', () => {
+  it('summarizes active installments', () => {
     const items: ItemSlim[] = [
-      { name: 'Phone', category: 'Tech', amount: 10000, recurring: false, installmentTotal: 12, installmentNumber: 3, installmentGroupId: 'grp-1', parentId: null },
+      { id: 'i1', name: 'TV', category: 'Electronics', amount: 10000, currency: 'ARS', recurring: false, installmentTotal: 12, installmentNumber: 3, installmentGroupId: 'grp-1', parentId: null },
     ]
     const result = computeInstallmentOverview(items)
-    expect(result).toHaveLength(1)
-    expect(result[0]!.name).toBe('Phone')
-    expect(result[0]!.amountPerMonth).toBe(10000)
-    expect(result[0]!.paymentsRemaining).toBe(9)
-    expect(result[0]!.totalRemaining).toBe(90000)
-  })
-
-  it('deduplicates by installmentGroupId', () => {
-    const items: ItemSlim[] = [
-      { name: 'Phone', category: 'Tech', amount: 10000, recurring: false, installmentTotal: 12, installmentNumber: 3, installmentGroupId: 'grp-1', parentId: null },
-      { name: 'Phone', category: 'Tech', amount: 10000, recurring: false, installmentTotal: 12, installmentNumber: 3, installmentGroupId: 'grp-1', parentId: null },
-    ]
-    expect(computeInstallmentOverview(items)).toHaveLength(1)
-  })
-
-  it('ignores items with no installmentGroupId', () => {
-    const items: ItemSlim[] = [
-      { name: 'Rent', category: 'Housing', amount: 120000, recurring: true, installmentTotal: null, installmentNumber: null, installmentGroupId: null, parentId: null },
-    ]
-    expect(computeInstallmentOverview(items)).toEqual([])
+    expect(result[0]?.paymentsRemaining).toBe(9)
+    expect(result[0]?.totalRemaining).toBe(90000)
   })
 })

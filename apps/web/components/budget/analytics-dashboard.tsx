@@ -62,6 +62,10 @@ type Props = {
   inflationAlerts: InflationAlert[]
   installments: InstallmentSummary[]
   monthlyTotals: MonthlyTotal[]
+  usdCategoryTotals: CategoryTotal[]
+  usdAvg3mo: RollingAvgResult[]
+  usdAvg6mo: RollingAvgResult[]
+  usdMonthlyTotals: MonthlyTotal[]
 }
 
 export function AnalyticsDashboard({
@@ -72,6 +76,10 @@ export function AnalyticsDashboard({
   inflationAlerts,
   installments,
   monthlyTotals,
+  usdCategoryTotals,
+  usdAvg3mo,
+  usdAvg6mo,
+  usdMonthlyTotals,
 }: Props) {
   const t = useTranslations('analytics')
   const tBudget = useTranslations('budget')
@@ -81,6 +89,8 @@ export function AnalyticsDashboard({
 
   const fmt = (cents: number) =>
     '$' + (cents / 100).toLocaleString(locale, { minimumFractionDigits: 0 })
+  const fmtUsd = (cents: number) =>
+    'USD ' + (cents / 100).toLocaleString(locale, { minimumFractionDigits: 2, maximumFractionDigits: 2 })
 
   const sortedCategoryTotals = useMemo(
     () => [...categoryTotals].sort((a, b) => b.total - a.total),
@@ -449,6 +459,111 @@ export function AnalyticsDashboard({
           </div>
         </section>
       )}
+
+      {/* USD section */}
+      {usdCategoryTotals.length > 0 && (() => {
+        const sortedUsd = [...usdCategoryTotals].sort((a, b) => b.total - a.total)
+        const usdColorMap = buildColorMap(sortedUsd)
+        const usdMax = Math.max(...sortedUsd.map(c => c.total), 1)
+        const usdTotal = sortedUsd.reduce((s, c) => s + c.total, 0)
+
+        return (
+          <section>
+            <h2 className="text-xs font-semibold text-[var(--muted-fg)] mb-3 uppercase tracking-wide">
+              {t('usdTitle')}
+            </h2>
+            <div className="grid grid-cols-1 md:grid-cols-[200px_1fr] gap-6 items-start">
+              <div className="flex flex-col items-center gap-4">
+                <DonutChart
+                  segments={sortedUsd.map(c => ({ category: c.category ?? '__null__', value: c.total, color: usdColorMap.get(c.category) ?? PALETTE[0]! }))}
+                  total={usdTotal}
+                  centerLabel={'USD ' + (usdTotal / 100).toLocaleString(locale, { maximumFractionDigits: 0 })}
+                  onToggle={() => {}}
+                />
+                <div className="w-full flex flex-col gap-1.5">
+                  {sortedUsd.map(c => (
+                    <div key={c.category ?? '__null__'} className="flex items-center gap-2 text-xs">
+                      <span className="w-2.5 h-2.5 rounded-full flex-shrink-0" style={{ background: usdColorMap.get(c.category) ?? PALETTE[0]! }} />
+                      <span className="flex-1 capitalize">{c.category ?? t('uncategorized')}</span>
+                      <span className="text-[var(--muted-fg)]">{usdTotal > 0 ? Math.round((c.total / usdTotal) * 100) : 0}%</span>
+                    </div>
+                  ))}
+                </div>
+              </div>
+
+              <div className="rounded-2xl border border-[var(--border)] bg-[var(--card-bg)] overflow-hidden">
+                <table className="w-full border-collapse text-sm">
+                  <thead>
+                    <tr className="bg-[var(--muted)]">
+                      <th className="text-left py-2.5 pl-5 text-xs font-medium text-[var(--muted-fg)] uppercase tracking-wide">{t('usdByCategory')}</th>
+                      <th className="text-right py-2.5 px-4 text-xs font-medium text-[var(--muted-fg)] uppercase tracking-wide w-28">{t('thisMonth')}</th>
+                      <th className="text-right py-2.5 px-4 text-xs font-medium text-[var(--muted-fg)] uppercase tracking-wide w-24">{t('avg3mo')}</th>
+                      <th className="text-right py-2.5 px-4 text-xs font-medium text-[var(--muted-fg)] uppercase tracking-wide w-24">{t('avg6mo')}</th>
+                      <th className="py-2.5 pr-5 w-36" />
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {sortedUsd.map(c => {
+                      const avg3 = usdAvg3mo.find(a => a.category === c.category)?.avg ?? 0
+                      const avg6 = usdAvg6mo.find(a => a.category === c.category)?.avg ?? 0
+                      const pct3 = avg3 > 0 ? Math.round(((c.total - avg3) / avg3) * 100) : 0
+                      return (
+                        <tr key={c.category ?? '__null__'} className="border-t border-[var(--border)] hover:bg-[var(--accent-muted)] transition-colors">
+                          <td className="py-3 pl-5 font-medium text-[var(--fg)]">
+                            <span className="flex items-center gap-2">
+                              <span className="w-2 h-2 rounded-full flex-shrink-0" style={{ background: usdColorMap.get(c.category) ?? PALETTE[0]! }} />
+                              <span className="capitalize">{c.category ?? t('uncategorized')}</span>
+                            </span>
+                          </td>
+                          <td className="py-3 px-4 text-right font-semibold text-blue-400">{fmtUsd(c.total)}</td>
+                          <td className="py-3 px-4 text-right text-[var(--muted-fg)]">{avg3 > 0 ? fmtUsd(avg3) : '-'}</td>
+                          <td className="py-3 px-4 text-right text-[var(--muted-fg)]">{avg6 > 0 ? fmtUsd(avg6) : '-'}</td>
+                          <td className="py-3 pr-5">
+                            <div className="flex items-center gap-2">
+                              <div className="flex-1 bg-[var(--muted)] rounded-full h-1.5">
+                                <div className="h-1.5 rounded-full bg-blue-400" style={{ width: `${Math.round((c.total / usdMax) * 100)}%` }} />
+                              </div>
+                              {avg3 > 0 && (
+                                <span className={`text-xs font-medium w-10 text-right ${pctColor(pct3)}`}>
+                                  {pct3 > 0 ? '+' : ''}{pct3}%
+                                </span>
+                              )}
+                            </div>
+                          </td>
+                        </tr>
+                      )
+                    })}
+                  </tbody>
+                </table>
+              </div>
+            </div>
+
+            {usdMonthlyTotals.length >= 3 && (
+              <div className="mt-6 rounded-2xl border border-[var(--border)] bg-[var(--card-bg)] p-5">
+                <h3 className="text-xs font-semibold text-[var(--muted-fg)] mb-3 uppercase tracking-wide">{t('usdMonthlyTotalTitle')}</h3>
+                {usdMonthlyTotals.some(m => m.totalCents > 0) ? (
+                  <div className="flex items-end gap-3 h-28">
+                    {usdMonthlyTotals.map(({ label, totalCents }) => {
+                      const maxUsd = Math.max(...usdMonthlyTotals.map(m => m.totalCents), 1)
+                      return (
+                        <div key={label} className="flex flex-col items-center gap-1 flex-1">
+                          <span className="text-xs text-[var(--muted-fg)] leading-none">
+                            {totalCents > 0 ? fmtUsd(totalCents) : ''}
+                          </span>
+                          <div className="w-full bg-blue-500/30 rounded-t-md" style={{ height: `${Math.max(Math.round((totalCents / maxUsd) * 80), totalCents > 0 ? 4 : 0)}px` }} />
+                          <span className="text-xs text-[var(--muted-fg)]">{label}</span>
+                        </div>
+                      )
+                    })}
+                  </div>
+                ) : (
+                  <p className="text-sm text-[var(--muted-fg)] text-center py-4">{t('notEnoughData')}</p>
+                )}
+              </div>
+            )}
+          </section>
+        )
+      })()}
 
     </div>
   )

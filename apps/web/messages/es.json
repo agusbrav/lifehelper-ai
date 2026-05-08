@@ -91,7 +91,17 @@
     "keywordPlaceholder": "palabra (ej: uber)",
     "selectCategory": "Categoría existente",
     "newCategoryPlaceholder": "Nueva categoría",
-    "or": "o"
+    "or": "o",
+    "currencyARS": "ARS",
+    "currencyUSD": "USD",
+    "usdBadge": "USD",
+    "usdExpenses": "Gastos USD",
+    "totalARS": "Total ARS",
+    "totalUSD": "Total USD",
+    "paidARS": "Pagado ARS",
+    "paidUSD": "Pagado USD",
+    "pendingARS": "Pendiente ARS",
+    "pendingUSD": "Pendiente USD"
   },
   "analytics": {
     "title": "Análisis de Presupuesto",
@@ -116,7 +126,10 @@
     "uncategorized": "Sin categoría",
     "resetExclusions": "Restablecer",
     "byCategory": "Por categoría",
-    "byType": "Por tipo"
+    "byType": "Por tipo",
+    "usdTitle": "Gastos USD",
+    "usdByCategory": "USD por categoría",
+    "usdMonthlyTotalTitle": "Total USD Mensual - Últimos 6 Meses"
   },
   "chat": {
     "placeholder": "Escribí un mensaje...",

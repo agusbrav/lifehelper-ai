@@ -1,11 +1,8 @@
 'use client'
-import { useState, useRef, useTransition, useId } from 'react'
+import { useState, useRef, useTransition } from 'react'
 import { useTranslations, useFormatter } from 'next-intl'
-import { setAmountAction, setAmountNextMonthAction, togglePaidAction, deleteItemAction, addExpenseAction, addInstallmentAction } from '@/app/(app)/m/budget/actions'
-
-function capitalize(s: string) {
-  return s ? s.charAt(0).toUpperCase() + s.slice(1) : s
-}
+import { setAmountAction, setAmountNextMonthAction, togglePaidAction, deleteItemAction } from '@/app/(app)/m/budget/actions'
+import { ExpenseForm } from './expense-form'
 
 type Item = {
   id: string
@@ -17,6 +14,7 @@ type Item = {
   recurring: boolean
   itemType: string
   isCard: boolean
+  currency: string
   installmentTotal: number | null
   installmentNumber: number | null
   parentId: string | null
@@ -37,13 +35,15 @@ type Props = {
 export function ExpenseRow({ item, depth = 0, monthId, keywordMap, categories, year, month, monthContext }: Props) {
   const t = useTranslations('budget')
   const format = useFormatter()
-  const fmt = (cents: number) =>
+  const fmtArs = (cents: number) =>
     format.number(cents / 100, { style: 'currency', currency: 'ARS', minimumFractionDigits: 0, maximumFractionDigits: 0 })
+  const fmtUsd = (cents: number) =>
+    'USD ' + format.number(cents / 100, { minimumFractionDigits: 2, maximumFractionDigits: 2 })
+  const itemCurrency = item.currency ?? 'ARS'
+  const fmt = itemCurrency === 'USD' ? fmtUsd : fmtArs
   const [editing, setEditing] = useState(false)
   const [collapsed, setCollapsed] = useState(item.isCard)
   const [addingCharge, setAddingCharge] = useState(false)
-  const [chargeType, setChargeType] = useState<'one_time' | 'recurring' | 'subscription' | 'installment'>('one_time')
-  const [chargeTotalPayments, setChargeTotalPayments] = useState('')
   const [inflationOpen, setInflationOpen] = useState(false)
   const [inflationMode, setInflationMode] = useState<'pct' | 'direct'>('pct')
   const [inflationValue, setInflationValue] = useState('')
@@ -52,7 +52,6 @@ export function ExpenseRow({ item, depth = 0, monthId, keywordMap, categories, y
   )
   const [, startTransition] = useTransition()
   const inputRef = useRef<HTMLInputElement>(null)
-  const chargeDatalistId = useId()
 
   const isCard = item.isCard
   const isSubItem = depth > 0
@@ -77,7 +76,11 @@ export function ExpenseRow({ item, depth = 0, monthId, keywordMap, categories, y
       ? `${item.name} (${item.installmentNumber}/${item.installmentTotal})`
       : item.name
 
-  const showInflationBtn = monthContext !== 'past' && (item.itemType === 'recurring' || item.itemType === 'subscription') && !isCard && item.amount !== null
+  const showInflationBtn = monthContext !== 'past'
+    && (item.itemType === 'recurring' || item.itemType === 'subscription')
+    && !isCard
+    && item.amount !== null
+    && itemCurrency !== 'USD'
 
   const inflationCurrentAmount = item.amount ?? 0
   const inflationNumVal = parseFloat(inflationValue) || 0
@@ -121,26 +124,6 @@ export function ExpenseRow({ item, depth = 0, monthId, keywordMap, categories, y
   function handleAmountKeyDown(e: React.KeyboardEvent) {
     if (e.key === 'Enter') inputRef.current?.blur()
     if (e.key === 'Escape') setEditing(false)
-  }
-
-  function handleAddCharge(e: React.FormEvent<HTMLFormElement>) {
-    e.preventDefault()
-    const fd = new FormData(e.currentTarget)
-    fd.set('monthId', monthId)
-    fd.set('parentId', item.id)
-    e.currentTarget.reset()
-    startTransition(async () => {
-      if (chargeType === 'installment') {
-        fd.set('totalPayments', chargeTotalPayments)
-        await addInstallmentAction(fd)
-      } else {
-        fd.set('itemType', chargeType)
-        await addExpenseAction(fd)
-      }
-      setAddingCharge(false)
-      setChargeType('one_time')
-      setChargeTotalPayments('')
-    })
   }
 
   return (
@@ -188,6 +171,11 @@ export function ExpenseRow({ item, depth = 0, monthId, keywordMap, categories, y
             {!isCard && item.installmentTotal === null && item.itemType === 'one_time' && !isSubItem && (
               <span className="text-xs px-1.5 py-0.5 rounded-full bg-cyan-500/15 text-cyan-400 font-medium flex-shrink-0">
                 {t('oneTimeBadge')}
+              </span>
+            )}
+            {itemCurrency === 'USD' && (
+              <span className="text-xs px-1.5 py-0.5 rounded-full bg-blue-500/15 text-blue-400 font-medium flex-shrink-0">
+                {t('usdBadge')}
               </span>
             )}
 
@@ -242,7 +230,15 @@ export function ExpenseRow({ item, depth = 0, monthId, keywordMap, categories, y
             <button
               onClick={handleAmountClick}
               disabled={isSubItem || isCard}
-              className={`font-medium tabular-nums ${isSubItem || isCard ? 'cursor-default' : 'hover:text-[var(--accent)] transition-colors'} ${displayAmount === null ? 'text-[var(--muted-fg)] italic font-normal' : isCard ? 'text-purple-400' : 'text-[var(--fg)]'}`}
+              className={`font-medium tabular-nums ${isSubItem || isCard ? 'cursor-default' : 'hover:text-[var(--accent)] transition-colors'} ${
+                displayAmount === null
+                  ? 'text-[var(--muted-fg)] italic font-normal'
+                  : itemCurrency === 'USD'
+                    ? 'text-blue-400'
+                    : isCard
+                      ? 'text-purple-400'
+                      : 'text-[var(--fg)]'
+              }`}
             >
               {displayAmount !== null ? fmt(displayAmount) : '-'}
             </button>
@@ -370,75 +366,17 @@ export function ExpenseRow({ item, depth = 0, monthId, keywordMap, categories, y
       {isCard && addingCharge && (
         <tr className="border-t border-purple-500/20 bg-purple-500/5">
           <td colSpan={5} className="py-2.5 pl-10 pr-4">
-            <form onSubmit={handleAddCharge} className="flex gap-2 items-center flex-wrap">
-              <input
-                name="name"
-                required
-                placeholder={t('chargeDescription')}
-                autoFocus
-                className="rounded-lg border border-[var(--border)] bg-[var(--card-bg)] text-[var(--fg)] px-2.5 py-1.5 text-sm outline-none focus:ring-1 focus:ring-purple-400 flex-[2_1_8rem] min-w-0"
-              />
-              <input
-                name="category"
-                list={chargeDatalistId}
-                placeholder={t('category')}
-                className="rounded-lg border border-[var(--border)] bg-[var(--card-bg)] text-[var(--fg)] px-2.5 py-1.5 text-sm outline-none focus:ring-1 focus:ring-purple-400 flex-[1_1_6rem] min-w-0 capitalize"
-              />
-              <datalist id={chargeDatalistId}>
-                {categories.map(cat => (
-                  <option key={cat} value={capitalize(cat)} />
-                ))}
-              </datalist>
-              <input
-                name="amount"
-                type="number"
-                step="0.01"
-                min="0.01"
-                required
-                placeholder={chargeType === 'installment' ? t('perMonth') : t('chargeAmount')}
-                className="rounded-lg border border-[var(--border)] bg-[var(--card-bg)] text-[var(--fg)] px-2.5 py-1.5 text-sm outline-none focus:ring-1 focus:ring-purple-400 w-24 flex-shrink-0"
-              />
-              {chargeType === 'installment' && (
-                <input
-                  type="number"
-                  min="2"
-                  required
-                  value={chargeTotalPayments}
-                  onChange={e => setChargeTotalPayments(e.target.value)}
-                  placeholder={t('paymentsCount')}
-                  className="rounded-lg border border-[var(--border)] bg-[var(--card-bg)] text-[var(--fg)] px-2.5 py-1.5 text-sm outline-none focus:ring-1 focus:ring-purple-400 w-20 flex-shrink-0"
-                />
-              )}
-              <div className="inline-flex rounded-lg border border-purple-500/40 overflow-hidden text-xs flex-shrink-0">
-                {(['one_time', 'recurring', 'subscription', 'installment'] as const).map(type => (
-                  <button
-                    key={type}
-                    type="button"
-                    onClick={() => setChargeType(type)}
-                    className={`px-2.5 py-1.5 font-medium transition-colors border-l border-purple-500/20 first:border-l-0 ${
-                      chargeType === type
-                        ? 'bg-purple-500 text-white'
-                        : 'text-[var(--muted-fg)] hover:bg-purple-500/10'
-                    }`}
-                  >
-                    {t(`${type}Badge` as Parameters<typeof t>[0])}
-                  </button>
-                ))}
-              </div>
-              <button
-                type="submit"
-                className="bg-purple-500 text-white rounded-lg px-3 py-1.5 text-sm font-medium hover:bg-purple-600 transition-colors flex-shrink-0"
-              >
-                {t('add')}
-              </button>
-              <button
-                type="button"
-                onClick={() => { setAddingCharge(false); setChargeType('one_time'); setChargeTotalPayments('') }}
-                className="text-sm text-[var(--muted-fg)] hover:text-[var(--fg)] transition-colors flex-shrink-0"
-              >
-                {t('cancel')}
-              </button>
-            </form>
+            <ExpenseForm
+              monthId={monthId}
+              keywordMap={keywordMap}
+              categories={categories}
+              parentId={item.id}
+              defaultCurrency={itemCurrency as 'ARS' | 'USD'}
+              withInstallment
+              theme="purple"
+              namePlaceholder={t('chargeDescription')}
+              onDone={() => setAddingCharge(false)}
+            />
           </td>
         </tr>
       )}

@@ -21,6 +21,11 @@ vi.mock('@lifehelper/core', () => ({
     card: {
       findMany: vi.fn(),
     },
+    categoryKeyword: {
+      findUnique: vi.fn().mockResolvedValue({ keyword: '__seeded__' }),
+      findMany: vi.fn().mockResolvedValue([]),
+      create: vi.fn(),
+    },
   },
 }))
 

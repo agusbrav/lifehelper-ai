@@ -2,7 +2,7 @@
 import { revalidatePath } from 'next/cache'
 import { cookies } from 'next/headers'
 import { getSession } from '@lifehelper/core'
-import { addCard, removeCard, renameCard } from '@lifehelper/budget'
+import { addCard, removeCard, renameCard, setCurrency } from '@lifehelper/budget'
 
 async function getUserId() {
   const cookieStore = await cookies()
@@ -25,6 +25,13 @@ export async function renameCardAction(cardId: string, name: string) {
   const trimmed = name.trim()
   if (!trimmed) return
   await renameCard({ userId, cardId, name: trimmed })
+  revalidatePath('/m/budget/settings')
+  revalidatePath('/m/budget')
+}
+
+export async function setCardCurrencyAction(cardId: string, currency: 'ARS' | 'USD'): Promise<void> {
+  const userId = await getUserId()
+  await setCurrency({ userId, cardId, currency })
   revalidatePath('/m/budget/settings')
   revalidatePath('/m/budget')
 }
