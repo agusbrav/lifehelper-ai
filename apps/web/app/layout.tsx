@@ -2,7 +2,11 @@ import type { Metadata } from 'next'
 import { NextIntlClientProvider } from 'next-intl'
 import { getLocale, getMessages } from 'next-intl/server'
 import { ThemeProvider } from '@/components/theme-provider'
+import { registerLinkableModule } from '@lifehelper/integrations'
+import { budgetLinkableModule } from '@lifehelper/budget'
 import './globals.css'
+
+registerLinkableModule(budgetLinkableModule)
 
 export const metadata: Metadata = {
   title: 'LifeHelper',

@@ -1,7 +1,7 @@
 import { cookies } from 'next/headers'
 import { redirect } from 'next/navigation'
 import { getSession } from '@lifehelper/core'
-import { getOrCreateMonth, fetchCategoryHistory, buildKeywordMap, knownCategories, getFirstMonth, getCardsForUser, getCategoryKeywords } from '@lifehelper/budget'
+import { getOrCreateMonth, fetchCategoryHistory, buildKeywordMap, knownCategories, getFirstMonth, getCardsForUser, getCategoryKeywords, getLinksForItems } from '@lifehelper/budget'
 import { getTranslations } from 'next-intl/server'
 import { MonthNav } from '@/components/budget/month-nav'
 import { SummaryBar } from '@/components/budget/summary-bar'
@@ -50,6 +50,8 @@ export default async function BudgetPage({ searchParams }: Props) {
     getCategoryKeywords(session.user.id),
   ])
   const items = budgetMonth?.items ?? []
+  const itemIds = items.map(i => i.id)
+  const linksMap = await getLinksForItems(session.user.id, 'budget', itemIds)
   const userKeywords = Object.fromEntries(userKeywordRecords.map(r => [r.keyword, r.category]))
   const keywordMap = buildKeywordMap(historyMap, userKeywords)
   const categories = knownCategories(keywordMap)
@@ -61,12 +63,8 @@ export default async function BudgetPage({ searchParams }: Props) {
     return i.amount ?? 0
   }
 
-  const arsItems = items.filter(i => (i.currency ?? 'ARS') !== 'USD')
-  const usdItems = items.filter(i => i.currency === 'USD')
-  const paidArsCents = arsItems.filter(i => i.paid).reduce((s, i) => s + effectiveAmount(i), 0)
-  const pendingArsCents = arsItems.filter(i => !i.paid).reduce((s, i) => s + effectiveAmount(i), 0)
-  const paidUsdCents = usdItems.filter(i => i.paid).reduce((s, i) => s + effectiveAmount(i), 0)
-  const pendingUsdCents = usdItems.filter(i => !i.paid).reduce((s, i) => s + effectiveAmount(i), 0)
+  const totalArsCents = items.filter(i => (i.currency ?? 'ARS') !== 'USD').reduce((s, i) => s + effectiveAmount(i), 0)
+  const totalUsdCents = items.filter(i => i.currency === 'USD').reduce((s, i) => s + effectiveAmount(i), 0)
 
   // Children from the DB query are one level deep and never have sub-children;
   // cast to satisfy the recursive Item type expected by ExpenseTable.
@@ -79,10 +77,8 @@ export default async function BudgetPage({ searchParams }: Props) {
         <MonthNav year={year} month={month} firstYear={firstMonth?.year} firstMonth={firstMonth?.month} />
         <div className="flex flex-wrap items-center gap-x-4 gap-y-2 ml-auto">
           <SummaryBar
-            paidArsCents={paidArsCents}
-            pendingArsCents={pendingArsCents}
-            paidUsdCents={paidUsdCents}
-            pendingUsdCents={pendingUsdCents}
+            totalArsCents={totalArsCents}
+            totalUsdCents={totalUsdCents}
           />
           <Link
             href="/m/budget/analytics"
@@ -104,6 +100,7 @@ export default async function BudgetPage({ searchParams }: Props) {
         monthContext={monthContext}
         cards={cards}
         userKeywords={userKeywordRecords}
+        linksMap={linksMap}
       />
     </div>
   )

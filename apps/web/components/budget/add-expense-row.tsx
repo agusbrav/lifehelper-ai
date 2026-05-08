@@ -16,7 +16,7 @@ export function AddExpenseRow({ monthId, keywordMap, categories }: Props) {
   if (!open) {
     return (
       <tr className="border-t border-[var(--border)]">
-        <td colSpan={5} className="py-2 pl-5">
+        <td colSpan={4} className="py-2 pl-5">
           <button
             onClick={() => setOpen(true)}
             className="text-sm text-[var(--muted-fg)] hover:text-[var(--accent)] transition-colors"
@@ -30,7 +30,7 @@ export function AddExpenseRow({ monthId, keywordMap, categories }: Props) {
 
   return (
     <tr className="border-t border-[var(--border)] bg-[var(--muted)]">
-      <td colSpan={5} className="py-3 px-4">
+      <td colSpan={4} className="py-3 px-4">
         <ExpenseForm
           monthId={monthId}
           keywordMap={keywordMap}

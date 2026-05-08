@@ -7,6 +7,8 @@ Format: `- [ ] description` — check off when done, delete when shipped.
 
 ## Budget
 
+- [ ] **Bug**: Resetting a past month does not remove all entries — also creates a ghost month entry in the accessible month list
+
 - [x] Card management settings page (`/m/budget/settings`) — separate `Card` model, add/remove cards outside the monthly table
 - [ ] Dates per expense — allow tagging an expense with a specific date within the month
 - [ ] Custom tags alongside categories — e.g. link a food expense to a specific trip and filter by it
@@ -18,7 +20,7 @@ Format: `- [ ] description` — check off when done, delete when shipped.
 - [x] USD currency support: currency field per expense (ARS default, USD for native cards); per-card USD-native setting (e.g. Amex)
 - [x] Summary bar shows ARS total and USD total as separate values (no conversion)
 - [ ] Analytics: dynamic layout where user can toggle which panels to show — gastos ARS por categoría, gastos USD, suscripciones total, etc.
-- [ ] Consider removing paid/pending tracking — simplify to expense ledger + past statistics only; keep `paid` field in schema but hide the UI
+- [x] Consider removing paid/pending tracking — simplify to expense ledger + past statistics only; keep `paid` field in schema but hide the UI
 
 ---
 

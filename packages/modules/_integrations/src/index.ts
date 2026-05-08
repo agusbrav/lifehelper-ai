@@ -13,3 +13,15 @@ export type {
   ModuleExport,
   ModuleExporter,
 } from './types'
+
+export {
+  registerLinkableModule,
+  getLinkableModule,
+  getLinkableModuleIds,
+} from './link-registry'
+export type {
+  LinkableModule,
+  LinkContext,
+  LinkSearchResult,
+  LinkResolveResult,
+} from './link-registry'

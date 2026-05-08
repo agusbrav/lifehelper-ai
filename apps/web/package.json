@@ -14,6 +14,7 @@
   "dependencies": {
     "@lifehelper/budget": "workspace:*",
     "@lifehelper/core": "workspace:*",
+    "@lifehelper/integrations": "workspace:*",
     "@lifehelper/registry": "workspace:*",
     "@lifehelper/ui": "workspace:*",
     "@prisma/client": "^6.19.3",
