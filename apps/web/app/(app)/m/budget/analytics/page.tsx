@@ -58,9 +58,7 @@ export default async function BudgetAnalyticsPage({
     monthMap.get(key)!.push(item)
   }
 
-  // Include all months that have any data (card charges count as real spending to analyze).
-  // Use Math.min(dataIndex, nowIndex) to derive the floor so the nav button is disabled at
-  // the oldest data month, capped at the current month to prevent a future-floor loop.
+  // All months with any data — used for the trend chart (card charges are real spending).
   const availableMonths = Array.from(
     new Map(
       allItems.map(i => [
@@ -71,6 +69,23 @@ export default async function BudgetAnalyticsPage({
   )
     .sort((a, b) => b.year * 12 + b.month - (a.year * 12 + a.month))
     .slice(0, 12)
+
+  // Nav floor: oldest month with non-card expenses, capped at current month.
+  // Auto-synced card rows don't count as "data" for navigation purposes.
+  const nonCardMonths = Array.from(
+    new Map(
+      allItems
+        .filter(i => !i.isCard)
+        .map(i => [`${i.month.year}-${i.month.month}`, { year: i.month.year, month: i.month.month }]),
+    ).values(),
+  ).sort((a, b) => a.year * 12 + a.month - (b.year * 12 + b.month))
+
+  const nowIndex = nowYear * 12 + nowMonth
+  const oldestNonCard = nonCardMonths[0]
+  const dataIndex = oldestNonCard ? oldestNonCard.year * 12 + oldestNonCard.month : nowIndex
+  const floorIndex = Math.min(dataIndex, nowIndex)
+  const floorYear = Math.floor((floorIndex - 1) / 12)
+  const floorMonth = floorIndex - floorYear * 12
 
 
   // 6-month window ending at selectedMonth
@@ -117,6 +132,8 @@ export default async function BudgetAnalyticsPage({
         <AnalyticsMonthNav
           selectedYear={selectedYear}
           selectedMonth={selectedMonth}
+          firstYear={floorYear}
+          firstMonth={floorMonth}
         />
         <Link
           href="/m/budget"
