@@ -3,6 +3,8 @@ import { revalidatePath } from 'next/cache'
 import { cookies } from 'next/headers'
 import { getSession } from '@lifehelper/core'
 import { addExpense, addInstallment, setAmount, setAmountNextMonth, togglePaid, deleteItem, resetMonth } from '@lifehelper/budget'
+import { getLinkableModule, getLinkableModuleIds } from '@lifehelper/integrations'
+import { createLink, deleteLink } from '@lifehelper/core'
 
 async function getUserId() {
   const cookieStore = await cookies()
@@ -67,5 +69,46 @@ export async function resetMonthAction(year: number, month: number) {
 export async function setAmountNextMonthAction(itemId: string, amountCents: number) {
   const userId = await getUserId()
   await setAmountNextMonth({ userId, itemId, amountCents })
+  revalidatePath('/m/budget')
+}
+
+export async function getLinkableModulesAction(): Promise<string[]> {
+  return getLinkableModuleIds()
+}
+
+export async function getLinkContextsAction(
+  moduleId: string,
+): Promise<{ id: string; label: string }[]> {
+  const userId = await getUserId()
+  const mod = getLinkableModule(moduleId)
+  if (!mod) return []
+  return mod.getContexts(userId)
+}
+
+export async function searchLinkableAction(
+  moduleId: string,
+  contextId: string,
+  query: string,
+): Promise<{ entityId: string; label: string; sublabel?: string }[]> {
+  const userId = await getUserId()
+  const mod = getLinkableModule(moduleId)
+  if (!mod) return []
+  return mod.search(userId, contextId, query)
+}
+
+export async function createLinkAction(
+  sourceModuleId: string,
+  sourceEntityId: string,
+  targetModuleId: string,
+  targetEntityId: string,
+): Promise<void> {
+  const userId = await getUserId()
+  await createLink(userId, sourceModuleId, sourceEntityId, targetModuleId, targetEntityId)
+  revalidatePath('/m/budget')
+}
+
+export async function deleteLinkAction(linkId: string): Promise<void> {
+  const userId = await getUserId()
+  await deleteLink(userId, linkId)
   revalidatePath('/m/budget')
 }
