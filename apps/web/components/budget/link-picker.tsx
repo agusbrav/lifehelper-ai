@@ -54,7 +54,6 @@ export function LinkPicker({ sourceModuleId, sourceEntityId, onDone }: Props) {
     setSelectedContextId(ctx.id)
     setQuery('')
     setStep('search')
-    searchLinkableAction(selectedModuleId, ctx.id, '').then(setResults)
   }
 
   function selectResult(result: SearchResult) {
@@ -70,7 +69,6 @@ export function LinkPicker({ sourceModuleId, sourceEntityId, onDone }: Props) {
   return (
     <div
       className="flex flex-col gap-2 max-w-sm"
-      onKeyDown={e => { if (e.key === 'Escape') onDone() }}
     >
       <div className="flex items-center gap-1.5 text-xs text-[var(--muted-fg)]">
         {pathPrefix && <span className="text-indigo-400 font-mono">{pathPrefix}</span>}
@@ -78,6 +76,7 @@ export function LinkPicker({ sourceModuleId, sourceEntityId, onDone }: Props) {
           autoFocus
           value={query}
           onChange={e => setQuery(e.target.value)}
+          onKeyDown={e => { if (e.key === 'Escape') onDone() }}
           placeholder={
             step === 'module' ? 'module name...' :
             step === 'context' ? 'context...' :
