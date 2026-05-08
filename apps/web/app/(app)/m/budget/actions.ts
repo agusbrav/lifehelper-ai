@@ -97,6 +97,14 @@ export async function createLinkAction(
   targetEntityId: string,
 ): Promise<void> {
   const userId = await getUserId()
+  const sourceMod = getLinkableModule(sourceModuleId)
+  const targetMod = getLinkableModule(targetModuleId)
+  if (!sourceMod || !targetMod) return
+  const [sourceResolved, targetResolved] = await Promise.all([
+    sourceMod.resolve(userId, sourceEntityId),
+    targetMod.resolve(userId, targetEntityId),
+  ])
+  if (!sourceResolved || !targetResolved) return
   await createLink(userId, sourceModuleId, sourceEntityId, targetModuleId, targetEntityId)
   revalidatePath('/m/budget')
 }
