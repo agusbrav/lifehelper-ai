@@ -6,6 +6,9 @@ import { useChatContext } from '@/components/chat/chat-context'
 import { sendChatMessage, type ChatMessage } from '@/app/(app)/chat-actions'
 import Markdown from 'react-markdown'
 
+const WELCOME_PROMPT =
+  'Please greet me and share one specific data-driven insight about my spending this month.'
+
 const SPINNER_PATTERNS: { pattern: RegExp; label: string }[] = [
   { pattern: /\b(add|agregar?|nueva?|nuevo|gasto)\b/i, label: 'Adding…' },
   { pattern: /\b(update|cambi|modific|set|actuali)\b/i, label: 'Updating…' },
@@ -31,6 +34,7 @@ export function ChatRail() {
   const [spinnerLabel, setSpinnerLabel] = useState('Thinking…')
   const [loading, setLoading] = useState(false)
   const messagesEndRef = useRef<HTMLDivElement>(null)
+  const welcomeSentRef = useRef(false)
 
   const isBudget = context.module === 'budget'
   const meta = context.metadata as { year?: number; month?: number }
@@ -61,12 +65,27 @@ export function ChatRail() {
     }
     try {
       const stored = sessionStorage.getItem(storageKey)
-      setMessages(stored ? (JSON.parse(stored) as ChatMessage[]) : [])
+      if (stored) {
+        setMessages(JSON.parse(stored) as ChatMessage[])
+        welcomeSentRef.current = true
+      } else {
+        setMessages([])
+        welcomeSentRef.current = false
+      }
     } catch {
       setMessages([])
+      welcomeSentRef.current = false
     }
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [storageKey])
+
+  // Send welcome only on fresh sessions (no stored history)
+  useEffect(() => {
+    if (!open || !isBudget || welcomeSentRef.current) return
+    welcomeSentRef.current = true
+    send(WELCOME_PROMPT, true)
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [open, isBudget])
 
   // Persist messages to sessionStorage on every update
   useEffect(() => {

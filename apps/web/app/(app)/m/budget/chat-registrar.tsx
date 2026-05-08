@@ -7,7 +7,7 @@ export function ChatRegistrar({ year, month }: { year: number; month: number }) 
 
   useEffect(() => {
     setContext({ module: 'budget', metadata: { year, month } })
-    return () => setContext({ module: null, metadata: {} })
+    return () => setContext({ module: 'budget', metadata: {} })
   }, [year, month, setContext])
 
   return null
