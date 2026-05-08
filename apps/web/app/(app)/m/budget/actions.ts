@@ -1,17 +1,21 @@
 'use server'
 import { revalidatePath } from 'next/cache'
 import { cookies } from 'next/headers'
-import { getSession } from '@lifehelper/core'
+import { getSession as resolveSession, db } from '@lifehelper/core'
 import { addExpense, addInstallment, setAmount, setAmountNextMonth, deleteItem, resetMonth, deletePastMonths } from '@lifehelper/budget'
 import { getLinkableModule, getLinkableModuleIds } from '@lifehelper/integrations'
 import { createLink, deleteLink } from '@lifehelper/core'
 
-async function getUserId() {
+async function getAuthedSession() {
   const cookieStore = await cookies()
   const token = cookieStore.get('session')?.value
-  const session = token ? await getSession(token) : null
+  const session = token ? await resolveSession(token) : null
   if (!session) throw new Error('Unauthorized')
-  return session.user.id
+  return session
+}
+
+async function getUserId() {
+  return (await getAuthedSession()).user.id
 }
 
 export async function addExpenseAction(formData: FormData) {

@@ -7,7 +7,11 @@
     "title": "Settings",
     "language": "Language",
     "english": "English",
-    "spanish": "Spanish"
+    "spanish": "Spanish",
+    "yourName": "Your name",
+    "yourNameHint": "Used by the AI assistant to address you.",
+    "yourNamePlaceholder": "e.g. Agus",
+    "save": "Save"
   },
   "dashboard": {
     "title": "Your Pockets",
@@ -44,6 +48,10 @@
     "recurring": "Recurring",
     "add": "Add",
     "cancel": "Cancel",
+    "save": "Save",
+    "yourName": "Your name",
+    "yourNameHint": "Used by the AI assistant to address you.",
+    "yourNamePlaceholder": "e.g. Agus",
     "today": "Today",
     "analyticsLink": "Analytics →",
     "noExpenses": "No expenses this month.",

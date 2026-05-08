@@ -7,7 +7,11 @@
     "title": "Configuración",
     "language": "Idioma",
     "english": "Inglés",
-    "spanish": "Español"
+    "spanish": "Español",
+    "yourName": "Tu nombre",
+    "yourNameHint": "El asistente de IA lo usará para dirigirse a vos.",
+    "yourNamePlaceholder": "ej. Agus",
+    "save": "Guardar"
   },
   "dashboard": {
     "title": "Tus Bolsillos",
@@ -44,6 +48,10 @@
     "recurring": "Recurrente",
     "add": "Agregar",
     "cancel": "Cancelar",
+    "save": "Guardar",
+    "yourName": "Tu nombre",
+    "yourNameHint": "El asistente de IA lo usará para dirigirse a vos.",
+    "yourNamePlaceholder": "ej. Agus",
     "today": "Hoy",
     "analyticsLink": "Análisis →",
     "noExpenses": "Sin gastos este mes.",
