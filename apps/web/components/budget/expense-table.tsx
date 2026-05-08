@@ -1,6 +1,7 @@
 'use client'
 import { useState, useMemo } from 'react'
 import { useTranslations } from 'next-intl'
+import type { ResolvedLink } from '@lifehelper/budget'
 import { ExpenseRow } from './expense-row'
 import { AddExpenseRow } from './add-expense-row'
 import { BudgetConfigPanel } from './budget-config-panel'
@@ -11,7 +12,6 @@ type Item = {
   category: string | null
   amount: number | null
   amountCarried: boolean
-  paid: boolean
   recurring: boolean
   itemType: string
   isCard: boolean
@@ -36,6 +36,7 @@ type Props = {
   monthContext: 'current' | 'next' | 'past'
   cards: Card[]
   userKeywords: KeywordRecord[]
+  linksMap: Record<string, ResolvedLink[]>
 }
 
 type SortCol = 'name' | 'category' | 'amount'
@@ -58,7 +59,7 @@ function SortArrow({ col, sortCol, sortDir }: { col: SortCol; sortCol: SortCol |
   return <span className="ml-0.5 text-[9px]">{sortDir === 'asc' ? '▲' : '▼'}</span>
 }
 
-export function ExpenseTable({ items, monthId, keywordMap, categories, year, month, monthContext, cards, userKeywords }: Props) {
+export function ExpenseTable({ items, monthId, keywordMap, categories, year, month, monthContext, cards, userKeywords, linksMap }: Props) {
   const t = useTranslations('budget')
 
   const [sortCol, setSortCol] = useState<SortCol | null>(null)
@@ -214,7 +215,6 @@ export function ExpenseTable({ items, monthId, keywordMap, categories, year, mon
                   <SortArrow col="amount" sortCol={sortCol} sortDir={sortDir} />
                 </button>
               </th>
-              <th className="text-center py-2.5 px-2 text-xs font-medium text-[var(--muted-fg)] uppercase tracking-wide w-14">{t('paid')}</th>
               <th className="py-2.5 pr-3 w-10" />
             </tr>
           </thead>
@@ -223,12 +223,12 @@ export function ExpenseTable({ items, monthId, keywordMap, categories, year, mon
             {showCards && (
               <>
                 <tr className="bg-purple-500/5 border-t border-[var(--border)]">
-                  <td colSpan={5} className="py-1 pl-4 text-[10px] font-semibold text-purple-400 uppercase tracking-widest">
+                  <td colSpan={4} className="py-1 pl-4 text-[10px] font-semibold text-purple-400 uppercase tracking-widest">
                     {t('addChargeBadge')}s
                   </td>
                 </tr>
                 {cardItems.map(item => (
-                  <ExpenseRow key={item.id} item={item} {...sharedRowProps} />
+                  <ExpenseRow key={item.id} item={item} {...sharedRowProps} links={linksMap[item.id] ?? []} />
                 ))}
               </>
             )}
@@ -236,7 +236,7 @@ export function ExpenseTable({ items, monthId, keywordMap, categories, year, mon
             {/* Divider between cards and expenses */}
             {showCards && showExpenses && visibleExpenses.length > 0 && (
               <tr className="bg-[var(--muted)]/60 border-t border-[var(--border)]">
-                <td colSpan={5} className="py-1 pl-4 text-[10px] font-semibold text-[var(--muted-fg)] uppercase tracking-widest">
+                <td colSpan={4} className="py-1 pl-4 text-[10px] font-semibold text-[var(--muted-fg)] uppercase tracking-widest">
                   {t('expense')}s
                 </td>
               </tr>
@@ -244,7 +244,7 @@ export function ExpenseTable({ items, monthId, keywordMap, categories, year, mon
 
             {/* Regular expenses */}
             {showExpenses && visibleExpenses.map(item => (
-              <ExpenseRow key={item.id} item={item} {...sharedRowProps} />
+              <ExpenseRow key={item.id} item={item} {...sharedRowProps} links={linksMap[item.id] ?? []} />
             ))}
 
             <AddExpenseRow monthId={monthId} keywordMap={keywordMap} categories={categories} />

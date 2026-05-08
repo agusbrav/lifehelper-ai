@@ -1,7 +1,8 @@
 'use client'
 import { useState, useRef, useTransition } from 'react'
 import { useTranslations, useFormatter } from 'next-intl'
-import { setAmountAction, setAmountNextMonthAction, togglePaidAction, deleteItemAction } from '@/app/(app)/m/budget/actions'
+import type { ResolvedLink } from '@lifehelper/budget'
+import { setAmountAction, setAmountNextMonthAction, deleteItemAction, deleteLinkAction } from '@/app/(app)/m/budget/actions'
 import { ExpenseForm } from './expense-form'
 
 type Item = {
@@ -10,7 +11,6 @@ type Item = {
   category: string | null
   amount: number | null
   amountCarried: boolean
-  paid: boolean
   recurring: boolean
   itemType: string
   isCard: boolean
@@ -30,9 +30,10 @@ type Props = {
   year: number
   month: number
   monthContext: 'current' | 'next' | 'past'
+  links: ResolvedLink[]
 }
 
-export function ExpenseRow({ item, depth = 0, monthId, keywordMap, categories, year, month, monthContext }: Props) {
+export function ExpenseRow({ item, depth = 0, monthId, keywordMap, categories, year, month, monthContext, links }: Props) {
   const t = useTranslations('budget')
   const format = useFormatter()
   const fmtArs = (cents: number) =>
@@ -45,6 +46,7 @@ export function ExpenseRow({ item, depth = 0, monthId, keywordMap, categories, y
   const [collapsed, setCollapsed] = useState(item.isCard)
   const [addingCharge, setAddingCharge] = useState(false)
   const [inflationOpen, setInflationOpen] = useState(false)
+  const [linkPickerOpen, setLinkPickerOpen] = useState(false)
   const [inflationMode, setInflationMode] = useState<'pct' | 'direct'>('pct')
   const [inflationValue, setInflationValue] = useState('')
   const [inflationTarget, setInflationTarget] = useState<'next' | 'this'>(
@@ -179,6 +181,28 @@ export function ExpenseRow({ item, depth = 0, monthId, keywordMap, categories, y
               </span>
             )}
 
+            {links.map(link => (
+              <span
+                key={link.linkId}
+                className="text-xs px-1.5 py-0.5 rounded-full bg-indigo-500/15 border border-indigo-500/30 text-indigo-400 font-medium flex-shrink-0 inline-flex items-center gap-1"
+              >
+                <a
+                  href={link.url}
+                  onClick={e => e.stopPropagation()}
+                  className="hover:text-indigo-300 transition-colors"
+                >
+                  ↗ {link.label}
+                </a>
+                <button
+                  onClick={e => { e.stopPropagation(); startTransition(() => deleteLinkAction(link.linkId)) }}
+                  className="opacity-50 hover:opacity-100 transition-opacity leading-none"
+                  aria-label="Remove link"
+                >
+                  ×
+                </button>
+              </span>
+            ))}
+
             <span className="ml-auto flex-shrink-0 flex items-center gap-2">
               {item.amountCarried && !isCard && (
                 <span className="text-[var(--muted-fg)] text-xs opacity-0 group-hover:opacity-100 transition-opacity" title={t('carriedTitle')}>
@@ -195,6 +219,18 @@ export function ExpenseRow({ item, depth = 0, monthId, keywordMap, categories, y
                   }`}
                 >
                   {t('inflationBtn')}
+                </button>
+              )}
+              {!isSubItem && !isCard && (
+                <button
+                  onClick={() => setLinkPickerOpen(o => !o)}
+                  className={`inline-flex items-center px-1.5 py-0.5 rounded-full text-[10px] font-semibold border transition-colors flex-shrink-0 opacity-0 group-hover:opacity-100 ${
+                    linkPickerOpen
+                      ? 'bg-indigo-500/25 text-indigo-300 border-indigo-500/40'
+                      : 'bg-indigo-500/15 text-indigo-400 border-indigo-500/25 hover:bg-indigo-500/25'
+                  }`}
+                >
+                  + link
                 </button>
               )}
               {isCard && !isSubItem && (
@@ -245,20 +281,6 @@ export function ExpenseRow({ item, depth = 0, monthId, keywordMap, categories, y
           )}
         </td>
 
-        {/* Paid */}
-        <td className="py-2.5 px-4 text-center w-16">
-          {isSubItem ? (
-            <span className="text-[var(--muted-fg)] text-xs">-</span>
-          ) : (
-            <input
-              type="checkbox"
-              checked={item.paid}
-              onChange={() => startTransition(() => togglePaidAction(item.id))}
-              className="w-4 h-4 accent-[var(--accent)] cursor-pointer"
-            />
-          )}
-        </td>
-
         {/* Delete */}
         <td className="py-2.5 pr-3 text-center w-8">
           <button
@@ -274,10 +296,18 @@ export function ExpenseRow({ item, depth = 0, monthId, keywordMap, categories, y
         </td>
       </tr>
 
+      {linkPickerOpen && (
+        <tr className="border-t border-indigo-500/20 bg-indigo-500/5">
+          <td colSpan={4} className={`py-2.5 pr-4 ${depth === 0 ? 'pl-4' : 'pl-10'}`}>
+            <span className="text-xs text-[var(--muted-fg)]">Picker coming in next task...</span>
+          </td>
+        </tr>
+      )}
+
       {/* Inflation quick-adjust popover */}
       {inflationOpen && (
         <tr className="border-t border-indigo-500/20 bg-indigo-500/5">
-          <td colSpan={5} className={`py-3 pr-4 ${depth === 0 ? 'pl-4' : 'pl-10'}`}>
+          <td colSpan={4} className={`py-3 pr-4 ${depth === 0 ? 'pl-4' : 'pl-10'}`}>
             <div className="flex flex-col gap-3 max-w-sm">
               <span className="text-xs font-medium text-[var(--muted-fg)] uppercase tracking-wide">
                 {t('inflationTitle', { name: item.name })}
@@ -365,7 +395,7 @@ export function ExpenseRow({ item, depth = 0, monthId, keywordMap, categories, y
       {/* Inline add-charge form for credit card rows */}
       {isCard && addingCharge && (
         <tr className="border-t border-purple-500/20 bg-purple-500/5">
-          <td colSpan={5} className="py-2.5 pl-10 pr-4">
+          <td colSpan={4} className="py-2.5 pl-10 pr-4">
             <ExpenseForm
               monthId={monthId}
               keywordMap={keywordMap}
@@ -383,7 +413,7 @@ export function ExpenseRow({ item, depth = 0, monthId, keywordMap, categories, y
 
       {/* Children rows */}
       {!collapsed && children.map(child => (
-        <ExpenseRow key={child.id} item={child} depth={depth + 1} monthId={monthId} keywordMap={keywordMap} categories={categories} year={year} month={month} monthContext={monthContext} />
+        <ExpenseRow key={child.id} item={child} depth={depth + 1} monthId={monthId} keywordMap={keywordMap} categories={categories} year={year} month={month} monthContext={monthContext} links={[]} />
       ))}
     </>
   )
