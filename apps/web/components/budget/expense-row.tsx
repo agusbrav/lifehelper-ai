@@ -45,7 +45,18 @@ export function ExpenseRow({ item, depth = 0, monthId, keywordMap, categories, y
   const itemCurrency = item.currency ?? 'ARS'
   const fmt = itemCurrency === 'USD' ? fmtUsd : fmtArs
   const [editing, setEditing] = useState(false)
-  const [collapsed, setCollapsed] = useState(item.isCard)
+  const [collapsed, setCollapsed] = useState(() => {
+    if (!item.isCard) return false
+    if (typeof window === 'undefined') return true
+    const stored = localStorage.getItem(`budget:card:${item.name}:collapsed`)
+    return stored !== null ? stored === 'true' : true
+  })
+
+  function toggleCollapsed() {
+    const next = !collapsed
+    setCollapsed(next)
+    if (isCard) localStorage.setItem(`budget:card:${item.name}:collapsed`, String(next))
+  }
   const [addingCharge, setAddingCharge] = useState(false)
   const [inflationOpen, setInflationOpen] = useState(false)
   const [linkPickerOpen, setLinkPickerOpen] = useState(false)
@@ -140,7 +151,7 @@ export function ExpenseRow({ item, depth = 0, monthId, keywordMap, categories, y
 
             {(hasChildren || isCard) && (
               <button
-                onClick={() => setCollapsed(c => !c)}
+                onClick={() => toggleCollapsed()}
                 className="text-[var(--muted-fg)] text-xs w-4 text-center flex-shrink-0 leading-none"
               >
                 {collapsed ? '▸' : '▾'}
@@ -237,7 +248,7 @@ export function ExpenseRow({ item, depth = 0, monthId, keywordMap, categories, y
               )}
               {isCard && !isSubItem && (
                 <button
-                  onClick={() => { setAddingCharge(a => !a); setCollapsed(false) }}
+                  onClick={() => { setAddingCharge(a => !a); if (collapsed) toggleCollapsed() }}
                   className="text-xs text-purple-400 hover:text-purple-300 transition-colors opacity-0 group-hover:opacity-100"
                 >
                   {t('addCharge')}

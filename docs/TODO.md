@@ -24,8 +24,8 @@ Format: `- [ ] description` — check off when done, delete when shipped.
 - [ ] Links: restrict which expense types can be linked — e.g. one-time expenses may not need linking, similar to how one-time expenses skip the inflation button
 - [x] Consider removing paid/pending tracking — simplify to expense ledger + past statistics only; keep `paid` field in schema but hide the UI
 - [x] Deleting a recurring or installment expense should propagate the deletion to future months
-- [ ] Card expand/collapse state should persist across month navigation and when returning to the current month
-- [ ] Card row order in the budget table should match the order defined in the Tarjetas settings tab (including sub-item ordering within each card)
+- [x] Card expand/collapse state should persist across month navigation and when returning to the current month
+- [x] Card row order in the budget table should match the order defined in the Tarjetas settings tab (including sub-item ordering within each card)
 
 ---
 

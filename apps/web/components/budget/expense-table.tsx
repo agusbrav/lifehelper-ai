@@ -67,7 +67,17 @@ export function ExpenseTable({ items, monthId, keywordMap, categories, year, mon
   const [filterCats, setFilterCats] = useState<Set<string>>(new Set())
   const [filterTypes, setFilterTypes] = useState<Set<string>>(new Set())
 
-  const cardItems = useMemo(() => items.filter(i => i.isCard), [items])
+  const cardItems = useMemo(() => {
+    const cards = items.filter(i => i.isCard)
+    if (!sortCol) return cards
+    return [...cards].sort((a, b) => {
+      let cmp = 0
+      if (sortCol === 'name') cmp = a.name.localeCompare(b.name, undefined, { sensitivity: 'base' })
+      else if (sortCol === 'category') cmp = (a.category ?? '').localeCompare(b.category ?? '', undefined, { sensitivity: 'base' })
+      else if (sortCol === 'amount') cmp = effectiveAmount(a) - effectiveAmount(b)
+      return sortDir === 'asc' ? cmp : -cmp
+    })
+  }, [items, sortCol, sortDir])
   const expenseItems = useMemo(() => items.filter(i => !i.isCard), [items])
   const allCards = cardItems.map(i => ({ id: i.id, name: i.name }))
 
