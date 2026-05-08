@@ -153,7 +153,7 @@ export function ChatRail() {
                 className={`text-xs px-3 py-1.5 rounded-xl max-w-[80%] ${
                   m.role === 'user'
                     ? 'ml-auto bg-[var(--accent)] text-[var(--accent-fg)]'
-                    : 'bg-[var(--muted)] text-[var(--fg)]'
+                    : 'bg-[var(--accent-muted)] text-[var(--fg)]'
                 }`}
               >
                 <div className="prose prose-xs max-w-none [&_p]:mb-1 [&_p:last-child]:mb-0 [&_strong]:font-semibold [&_ul]:list-disc [&_ul]:pl-4 [&_ol]:list-decimal [&_ol]:pl-4">
@@ -162,7 +162,7 @@ export function ChatRail() {
               </div>
             ))}
             {loading && (
-              <div className="text-xs px-3 py-1.5 rounded-xl max-w-[80%] bg-[var(--muted)] text-[var(--muted-fg)] flex items-center gap-2">
+              <div className="text-xs px-3 py-1.5 rounded-xl max-w-[80%] bg-[var(--accent-muted)] text-[var(--muted-fg)] flex items-center gap-2">
                 <span className="inline-block w-3 h-3 border-2 border-[var(--accent)] border-t-transparent rounded-full animate-spin" />
                 {spinnerLabel}
               </div>
