@@ -21,6 +21,7 @@ Format: `- [ ] description` — check off when done, delete when shipped.
 - [x] Summary bar shows ARS total and USD total as separate values (no conversion)
 - [ ] Analytics: dynamic layout where user can toggle which panels to show — gastos ARS por categoría, gastos USD, suscripciones total, etc.
 - [ ] Analytics: per-card breakdown — spending totals and charge history per credit card
+- [ ] Links: restrict which expense types can be linked — e.g. one-time expenses may not need linking, similar to how one-time expenses skip the inflation button
 - [x] Consider removing paid/pending tracking — simplify to expense ledger + past statistics only; keep `paid` field in schema but hide the UI
 
 ---
