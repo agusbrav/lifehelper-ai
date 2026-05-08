@@ -181,7 +181,18 @@ pnpm test
 
 ---
 
-## 14. UI Design Principles
+## 14. Fix Propagation — similar systems stay in sync
+
+When a bug or logic issue is fixed in one place, always check whether an analogous pattern exists elsewhere and apply the same fix there too. Common examples:
+- Navigation floor/ceiling logic shared between the budget page and analytics page.
+- Auth checks or redirect guards duplicated across route layouts.
+- Error handling patterns shared across multiple server actions.
+
+After every fix, ask: *"Is there another page, component, or action that uses the same pattern?"* If yes, fix it in the same commit. Document the parallel in the commit message so future reviewers understand why two files changed together.
+
+---
+
+## 15. UI Design Principles
 
 ### Responsiveness — always dynamic, never fixed
 - Never use fixed pixel heights on containers that hold variable content. Use `h-[Xpx] max-h-[85dvh]` when a stable size is needed so the panel shrinks gracefully on small screens and high zoom.

@@ -35,6 +35,15 @@ export default async function BudgetAnalyticsPage({
       ? now.getMonth() + 1
       : rawMonth
 
+  const nowYear = now.getFullYear()
+  const nowMonth = now.getMonth() + 1
+  const maxYear = nowMonth === 12 ? nowYear + 1 : nowYear
+  const maxMonth = nowMonth === 12 ? 1 : nowMonth + 1
+  const maxIndex = maxYear * 12 + maxMonth
+  if (selectedYear * 12 + selectedMonth > maxIndex) {
+    redirect(`/m/budget/analytics?year=${maxYear}&month=${maxMonth}`)
+  }
+
   const [allItems, t] = await Promise.all([
     getItemsForAnalytics(session.user.id),
     getTranslations('analytics'),
@@ -49,16 +58,31 @@ export default async function BudgetAnalyticsPage({
     monthMap.get(key)!.push(item)
   }
 
+  // Exclude card-only months from the navigation floor — auto-synced card items should not
+  // anchor the analytics range any more than they anchor the budget table floor.
   const availableMonths = Array.from(
     new Map(
-      allItems.map(i => [
-        `${i.month.year}-${i.month.month}`,
-        { year: i.month.year, month: i.month.month },
-      ]),
+      allItems
+        .filter(i => !i.isCard)
+        .map(i => [
+          `${i.month.year}-${i.month.month}`,
+          { year: i.month.year, month: i.month.month },
+        ]),
     ).values(),
   )
     .sort((a, b) => b.year * 12 + b.month - (a.year * 12 + a.month))
     .slice(0, 12)
+
+  // Floor redirect — mirror the budget page logic: floor = min(oldest real data, current month)
+  const nowIndex = nowYear * 12 + nowMonth
+  const oldestAvailable = availableMonths[availableMonths.length - 1]
+  const dataIndex = oldestAvailable ? oldestAvailable.year * 12 + oldestAvailable.month : nowIndex
+  const floorIndex = Math.min(dataIndex, nowIndex)
+  if (selectedYear * 12 + selectedMonth < floorIndex && floorIndex <= maxIndex) {
+    const fy = Math.floor((floorIndex - 1) / 12)
+    const fm = floorIndex - fy * 12
+    redirect(`/m/budget/analytics?year=${fy}&month=${fm}`)
+  }
 
   // 6-month window ending at selectedMonth
   const last6: { year: number; month: number; items: typeof allItems }[] = []
