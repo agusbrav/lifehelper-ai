@@ -5,11 +5,9 @@ import { useFormatter, useTranslations } from 'next-intl'
 type Props = {
   selectedYear: number
   selectedMonth: number
-  firstYear: number
-  firstMonth: number
 }
 
-export function AnalyticsMonthNav({ selectedYear, selectedMonth, firstYear, firstMonth }: Props) {
+export function AnalyticsMonthNav({ selectedYear, selectedMonth }: Props) {
   const router = useRouter()
   const format = useFormatter()
   const t = useTranslations('budget')
@@ -18,8 +16,6 @@ export function AnalyticsMonthNav({ selectedYear, selectedMonth, firstYear, firs
   const nowYear = now.getFullYear()
   const nowMonth = now.getMonth() + 1
   const isCurrentMonth = selectedYear === nowYear && selectedMonth === nowMonth
-
-  const isFirstMonth = selectedYear === firstYear && selectedMonth === firstMonth
 
   const maxYear = nowMonth === 12 ? nowYear + 1 : nowYear
   const maxMonth = nowMonth === 12 ? 1 : nowMonth + 1
@@ -39,7 +35,7 @@ export function AnalyticsMonthNav({ selectedYear, selectedMonth, firstYear, firs
 
   return (
     <div className="flex items-center gap-2">
-      <button onClick={() => navigate(-1)} disabled={isFirstMonth} className={btnCls}>←</button>
+      <button onClick={() => navigate(-1)} className={btnCls}>←</button>
       <span className="text-base font-semibold text-[var(--fg)] min-w-[160px] text-center capitalize">
         {monthLabel} {selectedYear}
       </span>

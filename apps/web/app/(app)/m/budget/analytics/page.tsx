@@ -72,12 +72,6 @@ export default async function BudgetAnalyticsPage({
     .sort((a, b) => b.year * 12 + b.month - (a.year * 12 + a.month))
     .slice(0, 12)
 
-  const nowIndex = nowYear * 12 + nowMonth
-  const oldestAvailable = availableMonths[availableMonths.length - 1]
-  const dataIndex = oldestAvailable ? oldestAvailable.year * 12 + oldestAvailable.month : nowIndex
-  const floorIndex = Math.min(dataIndex, nowIndex)
-  const floorYear = Math.floor((floorIndex - 1) / 12)
-  const floorMonth = floorIndex - floorYear * 12
 
   // 6-month window ending at selectedMonth
   const last6: { year: number; month: number; items: typeof allItems }[] = []
@@ -123,8 +117,6 @@ export default async function BudgetAnalyticsPage({
         <AnalyticsMonthNav
           selectedYear={selectedYear}
           selectedMonth={selectedMonth}
-          firstYear={floorYear}
-          firstMonth={floorMonth}
         />
         <Link
           href="/m/budget"
