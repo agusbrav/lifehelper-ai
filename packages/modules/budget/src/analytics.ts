@@ -149,7 +149,6 @@ export type TypeTotal = {
 
 const TYPE_ORDER: TypeTotal['type'][] = ['recurring', 'subscription', 'installment', 'card', 'one-time']
 
-// ARS items only — excludes USD card charges and USD top-level items
 export function computeTypeTotals(items: ItemSlim[]): TypeTotal[] {
   const idIsCard = new Map(
     items.filter(i => i.parentId === null).map(i => [i.id, i.isCard]),
@@ -160,6 +159,31 @@ export function computeTypeTotals(items: ItemSlim[]): TypeTotal[] {
     if (item.amount === null) continue
     if ((item.currency ?? 'ARS') === 'USD') continue
 
+    let type: TypeTotal['type']
+    if (item.parentId !== null) {
+      if (!idIsCard.get(item.parentId)) continue
+      type = 'card'
+    } else {
+      if (item.isCard) continue
+      if (item.installmentTotal !== null) { type = 'installment' }
+      else if (item.itemType === 'subscription') { type = 'subscription' }
+      else if (item.itemType === 'recurring') { type = 'recurring' }
+      else { type = 'one-time' }
+    }
+    map.set(type, (map.get(type) ?? 0) + item.amount)
+  }
+  return TYPE_ORDER.filter(t => map.has(t)).map(type => ({ type, total: map.get(type)! }))
+}
+
+export function computeUsdTypeTotals(items: ItemSlim[]): TypeTotal[] {
+  const cardCurrencyMap = buildCardCurrencyMap(items)
+  const idIsCard = new Map(
+    items.filter(i => i.parentId === null).map(i => [i.id, i.isCard]),
+  )
+  const map = new Map<string, number>()
+  for (const item of items) {
+    if (item.amount === null) continue
+    if (effectiveCurrency(item, cardCurrencyMap) !== 'USD') continue
     let type: TypeTotal['type']
     if (item.parentId !== null) {
       if (!idIsCard.get(item.parentId)) continue

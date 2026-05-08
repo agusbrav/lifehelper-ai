@@ -1,5 +1,5 @@
 'use client'
-import { useState, useMemo } from 'react'
+import { useState, useMemo, useEffect } from 'react'
 import { useTranslations, useLocale } from 'next-intl'
 import { DonutChart } from './donut-chart'
 import { ClickableRow } from '@/components/clickable-row'
@@ -10,6 +10,8 @@ import type {
   InflationAlert,
   InstallmentSummary,
 } from '@lifehelper/budget'
+
+export type ViewMode = 'category' | 'type'
 
 const PALETTE = [
   '#6366f1', '#f59e0b', '#10b981', '#ef4444',
@@ -55,6 +57,7 @@ type ViewItem = {
 }
 
 type Props = {
+  viewMode: ViewMode
   categoryTotals: CategoryTotal[]
   typeTotals: TypeTotal[]
   avg3mo: RollingAvgResult[]
@@ -63,12 +66,14 @@ type Props = {
   installments: InstallmentSummary[]
   monthlyTotals: MonthlyTotal[]
   usdCategoryTotals: CategoryTotal[]
+  usdTypeTotals: TypeTotal[]
   usdAvg3mo: RollingAvgResult[]
   usdAvg6mo: RollingAvgResult[]
   usdMonthlyTotals: MonthlyTotal[]
 }
 
 export function AnalyticsDashboard({
+  viewMode,
   categoryTotals,
   typeTotals,
   avg3mo,
@@ -77,6 +82,7 @@ export function AnalyticsDashboard({
   installments,
   monthlyTotals,
   usdCategoryTotals,
+  usdTypeTotals,
   usdAvg3mo,
   usdAvg6mo,
   usdMonthlyTotals,
@@ -84,7 +90,6 @@ export function AnalyticsDashboard({
   const t = useTranslations('analytics')
   const tBudget = useTranslations('budget')
   const locale = useLocale()
-  const [viewMode, setViewMode] = useState<'category' | 'type'>('category')
   const [excluded, setExcluded] = useState<Set<string>>(new Set())
 
   const fmt = (cents: number) =>
@@ -126,17 +131,14 @@ export function AnalyticsDashboard({
     }))
   }, [viewMode, sortedCategoryTotals, typeTotals, categoryColorMap, avg3mo, avg6mo])
 
+  useEffect(() => { setExcluded(new Set()) }, [viewMode])
+
   function toggle(key: string) {
     setExcluded(prev => {
       const next = new Set(prev)
       next.has(key) ? next.delete(key) : next.add(key)
       return next
     })
-  }
-
-  function switchMode(mode: 'category' | 'type') {
-    setViewMode(mode)
-    setExcluded(new Set())
   }
 
   const includedItems = viewItems.filter(item => !excluded.has(item.key))
@@ -154,32 +156,6 @@ export function AnalyticsDashboard({
 
   return (
     <div className="flex flex-col gap-8">
-
-      {/* View mode toggle */}
-      <div className="flex">
-        <div className="inline-flex rounded-lg border border-[var(--border)] overflow-hidden text-sm">
-          <button
-            onClick={() => switchMode('category')}
-            className={`px-4 py-1.5 font-medium transition-colors ${
-              viewMode === 'category'
-                ? 'bg-[var(--accent)] text-[var(--accent-fg)]'
-                : 'text-[var(--muted-fg)] hover:bg-[var(--muted)]'
-            }`}
-          >
-            {t('byCategory')}
-          </button>
-          <button
-            onClick={() => switchMode('type')}
-            className={`px-4 py-1.5 font-medium transition-colors border-l border-[var(--border)] ${
-              viewMode === 'type'
-                ? 'bg-[var(--accent)] text-[var(--accent-fg)]'
-                : 'text-[var(--muted-fg)] hover:bg-[var(--muted)]'
-            }`}
-          >
-            {t('byType')}
-          </button>
-        </div>
-      </div>
 
       {/* Split: donut left, table right */}
       <section>
@@ -461,11 +437,21 @@ export function AnalyticsDashboard({
       )}
 
       {/* USD section */}
-      {usdCategoryTotals.length > 0 && (() => {
-        const sortedUsd = [...usdCategoryTotals].sort((a, b) => b.total - a.total)
-        const usdColorMap = buildColorMap(sortedUsd)
-        const usdMax = Math.max(...sortedUsd.map(c => c.total), 1)
-        const usdTotal = sortedUsd.reduce((s, c) => s + c.total, 0)
+      {(usdCategoryTotals.length > 0 || usdTypeTotals.length > 0) && (() => {
+        const usdItems = viewMode === 'category'
+          ? [...usdCategoryTotals].sort((a, b) => b.total - a.total)
+          : usdTypeTotals.map(tp => ({ category: tp.type as string | null, total: tp.total }))
+        const usdColorMap = viewMode === 'category'
+          ? buildColorMap(usdItems)
+          : new Map(usdTypeTotals.map(tp => [tp.type as string | null, TYPE_COLORS[tp.type] ?? '#64748b']))
+        const usdMax = Math.max(...usdItems.map(c => c.total), 1)
+        const usdTotal = usdItems.reduce((s, c) => s + c.total, 0)
+        const showUsdAvgCols = viewMode === 'category'
+
+        const usdLabel = (cat: string | null) =>
+          viewMode === 'category'
+            ? (cat ?? t('uncategorized'))
+            : (typeLabels[cat ?? ''] ?? cat ?? '')
 
         return (
           <section>
@@ -475,16 +461,16 @@ export function AnalyticsDashboard({
             <div className="grid grid-cols-1 md:grid-cols-[200px_1fr] gap-6 items-start">
               <div className="flex flex-col items-center gap-4">
                 <DonutChart
-                  segments={sortedUsd.map(c => ({ category: c.category ?? '__null__', value: c.total, color: usdColorMap.get(c.category) ?? PALETTE[0]! }))}
+                  segments={usdItems.map(c => ({ category: c.category ?? '__null__', value: c.total, color: usdColorMap.get(c.category) ?? PALETTE[0]! }))}
                   total={usdTotal}
                   centerLabel={'USD ' + (usdTotal / 100).toLocaleString(locale, { maximumFractionDigits: 0 })}
                   onToggle={() => {}}
                 />
                 <div className="w-full flex flex-col gap-1.5">
-                  {sortedUsd.map(c => (
+                  {usdItems.map(c => (
                     <div key={c.category ?? '__null__'} className="flex items-center gap-2 text-xs">
                       <span className="w-2.5 h-2.5 rounded-full flex-shrink-0" style={{ background: usdColorMap.get(c.category) ?? PALETTE[0]! }} />
-                      <span className="flex-1 capitalize">{c.category ?? t('uncategorized')}</span>
+                      <span className="flex-1 capitalize">{usdLabel(c.category)}</span>
                       <span className="text-[var(--muted-fg)]">{usdTotal > 0 ? Math.round((c.total / usdTotal) * 100) : 0}%</span>
                     </div>
                   ))}
@@ -495,35 +481,45 @@ export function AnalyticsDashboard({
                 <table className="w-full border-collapse text-sm">
                   <thead>
                     <tr className="bg-[var(--muted)]">
-                      <th className="text-left py-2.5 pl-5 text-xs font-medium text-[var(--muted-fg)] uppercase tracking-wide">{t('usdByCategory')}</th>
+                      <th className="text-left py-2.5 pl-5 text-xs font-medium text-[var(--muted-fg)] uppercase tracking-wide">
+                        {viewMode === 'category' ? t('usdByCategory') : t('byType')}
+                      </th>
                       <th className="text-right py-2.5 px-4 text-xs font-medium text-[var(--muted-fg)] uppercase tracking-wide w-28">{t('thisMonth')}</th>
-                      <th className="text-right py-2.5 px-4 text-xs font-medium text-[var(--muted-fg)] uppercase tracking-wide w-24">{t('avg3mo')}</th>
-                      <th className="text-right py-2.5 px-4 text-xs font-medium text-[var(--muted-fg)] uppercase tracking-wide w-24">{t('avg6mo')}</th>
+                      {showUsdAvgCols && (
+                        <>
+                          <th className="text-right py-2.5 px-4 text-xs font-medium text-[var(--muted-fg)] uppercase tracking-wide w-24">{t('avg3mo')}</th>
+                          <th className="text-right py-2.5 px-4 text-xs font-medium text-[var(--muted-fg)] uppercase tracking-wide w-24">{t('avg6mo')}</th>
+                        </>
+                      )}
                       <th className="py-2.5 pr-5 w-36" />
                     </tr>
                   </thead>
                   <tbody>
-                    {sortedUsd.map(c => {
-                      const avg3 = usdAvg3mo.find(a => a.category === c.category)?.avg ?? 0
-                      const avg6 = usdAvg6mo.find(a => a.category === c.category)?.avg ?? 0
+                    {usdItems.map(c => {
+                      const avg3 = showUsdAvgCols ? (usdAvg3mo.find(a => a.category === c.category)?.avg ?? 0) : 0
+                      const avg6 = showUsdAvgCols ? (usdAvg6mo.find(a => a.category === c.category)?.avg ?? 0) : 0
                       const pct3 = avg3 > 0 ? Math.round(((c.total - avg3) / avg3) * 100) : 0
                       return (
                         <tr key={c.category ?? '__null__'} className="border-t border-[var(--border)] hover:bg-[var(--accent-muted)] transition-colors">
                           <td className="py-3 pl-5 font-medium text-[var(--fg)]">
                             <span className="flex items-center gap-2">
                               <span className="w-2 h-2 rounded-full flex-shrink-0" style={{ background: usdColorMap.get(c.category) ?? PALETTE[0]! }} />
-                              <span className="capitalize">{c.category ?? t('uncategorized')}</span>
+                              <span className="capitalize">{usdLabel(c.category)}</span>
                             </span>
                           </td>
                           <td className="py-3 px-4 text-right font-semibold text-blue-400">{fmtUsd(c.total)}</td>
-                          <td className="py-3 px-4 text-right text-[var(--muted-fg)]">{avg3 > 0 ? fmtUsd(avg3) : '-'}</td>
-                          <td className="py-3 px-4 text-right text-[var(--muted-fg)]">{avg6 > 0 ? fmtUsd(avg6) : '-'}</td>
+                          {showUsdAvgCols && (
+                            <>
+                              <td className="py-3 px-4 text-right text-[var(--muted-fg)]">{avg3 > 0 ? fmtUsd(avg3) : '-'}</td>
+                              <td className="py-3 px-4 text-right text-[var(--muted-fg)]">{avg6 > 0 ? fmtUsd(avg6) : '-'}</td>
+                            </>
+                          )}
                           <td className="py-3 pr-5">
                             <div className="flex items-center gap-2">
                               <div className="flex-1 bg-[var(--muted)] rounded-full h-1.5">
                                 <div className="h-1.5 rounded-full bg-blue-400" style={{ width: `${Math.round((c.total / usdMax) * 100)}%` }} />
                               </div>
-                              {avg3 > 0 && (
+                              {showUsdAvgCols && avg3 > 0 && (
                                 <span className={`text-xs font-medium w-10 text-right ${pctColor(pct3)}`}>
                                   {pct3 > 0 ? '+' : ''}{pct3}%
                                 </span>

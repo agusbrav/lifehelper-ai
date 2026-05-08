@@ -6,14 +6,13 @@ import {
   computeCategoryTotals,
   computeUsdCategoryTotals,
   computeTypeTotals,
+  computeUsdTypeTotals,
   computeRollingAverage,
   computeInflationAlerts,
   computeInstallmentOverview,
 } from '@lifehelper/budget'
 import { getTranslations } from 'next-intl/server'
-import { AnalyticsDashboard } from '@/components/budget/analytics-dashboard'
-import { AnalyticsMonthNav } from '@/components/budget/analytics-month-nav'
-import Link from 'next/link'
+import { AnalyticsPageClient } from '@/components/budget/analytics-page-client'
 
 export default async function BudgetAnalyticsPage({
   searchParams,
@@ -108,6 +107,7 @@ export default async function BudgetAnalyticsPage({
   const installments = computeInstallmentOverview(currentItems)
 
   const usdCategoryTotals = computeUsdCategoryTotals(currentItems)
+  const usdTypeTotals = computeUsdTypeTotals(currentItems)
   const usdAvg3mo = computeRollingAverage(last6, 3, computeUsdCategoryTotals)
   const usdAvg6mo = computeRollingAverage(last6, 6, computeUsdCategoryTotals)
 
@@ -128,21 +128,11 @@ export default async function BudgetAnalyticsPage({
 
   return (
     <div className="p-6">
-      <div className="flex items-center justify-between mb-4">
-        <AnalyticsMonthNav
-          selectedYear={selectedYear}
-          selectedMonth={selectedMonth}
-          firstYear={floorYear}
-          firstMonth={floorMonth}
-        />
-        <Link
-          href="/m/budget"
-          className="text-sm text-[var(--accent)] hover:opacity-80 font-medium"
-        >
-          {t('backToTable')}
-        </Link>
-      </div>
-      <AnalyticsDashboard
+      <AnalyticsPageClient
+        selectedYear={selectedYear}
+        selectedMonth={selectedMonth}
+        firstYear={floorYear}
+        firstMonth={floorMonth}
         categoryTotals={categoryTotals}
         typeTotals={typeTotals}
         avg3mo={avg3mo}
@@ -151,6 +141,7 @@ export default async function BudgetAnalyticsPage({
         installments={installments}
         monthlyTotals={monthlyTotals}
         usdCategoryTotals={usdCategoryTotals}
+        usdTypeTotals={usdTypeTotals}
         usdAvg3mo={usdAvg3mo}
         usdAvg6mo={usdAvg6mo}
         usdMonthlyTotals={usdMonthlyTotals}
