@@ -67,6 +67,8 @@
     "delete": "Eliminar",
     "resetMonth": "Reiniciar mes",
     "resetMonthConfirm": "¿Reiniciar este mes? Se eliminarán todos los gastos y se recargará desde el mes anterior.",
+    "deletePastMonths": "Eliminar meses anteriores",
+    "deletePastMonthsConfirm": "¿Eliminar todos los meses anteriores al actual? Esta acción no se puede deshacer.",
     "inflationBtn": "+%",
     "inflationTitle": "Ajustar: {name}",
     "inflationNextMonth": "→ Próximo mes",

@@ -109,6 +109,7 @@ model BudgetMonth {
   month            Int
   compacted        Boolean      @default(false)
   compactedSummary Json?
+  resetAt          DateTime?
   createdAt        DateTime     @default(now())
   items            BudgetItem[]
 

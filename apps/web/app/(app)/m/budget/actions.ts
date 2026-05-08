@@ -2,7 +2,7 @@
 import { revalidatePath } from 'next/cache'
 import { cookies } from 'next/headers'
 import { getSession } from '@lifehelper/core'
-import { addExpense, addInstallment, setAmount, setAmountNextMonth, deleteItem, resetMonth } from '@lifehelper/budget'
+import { addExpense, addInstallment, setAmount, setAmountNextMonth, deleteItem, resetMonth, deletePastMonths } from '@lifehelper/budget'
 import { getLinkableModule, getLinkableModuleIds } from '@lifehelper/integrations'
 import { createLink, deleteLink } from '@lifehelper/core'
 
@@ -57,6 +57,12 @@ export async function deleteItemAction(itemId: string) {
 export async function resetMonthAction(year: number, month: number) {
   const userId = await getUserId()
   await resetMonth(userId, year, month)
+  revalidatePath('/m/budget')
+}
+
+export async function deletePastMonthsAction() {
+  const userId = await getUserId()
+  await deletePastMonths(userId)
   revalidatePath('/m/budget')
 }
 

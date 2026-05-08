@@ -67,6 +67,8 @@
     "delete": "Delete",
     "resetMonth": "Reload month",
     "resetMonthConfirm": "Reload this month? All expenses will be removed and rebuilt from the previous month.",
+    "deletePastMonths": "Delete past months",
+    "deletePastMonthsConfirm": "Delete all months before the current one? This cannot be undone.",
     "inflationBtn": "+%",
     "inflationTitle": "Adjust: {name}",
     "inflationNextMonth": "→ Next month",

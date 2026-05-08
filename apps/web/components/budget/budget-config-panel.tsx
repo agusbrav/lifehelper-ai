@@ -4,7 +4,7 @@ import { useTranslations } from 'next-intl'
 import { useRouter } from 'next/navigation'
 import { addCardAction, removeCardAction, renameCardAction, setCardCurrencyAction } from '@/app/(app)/m/budget/settings/actions'
 import { addCategoryKeywordAction, removeCategoryKeywordAction } from '@/app/(app)/m/budget/config/actions'
-import { resetMonthAction } from '@/app/(app)/m/budget/actions'
+import { resetMonthAction, deletePastMonthsAction } from '@/app/(app)/m/budget/actions'
 import { RenameCardInput } from '@/app/(app)/m/budget/settings/rename-card-input'
 import { CATEGORY_SEEDS } from '@lifehelper/budget'
 
@@ -28,6 +28,8 @@ export function BudgetConfigPanel({ year, month, cards, userKeywords }: Props) {
   const [, startTransition] = useTransition()
   const [resetConfirming, setResetConfirming] = useState(false)
   const [resetPending, startResetTransition] = useTransition()
+  const [deletePastConfirming, setDeletePastConfirming] = useState(false)
+  const [deletePastPending, startDeletePastTransition] = useTransition()
 
   // Add card state
   const [newCardName, setNewCardName] = useState('')
@@ -104,6 +106,15 @@ export function BudgetConfigPanel({ year, month, cards, userKeywords }: Props) {
     })
   }
 
+  function handleDeletePast() {
+    startDeletePastTransition(async () => {
+      await deletePastMonthsAction()
+      setOpen(false)
+      setDeletePastConfirming(false)
+      router.push('/m/budget')
+    })
+  }
+
   const inputCls = 'rounded-lg border border-[var(--border)] bg-[var(--bg)] text-[var(--fg)] px-2.5 py-1.5 text-sm outline-none focus:ring-1 focus:ring-[var(--accent)] min-w-0'
   const tabCls = (active: boolean) =>
     `px-3 py-1.5 text-sm font-medium rounded-lg transition-colors ${
@@ -132,7 +143,7 @@ export function BudgetConfigPanel({ year, month, cards, userKeywords }: Props) {
           {/* Backdrop */}
           <div
             className="absolute inset-0 bg-black/50"
-            onClick={() => { setOpen(false); setResetConfirming(false) }}
+            onClick={() => { setOpen(false); setResetConfirming(false); setDeletePastConfirming(false) }}
           />
 
           {/* Panel */}
@@ -141,7 +152,7 @@ export function BudgetConfigPanel({ year, month, cards, userKeywords }: Props) {
             <div className="flex items-center justify-between px-5 py-4 border-b border-[var(--border)]">
               <h2 className="font-semibold text-[var(--fg)]">{t('configTitle')}</h2>
               <button
-                onClick={() => { setOpen(false); setResetConfirming(false) }}
+                onClick={() => { setOpen(false); setResetConfirming(false); setDeletePastConfirming(false) }}
                 className="text-[var(--muted-fg)] hover:text-[var(--fg)] transition-colors text-lg leading-none"
               >
                 ✕
@@ -150,7 +161,7 @@ export function BudgetConfigPanel({ year, month, cards, userKeywords }: Props) {
 
             {/* Tabs */}
             <div className="flex gap-1.5 px-5 pt-3">
-              <button className={tabCls(tab === 'general')} onClick={() => { setTab('general'); setResetConfirming(false) }}>
+              <button className={tabCls(tab === 'general')} onClick={() => { setTab('general'); setResetConfirming(false); setDeletePastConfirming(false) }}>
                 {t('generalTab')}
               </button>
               <button className={tabCls(tab === 'tarjetas')} onClick={() => setTab('tarjetas')}>
@@ -188,6 +199,35 @@ export function BudgetConfigPanel({ year, month, cards, userKeywords }: Props) {
                         </button>
                         <button
                           onClick={() => setResetConfirming(false)}
+                          className="text-[var(--muted-fg)] hover:text-[var(--fg)] transition-colors"
+                        >
+                          {t('cancel')}
+                        </button>
+                      </span>
+                    )}
+                  </div>
+
+                  <div className="rounded-xl border border-[var(--border)] p-4">
+                    <p className="text-sm font-medium text-[var(--fg)] mb-1">{t('deletePastMonths')}</p>
+                    <p className="text-xs text-[var(--muted-fg)] mb-3">{t('deletePastMonthsConfirm')}</p>
+                    {!deletePastConfirming ? (
+                      <button
+                        onClick={() => setDeletePastConfirming(true)}
+                        className="text-xs text-rose-400 hover:text-rose-300 border border-rose-400/30 rounded-lg px-3 py-1.5 transition-colors"
+                      >
+                        {t('deletePastMonths')}
+                      </button>
+                    ) : (
+                      <span className="flex items-center gap-2 text-xs">
+                        <button
+                          onClick={handleDeletePast}
+                          disabled={deletePastPending}
+                          className="text-rose-400 hover:text-rose-300 border border-rose-400/30 rounded-lg px-3 py-1.5 font-medium transition-colors"
+                        >
+                          {deletePastPending ? '…' : t('deletePastMonths') + ' ✓'}
+                        </button>
+                        <button
+                          onClick={() => setDeletePastConfirming(false)}
                           className="text-[var(--muted-fg)] hover:text-[var(--fg)] transition-colors"
                         >
                           {t('cancel')}

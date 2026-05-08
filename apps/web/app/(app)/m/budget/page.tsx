@@ -34,12 +34,20 @@ export default async function BudgetPage({ searchParams }: Props) {
     'past'
 
   const firstMonth = await getFirstMonth(session.user.id)
-  if (firstMonth) {
-    const targetIndex = year * 12 + month
-    const firstIndex = firstMonth.year * 12 + firstMonth.month
-    if (targetIndex < firstIndex) {
-      redirect(`/m/budget?year=${firstMonth.year}&month=${firstMonth.month}`)
-    }
+  const nowIndex = now.getFullYear() * 12 + (now.getMonth() + 1)
+  // Floor = earliest month the user may navigate to.
+  // Use the first month with real (non-card) data, capped at the current calendar month:
+  // - No real data yet → floor = current month (can't wander into empty past months)
+  // - Real data in the past → floor = that month (can review history)
+  // - Real data only in the future → floor = current month (prevents the redirect loop)
+  const dataIndex = firstMonth ? firstMonth.year * 12 + firstMonth.month : nowIndex
+  const floorIndex = Math.min(dataIndex, nowIndex)
+  const floorYear = Math.floor((floorIndex - 1) / 12)
+  const floorMonth = floorIndex - floorYear * 12
+  const targetIndex = year * 12 + month
+  const maxIndex = maxYear * 12 + maxMonth
+  if (targetIndex < floorIndex && floorIndex <= maxIndex) {
+    redirect(`/m/budget?year=${floorYear}&month=${floorMonth}`)
   }
 
   const [budgetMonth, historyMap, t, cards, userKeywordRecords] = await Promise.all([
@@ -77,7 +85,7 @@ export default async function BudgetPage({ searchParams }: Props) {
   return (
     <div className="p-4 sm:p-6 w-full">
       <div className="flex flex-wrap items-center gap-x-4 gap-y-3 mb-6">
-        <MonthNav year={year} month={month} firstYear={firstMonth?.year} firstMonth={firstMonth?.month} />
+        <MonthNav year={year} month={month} firstYear={floorYear} firstMonth={floorMonth} />
         <div className="flex flex-wrap items-center gap-x-4 gap-y-2 ml-auto">
           <SummaryBar
             totalArsCents={totalArsCents}

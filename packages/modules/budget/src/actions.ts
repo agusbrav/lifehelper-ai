@@ -58,6 +58,7 @@ export async function getOrCreateMonth(userId: string, year: number, month: numb
     include: MONTH_INCLUDE,
   })
   if (existing) {
+    if (existing.resetAt) return existing
     await syncCardsToMonth(userId, existing.id)
     return db.budgetMonth.findUnique({
       where: { userId_year_month: { userId, year, month } },
@@ -296,6 +297,7 @@ async function propagateToNextMonth(userId: string, monthId: string, item: Carry
 
 export async function addExpense(input: AddExpenseInput) {
   await assertOwnsMonth(input.userId, input.monthId)
+  await db.budgetMonth.update({ where: { id: input.monthId }, data: { resetAt: null } })
   const itemType = input.itemType ?? 'one_time'
   const recurring = input.recurring ?? (itemType === 'recurring' || itemType === 'subscription')
   const item = await db.budgetItem.create({
@@ -371,8 +373,49 @@ export async function togglePaid(input: { userId: string; itemId: string }) {
 }
 
 export async function deleteItem(input: { userId: string; itemId: string }) {
-  await assertOwnsItem(input.userId, input.itemId)
-  return db.budgetItem.delete({ where: { id: input.itemId } })
+  const item = await assertOwnsItem(input.userId, input.itemId)
+
+  const currentMonth = await db.budgetMonth.findUnique({
+    where: { id: item.monthId },
+    select: { year: true, month: true },
+  })
+
+  // Fetch parent name before deleting the item (needed for sub-item propagation)
+  let parentName: string | null = null
+  if (item.parentId && item.recurring) {
+    const parent = await db.budgetItem.findUnique({
+      where: { id: item.parentId },
+      select: { name: true },
+    })
+    parentName = parent?.name ?? null
+  }
+
+  await db.budgetItem.delete({ where: { id: input.itemId } })
+
+  if (!currentMonth) return
+
+  const futureMonths = {
+    OR: [
+      { year: { gt: currentMonth.year } },
+      { year: currentMonth.year, month: { gt: currentMonth.month } },
+    ],
+  }
+
+  if (item.installmentGroupId) {
+    await db.budgetItem.deleteMany({
+      where: { userId: input.userId, installmentGroupId: item.installmentGroupId, month: futureMonths },
+    })
+  } else if (item.recurring) {
+    if (parentName !== null) {
+      await db.budgetItem.deleteMany({
+        where: { userId: input.userId, name: item.name, recurring: true, parent: { name: parentName }, month: futureMonths },
+      })
+    } else {
+      await db.budgetItem.deleteMany({
+        where: { userId: input.userId, name: item.name, recurring: true, parentId: null, month: futureMonths },
+      })
+    }
+  }
 }
 
 export async function getMonthsForUser(userId: string) {
@@ -384,11 +427,11 @@ export async function getMonthsForUser(userId: string) {
 }
 
 export async function getFirstMonth(userId: string): Promise<{ year: number; month: number } | null> {
-  // Use the oldest item's createdAt rather than the earliest year/month record.
-  // Spurious months created by backwards navigation have newer items than the user's
-  // genuine first month, so this correctly identifies the real starting point.
+  // Card items are auto-synced into every month the user visits — they are not a signal
+  // that the user has started tracking data in that month. Only non-card items anchor the
+  // navigation floor so that accidental past-month visits don't shift the lower bound back.
   const oldest = await db.budgetItem.findFirst({
-    where: { userId, parentId: null },
+    where: { userId, parentId: null, isCard: false },
     orderBy: { createdAt: 'asc' },
     select: { monthId: true },
   })
@@ -407,7 +450,31 @@ export async function resetMonth(userId: string, year: number, month: number): P
   if (!existing) return
   await assertOwnsMonth(userId, existing.id)
   await db.budgetItem.deleteMany({ where: { monthId: existing.id } })
-  await db.budgetMonth.delete({ where: { id: existing.id } })
+  await db.budgetMonth.update({
+    where: { id: existing.id },
+    data: { resetAt: new Date() },
+  })
+
+  // Delete future months that contain only recurring carry-forward items — these are
+  // navigation artifacts from this month's data and would now carry stale entries.
+  // Leave any future month alone if it has at least one explicitly-added one_time item.
+  const futureMonths = await db.budgetMonth.findMany({
+    where: {
+      userId,
+      resetAt: null,
+      OR: [{ year: { gt: year } }, { year, month: { gt: month } }],
+    },
+    select: {
+      id: true,
+      items: { select: { itemType: true } },
+    },
+  })
+  for (const fm of futureMonths) {
+    const hasOneTime = fm.items.some(i => i.itemType === 'one_time')
+    if (!hasOneTime) {
+      await db.budgetMonth.delete({ where: { id: fm.id } })
+    }
+  }
 }
 
 export async function getItemsForAnalytics(userId: string) {
@@ -487,6 +554,21 @@ export async function setAmountNextMonth(input: { userId: string; itemId: string
   await db.budgetItem.update({
     where: { id: nextItem.id },
     data: { amount: input.amountCents, amountCarried: false },
+  })
+}
+
+export async function deletePastMonths(userId: string): Promise<void> {
+  const now = new Date()
+  const currentYear = now.getFullYear()
+  const currentMonth = now.getMonth() + 1
+  await db.budgetMonth.deleteMany({
+    where: {
+      userId,
+      OR: [
+        { year: { lt: currentYear } },
+        { year: currentYear, month: { lt: currentMonth } },
+      ],
+    },
   })
 }
 
