@@ -19,6 +19,8 @@ export async function executeBudgetTool(
     case 'get_summary':       return toolGetSummary(userId, context, input)
     case 'get_inflation_report': return toolGetInflationReport(userId, context, input)
     case 'remove_expense':       return toolRemoveExpense(userId, context, input)
+    case 'add_card_expense':     return toolAddCardExpense(userId, context, input)
+    case 'change_type':          return toolChangeType(userId, context, input)
     default: throw new Error(`Unknown budget tool: ${name}`)
   }
 }
@@ -136,6 +138,91 @@ async function toolGetInflationReport(
   return alerts
     .map(a => `${a.name}: ${a.changePct > 0 ? '+' : ''}${a.changePct}% (was $${(a.previousAmount / 100).toLocaleString()}, now $${(a.currentAmount / 100).toLocaleString()})`)
     .join('; ')
+}
+
+async function toolAddCardExpense(
+  userId: string,
+  context: ToolContext,
+  input: Record<string, unknown>,
+): Promise<string> {
+  const cardName = input.cardName as string
+  const name = input.name as string
+  const rawAmount = input.amount as number
+  const category = input.category as string
+
+  const budgetMonth = await db.budgetMonth.findUnique({
+    where: { userId_year_month: { userId, year: context.year, month: context.month } },
+    select: { id: true },
+  })
+  if (!budgetMonth) return `Month ${context.year}-${context.month} not found`
+
+  const card = await db.budgetItem.findFirst({
+    where: { userId, monthId: budgetMonth.id, isCard: true, name: { contains: cardName, mode: 'insensitive' } },
+    select: { id: true, name: true, currency: true },
+  })
+  if (!card) return `Could not find a card matching "${cardName}" in this month`
+
+  const currency = (input.currency as string | undefined) ?? card.currency
+  await addExpense({
+    userId,
+    monthId: budgetMonth.id,
+    parentId: card.id,
+    name,
+    amount: Math.round(rawAmount * 100),
+    category,
+    currency,
+  })
+  return `Added ${name} — $${rawAmount.toLocaleString()} ${currency} to ${card.name}`
+}
+
+async function toolChangeType(
+  userId: string,
+  context: ToolContext,
+  input: Record<string, unknown>,
+): Promise<string> {
+  const name = input.name as string
+  const newType = input.newType as string
+
+  const budgetMonth = await db.budgetMonth.findUnique({
+    where: { userId_year_month: { userId, year: context.year, month: context.month } },
+    select: { id: true },
+  })
+  if (!budgetMonth) return `Month ${context.year}-${context.month} not found`
+
+  const item = await db.budgetItem.findFirst({
+    where: { userId, monthId: budgetMonth.id, name: { contains: name, mode: 'insensitive' } },
+    select: { id: true, name: true, recurring: true },
+  })
+  if (!item) return `Could not find an expense matching "${name}" in this month`
+
+  const wasRecurring = item.recurring
+  const nowRecurring = newType === 'recurring' || newType === 'subscription'
+
+  await db.budgetItem.update({
+    where: { id: item.id },
+    data: { itemType: newType, recurring: nowRecurring },
+  })
+
+  // If switching away from recurring, remove future occurrences
+  if (wasRecurring && !nowRecurring) {
+    await db.budgetItem.deleteMany({
+      where: {
+        userId,
+        name: item.name,
+        recurring: true,
+        parentId: null,
+        month: {
+          OR: [
+            { year: { gt: context.year } },
+            { year: context.year, month: { gt: context.month } },
+          ],
+        },
+      },
+    })
+    return `Changed ${item.name} to ${newType} and removed future occurrences`
+  }
+
+  return `Changed ${item.name} to ${newType}${nowRecurring && !wasRecurring ? ' — will carry forward to future months when accessed' : ''}`
 }
 
 async function toolRemoveExpense(

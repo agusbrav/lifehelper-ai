@@ -108,7 +108,7 @@ export const budgetToolSchemas: ToolSchema[] = [
   {
     name: 'remove_expense',
     description:
-      'Removes an expense from the current month by name (case-insensitive match). Recurring and installment expenses are also removed from all future months — confirm with the user before removing those.',
+      'Removes an expense from the current month by name (case-insensitive match). Works for regular expenses and card charges. Recurring and installment expenses are also removed from all future months — confirm with the user before removing those.',
     input_schema: {
       type: 'object',
       properties: {
@@ -118,6 +118,52 @@ export const budgetToolSchemas: ToolSchema[] = [
         },
       },
       required: ['name'],
+    },
+  },
+  {
+    name: 'add_card_expense',
+    description:
+      'Adds a charge to a specific credit card in the current month. Use when the user mentions a card by name (e.g. "Visa", "Amex").',
+    input_schema: {
+      type: 'object',
+      properties: {
+        cardName: {
+          type: 'string',
+          description: 'Name of the card (partial, case-insensitive match). E.g. "Visa", "Amex", "American Express".',
+        },
+        name: { type: 'string', description: 'Name of the charge (e.g. "Spotify", "Supermercado").' },
+        amount: {
+          type: 'number',
+          description: 'Amount as a plain number (not cents). E.g. 1200 for $1,200.',
+        },
+        category: { type: 'string', description: 'Category slug in lowercase.' },
+        currency: {
+          type: 'string',
+          enum: ['ARS', 'USD'],
+          description: 'Currency. Defaults to the card\'s currency if not specified.',
+        },
+      },
+      required: ['cardName', 'name', 'amount', 'category'],
+    },
+  },
+  {
+    name: 'change_type',
+    description:
+      'Changes the type of an existing expense (e.g. from one-time to recurring, or recurring to one-time). Use when the user says an expense was added with the wrong type.',
+    input_schema: {
+      type: 'object',
+      properties: {
+        name: {
+          type: 'string',
+          description: 'Name of the expense to update (partial, case-insensitive match).',
+        },
+        newType: {
+          type: 'string',
+          enum: ['one_time', 'recurring', 'subscription'],
+          description: '"one_time" for one-off expenses, "recurring" for monthly fixed costs, "subscription" for services billed monthly.',
+        },
+      },
+      required: ['name', 'newType'],
     },
   },
   {
