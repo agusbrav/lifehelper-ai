@@ -2,7 +2,7 @@
 import { revalidatePath } from 'next/cache'
 import { cookies } from 'next/headers'
 import { getSession } from '@lifehelper/core'
-import { addExpense, addInstallment, setAmount, setAmountNextMonth, togglePaid, deleteItem, resetMonth } from '@lifehelper/budget'
+import { addExpense, addInstallment, setAmount, setAmountNextMonth, deleteItem, resetMonth } from '@lifehelper/budget'
 import { getLinkableModule, getLinkableModuleIds } from '@lifehelper/integrations'
 import { createLink, deleteLink } from '@lifehelper/core'
 
@@ -45,12 +45,6 @@ export async function addInstallmentAction(formData: FormData) {
 export async function setAmountAction(itemId: string, amountCents: number) {
   const userId = await getUserId()
   await setAmount({ userId, itemId, amountCents })
-  revalidatePath('/m/budget')
-}
-
-export async function togglePaidAction(itemId: string) {
-  const userId = await getUserId()
-  await togglePaid({ userId, itemId })
   revalidatePath('/m/budget')
 }
 

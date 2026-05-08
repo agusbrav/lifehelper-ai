@@ -4,6 +4,7 @@ import { useTranslations, useFormatter } from 'next-intl'
 import type { ResolvedLink } from '@lifehelper/budget'
 import { setAmountAction, setAmountNextMonthAction, deleteItemAction, deleteLinkAction } from '@/app/(app)/m/budget/actions'
 import { ExpenseForm } from './expense-form'
+import { LinkPicker } from './link-picker'
 
 type Item = {
   id: string
@@ -299,7 +300,11 @@ export function ExpenseRow({ item, depth = 0, monthId, keywordMap, categories, y
       {linkPickerOpen && (
         <tr className="border-t border-indigo-500/20 bg-indigo-500/5">
           <td colSpan={4} className={`py-2.5 pr-4 ${depth === 0 ? 'pl-4' : 'pl-10'}`}>
-            <span className="text-xs text-[var(--muted-fg)]">Picker coming in next task...</span>
+            <LinkPicker
+              sourceModuleId="budget"
+              sourceEntityId={item.id}
+              onDone={() => setLinkPickerOpen(false)}
+            />
           </td>
         </tr>
       )}
