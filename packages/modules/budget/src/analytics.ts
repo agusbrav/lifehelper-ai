@@ -46,12 +46,32 @@ export type InstallmentSummary = {
   totalRemaining: number
 }
 
-// ARS top-level expenses only (no card containers, no children, no USD)
+// Returns the effective currency of an item, accounting for card children that may have been
+// created before explicit USD tracking (schema default 'ARS'). A card's currency is
+// authoritative: all its charges are treated as that currency unless explicitly overridden to USD.
+function effectiveCurrency(item: ItemSlim, cardCurrencyMap: Map<string, string>): 'ARS' | 'USD' {
+  if (item.currency === 'USD') return 'USD'
+  if (item.parentId !== null) {
+    const parentCurrency = cardCurrencyMap.get(item.parentId)
+    if (parentCurrency === 'USD') return 'USD'
+  }
+  return 'ARS'
+}
+
+function buildCardCurrencyMap(items: ItemSlim[]): Map<string, string> {
+  return new Map(
+    items.filter(i => i.isCard && i.parentId === null).map(i => [i.id, i.currency ?? 'ARS']),
+  )
+}
+
+// ARS expenses: top-level non-card items + ARS card charges
 export function computeCategoryTotals(items: ItemSlim[]): CategoryTotal[] {
+  const cardCurrencyMap = buildCardCurrencyMap(items)
   const map = new Map<string, number>()
   for (const item of items) {
-    if ((item.currency ?? 'ARS') === 'USD') continue
-    if (item.parentId !== null || item.amount === null || item.isCard) continue
+    if (item.amount === null || item.isCard) continue
+    if (item.parentId !== null && !cardCurrencyMap.has(item.parentId)) continue
+    if (effectiveCurrency(item, cardCurrencyMap) === 'USD') continue
     const key = item.category?.toLowerCase() ?? '__null__'
     map.set(key, (map.get(key) ?? 0) + item.amount)
   }
@@ -61,13 +81,14 @@ export function computeCategoryTotals(items: ItemSlim[]): CategoryTotal[] {
   }))
 }
 
-// USD items only — includes card charges (parentId not null), excludes card containers
+// USD expenses: top-level USD items + USD card charges
 export function computeUsdCategoryTotals(items: ItemSlim[]): CategoryTotal[] {
+  const cardCurrencyMap = buildCardCurrencyMap(items)
   const map = new Map<string, number>()
   for (const item of items) {
-    if (item.currency !== 'USD') continue
-    if (item.isCard) continue
-    if (item.amount === null) continue
+    if (item.amount === null || item.isCard) continue
+    if (item.parentId !== null && !cardCurrencyMap.has(item.parentId)) continue
+    if (effectiveCurrency(item, cardCurrencyMap) !== 'USD') continue
     const key = item.category?.toLowerCase() ?? '__null__'
     map.set(key, (map.get(key) ?? 0) + item.amount)
   }

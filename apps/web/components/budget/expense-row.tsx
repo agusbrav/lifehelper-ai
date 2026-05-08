@@ -75,7 +75,9 @@ export function ExpenseRow({ item, depth = 0, monthId, keywordMap, categories, y
   const children = item.children ?? []
   const hasChildren = children.length > 0
 
-  const childrenSum = children.reduce((s, c) => s + (c.amount ?? 0), 0)
+  const childrenSum = children
+    .filter(c => (c.currency === 'USD' || itemCurrency === 'USD' ? 'USD' : 'ARS') === itemCurrency)
+    .reduce((s, c) => s + (c.amount ?? 0), 0)
   const displayAmount = isCard && hasChildren ? childrenSum : item.amount
 
   const dotColor = isCard

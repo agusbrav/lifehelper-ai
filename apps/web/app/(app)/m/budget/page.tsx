@@ -68,14 +68,22 @@ export default async function BudgetPage({ searchParams }: Props) {
   const categories = knownCategories(keywordMap)
 
   type DbItem = typeof items[number]
-  function effectiveAmount(i: DbItem) {
-    const ch = i.children ?? []
-    if (ch.length > 0) return ch.reduce((s, c) => s + (c.amount ?? 0), 0)
-    return i.amount ?? 0
+  // A card's currency is authoritative for its charges. Children of a USD card are always USD
+  // even if their stored currency is 'ARS' (schema default for rows created before USD tracking).
+  function totalByCurrency(currency: 'ARS' | 'USD'): number {
+    return items.reduce((sum, i) => {
+      const ch = i.children ?? []
+      const iCur = (i.currency ?? 'ARS') as 'ARS' | 'USD'
+      if (ch.length > 0)
+        return sum + ch
+          .filter(c => (c.currency === 'USD' || iCur === 'USD' ? 'USD' : 'ARS') === currency)
+          .reduce((s, c) => s + (c.amount ?? 0), 0)
+      return iCur === currency ? sum + (i.amount ?? 0) : sum
+    }, 0)
   }
 
-  const totalArsCents = items.filter(i => (i.currency ?? 'ARS') !== 'USD').reduce((s, i) => s + effectiveAmount(i), 0)
-  const totalUsdCents = items.filter(i => i.currency === 'USD').reduce((s, i) => s + effectiveAmount(i), 0)
+  const totalArsCents = totalByCurrency('ARS')
+  const totalUsdCents = totalByCurrency('USD')
 
   // Children from the DB query are one level deep and never have sub-children;
   // cast to satisfy the recursive Item type expected by ExpenseTable.
