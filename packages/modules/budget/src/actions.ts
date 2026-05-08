@@ -58,7 +58,6 @@ export async function getOrCreateMonth(userId: string, year: number, month: numb
     include: MONTH_INCLUDE,
   })
   if (existing) {
-    if (existing.resetAt) return existing
     await syncCardsToMonth(userId, existing.id)
     return db.budgetMonth.findUnique({
       where: { userId_year_month: { userId, year, month } },

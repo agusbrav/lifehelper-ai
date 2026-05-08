@@ -155,53 +155,55 @@ export function ExpenseTable({ items, monthId, keywordMap, categories, year, mon
   return (
     <div className="rounded-2xl border border-[var(--border)] bg-[var(--card-bg)] overflow-hidden">
 
-      {/* Filter bar */}
-      {items.length > 0 && (
-        <div className="px-4 py-2 border-b border-[var(--border)] flex flex-wrap gap-1.5 items-center">
-          {typeFilters.map(f => (
-            <button
-              key={f.key}
-              onClick={() => toggleType(f.key)}
-              className={`px-2 py-0.5 rounded-full text-xs font-medium border transition-colors ${
-                filterTypes.has(f.key) ? f.activeCls : inactiveCls
-              }`}
-            >
-              {f.label}
-            </button>
-          ))}
-
-          {uniqueCategories.length > 0 && (
-            <>
-              <span className="w-px h-3.5 bg-[var(--border)] mx-0.5 self-center" />
-              {uniqueCategories.map(cat => (
-                <button
-                  key={cat}
-                  onClick={() => toggleCat(cat)}
-                  className={`px-2 py-0.5 rounded-full text-xs font-medium border capitalize transition-colors ${
-                    filterCats.has(cat)
-                      ? 'bg-[var(--accent)] text-[var(--accent-fg)] border-[var(--accent)]'
-                      : inactiveCls
-                  }`}
-                >
-                  {cat}
-                </button>
-              ))}
-            </>
-          )}
-
-          <span className="ml-auto flex items-center gap-2">
-            {hasFilters && (
+      {/* Filter bar — config button always visible; filters only when there are items */}
+      <div className="px-4 py-2 border-b border-[var(--border)] flex flex-wrap gap-1.5 items-center">
+        {items.length > 0 && (
+          <>
+            {typeFilters.map(f => (
               <button
-                onClick={() => { setFilterCats(new Set()); setFilterTypes(new Set()) }}
-                className="text-xs text-[var(--muted-fg)] hover:text-rose-400 transition-colors"
+                key={f.key}
+                onClick={() => toggleType(f.key)}
+                className={`px-2 py-0.5 rounded-full text-xs font-medium border transition-colors ${
+                  filterTypes.has(f.key) ? f.activeCls : inactiveCls
+                }`}
               >
-                {t('clearFilters')}
+                {f.label}
               </button>
+            ))}
+
+            {uniqueCategories.length > 0 && (
+              <>
+                <span className="w-px h-3.5 bg-[var(--border)] mx-0.5 self-center" />
+                {uniqueCategories.map(cat => (
+                  <button
+                    key={cat}
+                    onClick={() => toggleCat(cat)}
+                    className={`px-2 py-0.5 rounded-full text-xs font-medium border capitalize transition-colors ${
+                      filterCats.has(cat)
+                        ? 'bg-[var(--accent)] text-[var(--accent-fg)] border-[var(--accent)]'
+                        : inactiveCls
+                    }`}
+                  >
+                    {cat}
+                  </button>
+                ))}
+              </>
             )}
-            <BudgetConfigPanel year={year} month={month} cards={cards} userKeywords={userKeywords} />
-          </span>
-        </div>
-      )}
+          </>
+        )}
+
+        <span className="ml-auto flex items-center gap-2">
+          {hasFilters && (
+            <button
+              onClick={() => { setFilterCats(new Set()); setFilterTypes(new Set()) }}
+              className="text-xs text-[var(--muted-fg)] hover:text-rose-400 transition-colors"
+            >
+              {t('clearFilters')}
+            </button>
+          )}
+          <BudgetConfigPanel year={year} month={month} cards={cards} userKeywords={userKeywords} />
+        </span>
+      </div>
 
       <div className="overflow-x-auto">
         <table className="w-full border-collapse text-sm">

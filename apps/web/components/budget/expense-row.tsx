@@ -1,5 +1,5 @@
 'use client'
-import { useState, useRef, useTransition } from 'react'
+import { useState, useEffect, useRef, useTransition } from 'react'
 import { useTranslations, useFormatter } from 'next-intl'
 import type { ResolvedLink } from '@lifehelper/budget'
 import { setAmountAction, setAmountNextMonthAction, deleteItemAction, deleteLinkAction } from '@/app/(app)/m/budget/actions'
@@ -45,12 +45,13 @@ export function ExpenseRow({ item, depth = 0, monthId, keywordMap, categories, y
   const itemCurrency = item.currency ?? 'ARS'
   const fmt = itemCurrency === 'USD' ? fmtUsd : fmtArs
   const [editing, setEditing] = useState(false)
-  const [collapsed, setCollapsed] = useState(() => {
-    if (!item.isCard) return false
-    if (typeof window === 'undefined') return true
+  // Default collapsed=true (SSR-safe). After hydration, apply persisted state from localStorage.
+  const [collapsed, setCollapsed] = useState(item.isCard)
+  useEffect(() => {
+    if (!item.isCard) return
     const stored = localStorage.getItem(`budget:card:${item.name}:collapsed`)
-    return stored !== null ? stored === 'true' : true
-  })
+    if (stored !== null) setCollapsed(stored === 'true')
+  }, [item.isCard, item.name])
 
   function toggleCollapsed() {
     const next = !collapsed
