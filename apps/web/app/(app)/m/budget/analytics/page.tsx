@@ -13,7 +13,6 @@ import {
 } from '@lifehelper/budget'
 import { getTranslations } from 'next-intl/server'
 import { AnalyticsPageClient } from '@/components/budget/analytics-page-client'
-import { ChatRegistrar } from '../chat-registrar'
 
 export default async function BudgetAnalyticsPage({
   searchParams,
@@ -128,9 +127,7 @@ export default async function BudgetAnalyticsPage({
   }))
 
   return (
-    <>
-      <ChatRegistrar year={selectedYear} month={selectedMonth} />
-      <div className="p-6">
+    <div className="p-6">
       <AnalyticsPageClient
         selectedYear={selectedYear}
         selectedMonth={selectedMonth}
@@ -149,7 +146,6 @@ export default async function BudgetAnalyticsPage({
         usdAvg6mo={usdAvg6mo}
         usdMonthlyTotals={usdMonthlyTotals}
       />
-      </div>
-    </>
+    </div>
   )
 }
