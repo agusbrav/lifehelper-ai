@@ -14,9 +14,10 @@ Format: `- [ ] description` — check off when done, delete when shipped.
 - [ ] Custom tags alongside categories — e.g. link a food expense to a specific trip and filter by it
 - [ ] Link budget expenses to other modules (trip planner, shared expenses)
 - [ ] Audit and clean up any dead or duplicated code across the budget module
-- [ ] Hook AI prompts in the chat box to interact with the expenses table (add, edit, query expenses via natural language)
+- [x] Hook AI prompts in the chat box to interact with the expenses table (add, edit, query expenses via natural language)
 - [ ] Accept image and PDF inputs in the chat box — analyze them (e.g. receipts, bank statements) and extract expenses
 - [ ] Show a preview of extracted expenses before committing them to the table
+- [ ] Dashboard pocket summary view + chat context — each pocket shows a summary card on the main dashboard; chat rail on dashboard has module-aware context and tools (open module, create/remove pocket with confirmation). Spec pending.
 - [x] USD currency support: currency field per expense (ARS default, USD for native cards); per-card USD-native setting (e.g. Amex)
 - [x] Summary bar shows ARS total and USD total as separate values (no conversion)
 - [ ] Analytics: dynamic layout where user can toggle which panels to show — gastos ARS por categoría, gastos USD, suscripciones total, etc.

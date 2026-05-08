@@ -111,6 +111,11 @@ export async function sendChatMessage(
 
       anthropicMessages.push({ role: 'assistant', content: response.content })
       anthropicMessages.push({ role: 'user', content: toolResults })
+    } else {
+      // Unexpected stop reason (e.g. max_tokens) — return whatever text is available
+      const textBlock = response.content.find(b => b.type === 'text')
+      const text = textBlock?.type === 'text' ? textBlock.text : ''
+      return { message: { role: 'assistant', content: text }, mutated }
     }
   }
 }
