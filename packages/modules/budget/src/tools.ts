@@ -1,6 +1,6 @@
 // packages/modules/budget/src/tools.ts
 import { db } from '@lifehelper/core'
-import { addExpense, addInstallment, setAmount, getOrCreateMonth, getItemsForAnalytics } from './actions'
+import { addExpense, addInstallment, setAmount, getOrCreateMonth, getItemsForAnalytics, deleteItem } from './actions'
 import { computeCategoryTotals, computeUsdCategoryTotals, computeInflationAlerts } from './analytics'
 
 export type ToolContext = { year: number; month: number }
@@ -18,6 +18,7 @@ export async function executeBudgetTool(
     case 'add_month':         return toolAddMonth(userId, input)
     case 'get_summary':       return toolGetSummary(userId, context, input)
     case 'get_inflation_report': return toolGetInflationReport(userId, context, input)
+    case 'remove_expense':       return toolRemoveExpense(userId, context, input)
     default: throw new Error(`Unknown budget tool: ${name}`)
   }
 }
@@ -135,4 +136,24 @@ async function toolGetInflationReport(
   return alerts
     .map(a => `${a.name}: ${a.changePct > 0 ? '+' : ''}${a.changePct}% (was $${(a.previousAmount / 100).toLocaleString()}, now $${(a.currentAmount / 100).toLocaleString()})`)
     .join('; ')
+}
+
+async function toolRemoveExpense(
+  userId: string,
+  context: ToolContext,
+  input: Record<string, unknown>,
+): Promise<string> {
+  const name = input.name as string
+  const budgetMonth = await db.budgetMonth.findUnique({
+    where: { userId_year_month: { userId, year: context.year, month: context.month } },
+    select: { id: true },
+  })
+  if (!budgetMonth) return `Month ${context.year}-${context.month} not found`
+  const item = await db.budgetItem.findFirst({
+    where: { userId, monthId: budgetMonth.id, name: { contains: name, mode: 'insensitive' } },
+    select: { id: true, name: true },
+  })
+  if (!item) return `Could not find an expense matching "${name}" in this month`
+  await deleteItem({ userId, itemId: item.id })
+  return `Removed ${item.name}`
 }

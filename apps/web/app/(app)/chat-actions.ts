@@ -14,7 +14,7 @@ import type { ChatContext } from '@/components/chat/chat-context'
 
 export type ChatMessage = { role: 'user' | 'assistant'; content: string }
 
-const MUTATION_TOOLS = new Set(['add_expense', 'add_installment', 'set_amount', 'add_month'])
+const MUTATION_TOOLS = new Set(['add_expense', 'add_installment', 'set_amount', 'add_month', 'remove_expense'])
 
 async function getSessionOrThrow() {
   const cookieStore = await cookies()

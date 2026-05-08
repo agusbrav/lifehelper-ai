@@ -106,6 +106,21 @@ export const budgetToolSchemas: ToolSchema[] = [
     },
   },
   {
+    name: 'remove_expense',
+    description:
+      'Removes an expense from the current month by name (case-insensitive match). Recurring and installment expenses are also removed from all future months — confirm with the user before removing those.',
+    input_schema: {
+      type: 'object',
+      properties: {
+        name: {
+          type: 'string',
+          description: 'Name of the expense to remove (partial, case-insensitive match).',
+        },
+      },
+      required: ['name'],
+    },
+  },
+  {
     name: 'get_inflation_report',
     description:
       'Returns recurring expenses whose price changed compared to 3 months ago. Use when the user asks about price changes, inflation, or cost increases.',
