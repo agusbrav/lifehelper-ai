@@ -128,7 +128,7 @@ pnpm test
 
 ## 9. Commit Rules
 
-- Human-style messages: short, accurate, no AI attribution.
+- Human-style messages: short, accurate.
 - Never commit: `.env`, `docs/superpowers/`, `*.tsbuildinfo`, `.next/`, `node_modules/`.
 - One logical change per commit. Bug fix = one commit, feature = one commit per meaningful unit.
 - Check for em dashes (`—`) in code and replace with regular dashes (`-`). Exception: migration SQL files are immutable.
