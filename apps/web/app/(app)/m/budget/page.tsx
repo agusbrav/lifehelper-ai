@@ -7,6 +7,7 @@ import { MonthNav } from '@/components/budget/month-nav'
 import { SummaryBar } from '@/components/budget/summary-bar'
 import { ExpenseTable } from '@/components/budget/expense-table'
 import Link from 'next/link'
+import { ChatRegistrar } from './chat-registrar'
 
 type Props = { searchParams: Promise<{ year?: string; month?: string }> }
 
@@ -91,6 +92,8 @@ export default async function BudgetPage({ searchParams }: Props) {
   const tableItems = items as unknown as TableItem[]
 
   return (
+    <>
+    <ChatRegistrar year={year} month={month} />
     <div className="p-4 sm:p-6 w-full">
       <div className="flex flex-wrap items-center gap-x-4 gap-y-3 mb-6">
         <MonthNav year={year} month={month} firstYear={floorYear} firstMonth={floorMonth} />
@@ -122,5 +125,6 @@ export default async function BudgetPage({ searchParams }: Props) {
         linksMap={linksMap}
       />
     </div>
+    </>
   )
 }
