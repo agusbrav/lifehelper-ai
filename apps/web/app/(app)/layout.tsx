@@ -3,6 +3,7 @@ import { cookies } from 'next/headers'
 import { getSession, db } from '@lifehelper/core'
 import { Sidebar } from '@/components/sidebar'
 import { ChatRail } from '@/components/chat-rail'
+import { ChatContextProvider } from '@/components/chat/chat-context'
 
 export default async function AppLayout({ children }: { children: React.ReactNode }) {
   const cookieStore = await cookies()
@@ -25,10 +26,12 @@ export default async function AppLayout({ children }: { children: React.ReactNod
     <div className="flex h-screen bg-[var(--bg)] text-[var(--fg)] overflow-hidden">
       <Sidebar pockets={pockets} />
       <div className="flex flex-col flex-1 min-w-0">
-        <main className="flex-1 overflow-y-auto">
-          {children}
-        </main>
-        <ChatRail />
+        <ChatContextProvider>
+          <main className="flex-1 overflow-y-auto">
+            {children}
+          </main>
+          <ChatRail />
+        </ChatContextProvider>
       </div>
     </div>
   )
