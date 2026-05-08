@@ -31,6 +31,7 @@ export async function sendChatMessage(
   const session = await getSessionOrThrow()
   const userId = session.user.id
   const locale = session.user.locale ?? 'es-AR'
+  const userName = session.user.email.split(/[@.]/)[0]
 
   if (context.module !== 'budget') {
     return { message: { role: 'assistant', content: 'No module context available.' }, mutated: false }
@@ -59,6 +60,7 @@ export async function sendChatMessage(
     topUsdCategories: usdTotals,
     recurringCount,
     installmentCount,
+    userName,
   })
 
   const anthropic = new Anthropic()

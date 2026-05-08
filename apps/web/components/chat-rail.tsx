@@ -4,6 +4,7 @@ import { useRouter } from 'next/navigation'
 import { useTranslations } from 'next-intl'
 import { useChatContext } from '@/components/chat/chat-context'
 import { sendChatMessage, type ChatMessage } from '@/app/(app)/chat-actions'
+import Markdown from 'react-markdown'
 
 const WELCOME_PROMPT =
   'Please greet me and share one specific data-driven insight about my spending this month.'
@@ -122,7 +123,9 @@ export function ChatRail() {
                     : 'bg-[var(--muted)] text-[var(--fg)]'
                 }`}
               >
-                {m.content}
+                <div className="prose prose-xs max-w-none [&_p]:mb-1 [&_p:last-child]:mb-0 [&_strong]:font-semibold [&_ul]:list-disc [&_ul]:pl-4 [&_ol]:list-decimal [&_ol]:pl-4">
+                  <Markdown>{m.content}</Markdown>
+                </div>
               </div>
             ))}
             {loading && (

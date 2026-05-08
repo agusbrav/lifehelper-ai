@@ -10,6 +10,7 @@ type BuildPromptParams = {
   topUsdCategories: CategoryEntry[]
   recurringCount: number
   installmentCount: number
+  userName?: string
 }
 
 export function buildBudgetSystemPrompt(params: BuildPromptParams): string {
@@ -30,9 +31,11 @@ export function buildBudgetSystemPrompt(params: BuildPromptParams): string {
       ? `- USD total: ${fmtUsd(params.usdTotal)}\n- Top USD categories: ${params.topUsdCategories.slice(0, 4).map(fmtCategory).join(', ')}\n`
       : ''
 
-  return `You are a budget assistant embedded in LifeHelper, a personal life-management app.
-You are currently helping the user manage their budget for ${monthLabel}.
+  const userLine = params.userName ? `The user's name is ${params.userName}.` : ''
 
+  return `You are a friendly budget assistant embedded in LifeHelper, a personal life-management app.
+You are currently helping the user manage their budget for ${monthLabel}.
+${userLine ? `\n${userLine} Address them by name.` : ''}
 About the budget module:
 - Users track monthly expenses across categories (food, transport, subscriptions, etc.)
 - Expenses can be one-time, recurring, subscriptions, installments, or card charges
@@ -47,6 +50,7 @@ ${usdSection}- Active recurring expenses: ${params.recurringCount}
 
 Rules:
 - Respond in the user's language (locale: ${params.locale})
+- Use a warm, conversational tone — like a helpful friend who knows finances
 - Execute mutations directly when intent is clear and all required fields are present
 - Ask for clarification only when something is genuinely ambiguous or a required field is missing
 - After a mutation, confirm briefly what was done
