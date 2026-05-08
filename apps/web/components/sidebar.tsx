@@ -6,7 +6,13 @@ import { ThemeToggle } from './theme-toggle'
 
 type Pocket = { id: string; name: string }
 
-export function Sidebar({ pockets }: { pockets: Pocket[] }) {
+function initials(str: string): string {
+  const words = str.trim().split(/\s+/)
+  if (words.length === 1) return (words[0] ?? '').slice(0, 2).toUpperCase()
+  return words.slice(0, 2).map(w => (w[0] ?? '').toUpperCase()).join('')
+}
+
+export function Sidebar({ pockets, userName }: { pockets: Pocket[]; userName: string }) {
   const pathname = usePathname()
   const t = useTranslations('nav')
   const currentPocketId = pathname.startsWith('/m/')
@@ -20,7 +26,7 @@ export function Sidebar({ pockets }: { pockets: Pocket[] }) {
         className="flex items-center justify-center w-8 h-8 rounded-xl bg-[var(--accent)] text-[var(--accent-fg)] font-bold text-sm mb-3 shadow-sm"
         aria-label={t('dashboard')}
       >
-        L
+        {initials(userName)}
       </Link>
 
       {pockets.map(p => (
@@ -34,7 +40,7 @@ export function Sidebar({ pockets }: { pockets: Pocket[] }) {
               : 'text-[var(--muted-fg)] hover:text-[var(--fg)] hover:bg-[var(--accent-muted)]'
           }`}
         >
-          {p.name.slice(0, 2).toUpperCase()}
+          {initials(p.name)}
         </Link>
       ))}
 
