@@ -1,13 +1,14 @@
 'use server'
 import Anthropic from '@anthropic-ai/sdk'
 import { cookies } from 'next/headers'
-import { getSession, runTool } from '@lifehelper/core'
+import { getSession } from '@lifehelper/core'
 import {
   getItemsForAnalytics,
   computeCategoryTotals,
   computeUsdCategoryTotals,
   budgetToolSchemas,
   buildBudgetSystemPrompt,
+  executeBudgetTool,
 } from '@lifehelper/budget'
 import type { ChatContext } from '@/components/chat/chat-context'
 
@@ -94,8 +95,7 @@ export async function sendChatMessage(
       const toolResults = await Promise.all(
         toolUseBlocks.map(async block => {
           if (MUTATION_TOOLS.has(block.name)) mutated = true
-          const result = await runTool(
-            'budget',
+          const result = await executeBudgetTool(
             block.name,
             block.input as Record<string, unknown>,
             userId,
