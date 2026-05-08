@@ -75,7 +75,7 @@ export async function sendChatMessage(
   // eslint-disable-next-line no-constant-condition
   while (true) {
     const response = await anthropic.messages.create({
-      model: 'claude-sonnet-4-6',
+      model: 'claude-haiku-4-5-20251001',
       max_tokens: 1024,
       system: systemPrompt,
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
