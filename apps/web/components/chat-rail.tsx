@@ -6,9 +6,6 @@ import { useChatContext } from '@/components/chat/chat-context'
 import { sendChatMessage, type ChatMessage } from '@/app/(app)/chat-actions'
 import Markdown from 'react-markdown'
 
-const WELCOME_PROMPT =
-  'Please greet me and share one specific data-driven insight about my spending this month.'
-
 const SPINNER_PATTERNS: { pattern: RegExp; label: string }[] = [
   { pattern: /\b(add|agregar?|nueva?|nuevo|gasto)\b/i, label: 'Adding…' },
   { pattern: /\b(update|cambi|modific|set|actuali)\b/i, label: 'Updating…' },
@@ -34,12 +31,10 @@ export function ChatRail() {
   const [spinnerLabel, setSpinnerLabel] = useState('Thinking…')
   const [loading, setLoading] = useState(false)
   const messagesEndRef = useRef<HTMLDivElement>(null)
-  const welcomeSentRef = useRef(false)
 
   const isBudget = context.module === 'budget'
   const meta = context.metadata as { year?: number; month?: number }
-  const storageKey =
-    isBudget && meta.year && meta.month ? `chat-budget-${meta.year}-${meta.month}` : null
+  const storageKey = isBudget ? 'chat-budget' : null
 
   const monthLabel =
     isBudget && meta.year && meta.month
@@ -58,25 +53,17 @@ export function ChatRail() {
     if (isBudget) setOpen(true)
   }, [isBudget])
 
-  // Load history from sessionStorage when context changes; skip welcome if history exists
+  // Load history from sessionStorage when context changes
   useEffect(() => {
     if (!storageKey) {
       setMessages([])
-      welcomeSentRef.current = false
       return
     }
     try {
       const stored = sessionStorage.getItem(storageKey)
-      if (stored) {
-        setMessages(JSON.parse(stored) as ChatMessage[])
-        welcomeSentRef.current = true
-      } else {
-        setMessages([])
-        welcomeSentRef.current = false
-      }
+      setMessages(stored ? (JSON.parse(stored) as ChatMessage[]) : [])
     } catch {
       setMessages([])
-      welcomeSentRef.current = false
     }
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [storageKey])
@@ -89,12 +76,6 @@ export function ChatRail() {
     } catch {}
   }, [messages, storageKey])
 
-  useEffect(() => {
-    if (!open || !isBudget || welcomeSentRef.current) return
-    welcomeSentRef.current = true
-    send(WELCOME_PROMPT, true)
-  // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [open, isBudget])
 
   async function send(text: string, hidden = false) {
     if (!isBudget || loading) return
