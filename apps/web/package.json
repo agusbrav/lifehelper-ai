@@ -12,6 +12,7 @@
     "test:watch": "vitest"
   },
   "dependencies": {
+    "@anthropic-ai/sdk": "^0.94.0",
     "@lifehelper/budget": "workspace:*",
     "@lifehelper/core": "workspace:*",
     "@lifehelper/integrations": "workspace:*",
