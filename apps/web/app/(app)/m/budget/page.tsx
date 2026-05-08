@@ -50,8 +50,11 @@ export default async function BudgetPage({ searchParams }: Props) {
     getCategoryKeywords(session.user.id),
   ])
   const items = budgetMonth?.items ?? []
-  const itemIds = items.map(i => i.id)
-  const linksMap = await getLinksForItems(session.user.id, 'budget', itemIds)
+  const allItemIds = [
+    ...items.map(i => i.id),
+    ...items.flatMap(i => (i.children ?? []).map(c => c.id)),
+  ]
+  const linksMap = await getLinksForItems(session.user.id, 'budget', allItemIds)
   const userKeywords = Object.fromEntries(userKeywordRecords.map(r => [r.keyword, r.category]))
   const keywordMap = buildKeywordMap(historyMap, userKeywords)
   const categories = knownCategories(keywordMap)

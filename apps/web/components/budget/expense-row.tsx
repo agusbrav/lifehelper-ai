@@ -32,9 +32,10 @@ type Props = {
   month: number
   monthContext: 'current' | 'next' | 'past'
   links: ResolvedLink[]
+  linksMap?: Record<string, ResolvedLink[]>
 }
 
-export function ExpenseRow({ item, depth = 0, monthId, keywordMap, categories, year, month, monthContext, links }: Props) {
+export function ExpenseRow({ item, depth = 0, monthId, keywordMap, categories, year, month, monthContext, links, linksMap }: Props) {
   const t = useTranslations('budget')
   const format = useFormatter()
   const fmtArs = (cents: number) =>
@@ -222,7 +223,7 @@ export function ExpenseRow({ item, depth = 0, monthId, keywordMap, categories, y
                   {t('inflationBtn')}
                 </button>
               )}
-              {!isSubItem && !isCard && (
+              {!isCard && (
                 <button
                   onClick={() => setLinkPickerOpen(o => !o)}
                   className={`inline-flex items-center px-1.5 py-0.5 rounded-full text-[10px] font-semibold border transition-colors flex-shrink-0 opacity-0 group-hover:opacity-100 ${
@@ -418,7 +419,7 @@ export function ExpenseRow({ item, depth = 0, monthId, keywordMap, categories, y
 
       {/* Children rows */}
       {!collapsed && children.map(child => (
-        <ExpenseRow key={child.id} item={child} depth={depth + 1} monthId={monthId} keywordMap={keywordMap} categories={categories} year={year} month={month} monthContext={monthContext} links={[]} />
+        <ExpenseRow key={child.id} item={child} depth={depth + 1} monthId={monthId} keywordMap={keywordMap} categories={categories} year={year} month={month} monthContext={monthContext} links={linksMap?.[child.id] ?? []} linksMap={linksMap} />
       ))}
     </>
   )

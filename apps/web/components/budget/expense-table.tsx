@@ -228,7 +228,7 @@ export function ExpenseTable({ items, monthId, keywordMap, categories, year, mon
                   </td>
                 </tr>
                 {cardItems.map(item => (
-                  <ExpenseRow key={item.id} item={item} {...sharedRowProps} links={linksMap[item.id] ?? []} />
+                  <ExpenseRow key={item.id} item={item} {...sharedRowProps} links={linksMap[item.id] ?? []} linksMap={linksMap} />
                 ))}
               </>
             )}
@@ -244,7 +244,7 @@ export function ExpenseTable({ items, monthId, keywordMap, categories, year, mon
 
             {/* Regular expenses */}
             {showExpenses && visibleExpenses.map(item => (
-              <ExpenseRow key={item.id} item={item} {...sharedRowProps} links={linksMap[item.id] ?? []} />
+              <ExpenseRow key={item.id} item={item} {...sharedRowProps} links={linksMap[item.id] ?? []} linksMap={linksMap} />
             ))}
 
             <AddExpenseRow monthId={monthId} keywordMap={keywordMap} categories={categories} />
