@@ -41,22 +41,22 @@ export async function bulkImportStatementAction(
     return amount != null && amount > 0
   })
 
-  await Promise.all(
-    validTransactions.map(tx =>
-      addExpense({
-        userId,
-        monthId: budgetMonth.id,
-        parentId: card.id,
-        name: tx.description,
-        amount: tx.currency === 'ARS'
-          ? Math.round((tx.amountARS ?? 0) * 100)
-          : Math.round((tx.amountUSD ?? 0) * 100),
-        currency: tx.currency,
-        itemType: 'one_time',
-      }),
-    ),
-  )
+  let imported = 0
+  for (const tx of validTransactions) {
+    await addExpense({
+      userId,
+      monthId: budgetMonth.id,
+      parentId: card.id,
+      name: tx.description,
+      amount: tx.currency === 'ARS'
+        ? Math.round((tx.amountARS ?? 0) * 100)
+        : Math.round((tx.amountUSD ?? 0) * 100),
+      currency: tx.currency,
+      itemType: 'one_time',
+    })
+    imported++
+  }
 
   revalidatePath('/m/budget')
-  return { imported: validTransactions.length }
+  return { imported }
 }
