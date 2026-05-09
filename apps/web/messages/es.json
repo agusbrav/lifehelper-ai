@@ -111,7 +111,17 @@
     "paidARS": "Pagado ARS",
     "paidUSD": "Pagado USD",
     "pendingARS": "Pendiente ARS",
-    "pendingUSD": "Pendiente USD"
+    "pendingUSD": "Pendiente USD",
+    "importStatement": "Importar resumen",
+    "importStatementTitle": "Importar: {card}",
+    "importParsing": "Analizando PDF...",
+    "importPreviewTitle": "Transacciones encontradas",
+    "importSelectAll": "Seleccionar todo",
+    "importConfirm": "Importar {count} transacciones",
+    "importImporting": "Importando...",
+    "importDone": "Importado correctamente",
+    "importError": "Error al procesar el PDF. Intentá de nuevo.",
+    "importNoneSelected": "Seleccioná al menos una transacción"
   },
   "analytics": {
     "title": "Análisis de Presupuesto",

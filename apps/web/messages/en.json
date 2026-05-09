@@ -111,7 +111,17 @@
     "paidARS": "Paid ARS",
     "paidUSD": "Paid USD",
     "pendingARS": "Pending ARS",
-    "pendingUSD": "Pending USD"
+    "pendingUSD": "Pending USD",
+    "importStatement": "Import statement",
+    "importStatementTitle": "Import: {card}",
+    "importParsing": "Analyzing PDF...",
+    "importPreviewTitle": "Transactions found",
+    "importSelectAll": "Select all",
+    "importConfirm": "Import {count} transactions",
+    "importImporting": "Importing...",
+    "importDone": "Imported successfully",
+    "importError": "Error processing PDF. Please try again.",
+    "importNoneSelected": "Select at least one transaction"
   },
   "analytics": {
     "title": "Budget Analytics",
