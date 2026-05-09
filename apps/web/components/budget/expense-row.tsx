@@ -345,8 +345,17 @@ export function ExpenseRow({ item, depth = 0, monthId, keywordMap, categories, y
             />
           ) : isCard && hasChildren ? (
             <div className="flex flex-col items-end leading-tight cursor-default">
-              <span className={`font-medium tabular-nums text-purple-400 ${arsChildrenSum === 0 ? 'invisible' : ''}`}>{fmtArs(arsChildrenSum)}</span>
-              <span className={`font-medium tabular-nums text-blue-400 text-xs ${usdChildrenSum === 0 ? 'invisible' : ''}`}>{fmtUsd(usdChildrenSum)}</span>
+              {itemCurrency === 'USD' ? (
+                <>
+                  <span className={`font-medium tabular-nums text-blue-400 ${usdChildrenSum === 0 ? 'invisible' : ''}`}>{fmtUsd(usdChildrenSum)}</span>
+                  <span className={`font-medium tabular-nums text-purple-400 text-xs ${arsChildrenSum === 0 ? 'invisible' : ''}`}>{fmtArs(arsChildrenSum)}</span>
+                </>
+              ) : (
+                <>
+                  <span className={`font-medium tabular-nums text-purple-400 ${arsChildrenSum === 0 ? 'invisible' : ''}`}>{fmtArs(arsChildrenSum)}</span>
+                  <span className={`font-medium tabular-nums text-blue-400 text-xs ${usdChildrenSum === 0 ? 'invisible' : ''}`}>{fmtUsd(usdChildrenSum)}</span>
+                </>
+              )}
             </div>
           ) : (
             <button
