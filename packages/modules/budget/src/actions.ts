@@ -42,11 +42,13 @@ async function syncCardsToMonth(userId: string, monthId: string): Promise<void> 
   }
 }
 
+const CHILD_ORDER = [{ createdAt: 'asc' as const }, { id: 'asc' as const }]
+
 const MONTH_INCLUDE = {
   items: {
     where: { parentId: null },
-    include: { children: true },
-    orderBy: [{ createdAt: 'asc' as const }, { id: 'asc' as const }],
+    include: { children: { orderBy: CHILD_ORDER } },
+    orderBy: CHILD_ORDER,
   },
 }
 
