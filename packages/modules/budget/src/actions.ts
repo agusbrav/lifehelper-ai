@@ -571,6 +571,70 @@ export async function deletePastMonths(userId: string): Promise<void> {
   })
 }
 
+const TYPE_CYCLE: Record<string, string> = {
+  one_time: 'subscription',
+  subscription: 'recurring',
+  recurring: 'one_time',
+}
+
+export async function setItemType(input: { userId: string; itemId: string }) {
+  const item = await assertOwnsItem(input.userId, input.itemId)
+  if (item.installmentTotal !== null || item.isCard) return
+
+  const nextType = TYPE_CYCLE[item.itemType] ?? 'one_time'
+  const wasRecurring = item.recurring
+  const willBeRecurring = nextType === 'subscription' || nextType === 'recurring'
+
+  const updated = await db.budgetItem.update({
+    where: { id: item.id },
+    data: { itemType: nextType, recurring: willBeRecurring },
+  })
+
+  const currentMonth = await db.budgetMonth.findUnique({
+    where: { id: item.monthId },
+    select: { year: true, month: true },
+  })
+  if (!currentMonth) return updated
+
+  const futureFilter = {
+    OR: [
+      { year: { gt: currentMonth.year } },
+      { year: currentMonth.year, month: { gt: currentMonth.month } },
+    ],
+  }
+
+  const parentName = item.parentId
+    ? (await db.budgetItem.findUnique({ where: { id: item.parentId }, select: { name: true } }))?.name ?? null
+    : null
+
+  const futureWhere = parentName !== null
+    ? { userId: input.userId, name: item.name, recurring: true, parent: { name: parentName }, month: futureFilter }
+    : { userId: input.userId, name: item.name, recurring: true, parentId: null as null, month: futureFilter }
+
+  if (wasRecurring && !willBeRecurring) {
+    await db.budgetItem.deleteMany({ where: futureWhere })
+  } else if (!wasRecurring && willBeRecurring) {
+    await propagateToNextMonth(input.userId, item.monthId, {
+      ...updated,
+      itemType: nextType,
+      isCard: updated.isCard,
+      parentId: item.parentId,
+    })
+  } else if (wasRecurring && willBeRecurring) {
+    await db.budgetItem.updateMany({ where: futureWhere, data: { itemType: nextType } })
+  }
+
+  return updated
+}
+
+export async function setCategory(input: { userId: string; itemId: string; category: string | null }) {
+  await assertOwnsItem(input.userId, input.itemId)
+  return db.budgetItem.update({
+    where: { id: input.itemId },
+    data: { category: input.category ? input.category.toLowerCase().trim() : null },
+  })
+}
+
 export async function fetchCategoryHistory(userId: string): Promise<Record<string, string>> {
   const items = await db.budgetItem.findMany({
     where: { userId, category: { not: null } },

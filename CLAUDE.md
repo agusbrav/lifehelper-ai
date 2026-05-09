@@ -135,7 +135,7 @@ pnpm test
 - Push only after confirming no broken tests or type errors.
 
 **Pre-commit gate — all four steps required, no exceptions:**
-1. `pnpm type-check` — TypeScript must be clean across all packages.
+1. `pnpm type-check` — TypeScript must be clean across all packages (runs `turbo type-check`). For a single package use `pnpm --filter <name> exec pnpm type-check` (e.g. `pnpm --filter web exec pnpm type-check`). Both are in the allowed-tools list and require no approval.
 2. `pnpm test` — full Vitest suite must pass.
 3. `pnpm db:generate` — required whenever any `.prisma` file was touched; regenerates the client so runtime field access matches the schema.
 4. **Manual browser test** — start the dev server, exercise the golden path for whatever changed, and verify no regressions in adjacent features. Unit tests passing is not sufficient; browser confirmation is mandatory.
@@ -166,7 +166,7 @@ pnpm test
 - Use absolute paths for critical operations
 - NEVER use cd commands to change directories during interactions. This is a STRICT rule with NO exceptions. Instead:
   - Use relative or absolute paths directly in commands (e.g., ls ./subdirectory or grep pattern ./subdirectory/file.txt instead of cd ./subdirectory && ls or cd ./subdirectory && grep pattern file.txt)
-  - If you need to run multiple commands in a specific directory, use subshells: (cd /path/to/dir && command1 && command2) which contain the directory change
+  - For pnpm commands in a specific package, use `pnpm --filter <name> exec pnpm <command>` (e.g. `pnpm --filter web exec pnpm type-check`) — this avoids subshell approval prompts and is in the allowed-tools list
   - When needing to reference multiple files in the same directory, use pattern matching: /path/to/dir/*.* instead of changing into that directory
   - If a user explicitly requests you to use cd, explain this policy and suggest the alternatives above
 

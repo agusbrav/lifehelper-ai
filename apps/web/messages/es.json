@@ -68,6 +68,8 @@
     "recurringBadge": "recurrente",
     "subscriptionBadge": "suscripción",
     "oneTimeBadge": "único",
+    "cycleTypeTip": "Click para cambiar tipo",
+    "noCategory": "Sin categoría",
     "one_timeBadge": "único",
     "selectCard": "Seleccionar tarjeta",
     "noCards": "Sin tarjetas configuradas",

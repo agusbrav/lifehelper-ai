@@ -5,7 +5,7 @@ import { createPortal } from 'react-dom'
 const useIsomorphicLayoutEffect = typeof window !== 'undefined' ? useLayoutEffect : useEffect
 import { useTranslations, useFormatter } from 'next-intl'
 import type { ResolvedLink } from '@lifehelper/budget'
-import { setAmountAction, setAmountNextMonthAction, deleteItemAction, deleteLinkAction } from '@/app/(app)/m/budget/actions'
+import { setAmountAction, setAmountNextMonthAction, deleteItemAction, deleteLinkAction, setItemTypeAction, setCategoryAction } from '@/app/(app)/m/budget/actions'
 import { ExpenseForm } from './expense-form'
 import { LinkPicker } from './link-picker'
 import { ConfirmDialog } from '@/components/confirm-dialog'
@@ -72,6 +72,9 @@ export function ExpenseRow({ item, depth = 0, monthId, keywordMap, categories, y
   )
   const [, startTransition] = useTransition()
   const inputRef = useRef<HTMLInputElement>(null)
+  const [editingCategory, setEditingCategory] = useState(false)
+  const [categoryValue, setCategoryValue] = useState(item.category ?? '')
+  const categoryInputRef = useRef<HTMLInputElement>(null)
 
   const isCard = item.isCard
   const isSubItem = depth > 0
@@ -149,9 +152,32 @@ export function ExpenseRow({ item, depth = 0, monthId, keywordMap, categories, y
     if (e.key === 'Escape') setEditing(false)
   }
 
+  function handleCategoryClick() {
+    if (isCard) return
+    setCategoryValue(item.category ?? '')
+    setEditingCategory(true)
+    setTimeout(() => { categoryInputRef.current?.focus(); categoryInputRef.current?.select() }, 0)
+  }
+
+  function saveCategoryEdit() {
+    const val = categoryValue.trim() || null
+    startTransition(() => setCategoryAction(item.id, val))
+    setEditingCategory(false)
+  }
+
+  function handleCategoryKeyDown(e: React.KeyboardEvent) {
+    if (e.key === 'Enter') saveCategoryEdit()
+    if (e.key === 'Escape') setEditingCategory(false)
+  }
+
+  function handleTypeClick() {
+    if (isCard || item.installmentTotal !== null) return
+    startTransition(() => setItemTypeAction(item.id))
+  }
+
   return (
     <>
-      <tr className={`border-t border-[var(--border)] group transition-colors hover:bg-[var(--accent-muted)] ${isSubItem ? 'bg-[var(--muted)]' : ''}`}>
+      <tr className={`border-t border-[var(--border)] group transition-colors duration-200 ease-out hover:bg-[var(--accent-muted)]/70 ${isSubItem ? 'bg-[var(--muted)]' : ''}`}>
         {/* Name */}
         <td className={`py-2.5 ${depth === 0 ? 'pl-4' : 'pl-10'} pr-3`}>
           <div className="flex items-center gap-2 min-w-0">
@@ -182,19 +208,19 @@ export function ExpenseRow({ item, depth = 0, monthId, keywordMap, categories, y
               </span>
             )}
             {!isCard && item.installmentTotal === null && item.itemType === 'recurring' && (
-              <span className="text-xs px-1.5 py-0.5 rounded-full bg-blue-500/15 text-blue-400 font-medium flex-shrink-0">
+              <button onClick={handleTypeClick} title={t('cycleTypeTip')} className="text-xs px-1.5 py-0.5 rounded-full bg-blue-500/15 text-blue-400 font-medium flex-shrink-0 hover:bg-blue-500/30 transition-colors">
                 {t('recurringBadge')}
-              </span>
+              </button>
             )}
             {!isCard && item.installmentTotal === null && item.itemType === 'subscription' && (
-              <span className="text-xs px-1.5 py-0.5 rounded-full bg-pink-500/15 text-pink-400 font-medium flex-shrink-0">
+              <button onClick={handleTypeClick} title={t('cycleTypeTip')} className="text-xs px-1.5 py-0.5 rounded-full bg-pink-500/15 text-pink-400 font-medium flex-shrink-0 hover:bg-pink-500/30 transition-colors">
                 {t('subscriptionBadge')}
-              </span>
+              </button>
             )}
             {!isCard && item.installmentTotal === null && item.itemType === 'one_time' && (
-              <span className="text-xs px-1.5 py-0.5 rounded-full bg-cyan-500/15 text-cyan-400 font-medium flex-shrink-0">
+              <button onClick={handleTypeClick} title={t('cycleTypeTip')} className="text-xs px-1.5 py-0.5 rounded-full bg-cyan-500/15 text-cyan-400 font-medium flex-shrink-0 hover:bg-cyan-500/30 transition-colors">
                 {t('oneTimeBadge')}
-              </span>
+              </button>
             )}
             {itemCurrency === 'USD' && (
               <span className="text-xs px-1.5 py-0.5 rounded-full bg-blue-500/15 text-blue-400 font-medium flex-shrink-0">
@@ -275,8 +301,34 @@ export function ExpenseRow({ item, depth = 0, monthId, keywordMap, categories, y
         </td>
 
         {/* Category */}
-        <td className="hidden md:table-cell py-2.5 px-3 text-sm text-[var(--muted-fg)] w-36 text-center">
-          <span>{item.category ? item.category.charAt(0).toUpperCase() + item.category.slice(1) : ''}</span>
+        <td className="hidden md:table-cell py-2.5 px-3 text-sm w-36 text-center">
+          {editingCategory && !isCard ? (
+            <>
+              <datalist id={`cats-${item.id}`}>
+                {categories.map(c => <option key={c} value={c} />)}
+              </datalist>
+              <input
+                ref={categoryInputRef}
+                list={`cats-${item.id}`}
+                value={categoryValue}
+                onChange={e => setCategoryValue(e.target.value)}
+                onBlur={saveCategoryEdit}
+                onKeyDown={handleCategoryKeyDown}
+                placeholder={t('noCategory')}
+                className="w-28 text-center bg-[var(--muted)] border border-[var(--accent)] rounded-md px-2 py-0.5 text-xs outline-none text-[var(--fg)]"
+              />
+            </>
+          ) : (
+            <button
+              onClick={handleCategoryClick}
+              disabled={isCard}
+              className={`w-full text-center transition-colors rounded ${isCard ? 'cursor-default' : 'hover:text-[var(--fg)] hover:bg-[var(--muted)] cursor-pointer'} ${item.category ? 'text-[var(--muted-fg)]' : 'text-[var(--muted-fg)]/40 italic'}`}
+            >
+              {item.category
+                ? item.category.charAt(0).toUpperCase() + item.category.slice(1)
+                : t('noCategory')}
+            </button>
+          )}
         </td>
 
         {/* Amount */}
@@ -291,10 +343,10 @@ export function ExpenseRow({ item, depth = 0, monthId, keywordMap, categories, y
               onKeyDown={handleAmountKeyDown}
               className="w-24 text-right bg-[var(--muted)] border border-[var(--accent)] rounded-md px-2 py-0.5 text-sm outline-none text-[var(--fg)]"
             />
-          ) : hasMixedCurrencies ? (
+          ) : isCard && hasChildren ? (
             <div className="flex flex-col items-end leading-tight cursor-default">
-              <span className="font-medium tabular-nums text-purple-400">{fmtArs(arsChildrenSum)}</span>
-              <span className="font-medium tabular-nums text-blue-400 text-xs">{fmtUsd(usdChildrenSum)}</span>
+              <span className={`font-medium tabular-nums text-purple-400 ${arsChildrenSum === 0 ? 'invisible' : ''}`}>{fmtArs(arsChildrenSum)}</span>
+              <span className={`font-medium tabular-nums text-blue-400 text-xs ${usdChildrenSum === 0 ? 'invisible' : ''}`}>{fmtUsd(usdChildrenSum)}</span>
             </div>
           ) : (
             <button

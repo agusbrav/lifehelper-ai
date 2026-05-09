@@ -10,8 +10,8 @@ Format: `- [ ] description` — check off when done, delete when shipped.
 - [x] **Bug**: Resetting a past month does not remove all entries — also creates a ghost month entry in the accessible month list
 
 - [x] Card management settings page (`/m/budget/settings`) — separate `Card` model, add/remove cards outside the monthly table
-- [ ] Change expense type inline — button next to the type badge (similar to +link) that opens a picker to switch between one-time, recurring, subscription, and installment; applying the change propagates correctly (e.g. recurring→one-time stops future propagation)
-- [ ] Change category inline from the expense table — click the category badge (or an empty placeholder) to pick or type a new category without opening settings
+- [x] Change expense type inline — click the type badge to cycle one-time → subscription → recurring; propagates correctly (becoming recurring: propagate forward; becoming one-time: remove from future months; subscription↔recurring: update future months)
+- [x] Change category inline from the expense table — click the category cell to edit; datalist of known categories; "Sin categoría" shown when empty
 - [ ] Smoother hover effect on expense table rows — current transition feels abrupt
 - [ ] Dates per expense — allow tagging an expense with a specific date within the month
 - [ ] Custom tags alongside categories — e.g. link a food expense to a specific trip and filter by it
@@ -26,8 +26,8 @@ Format: `- [ ] description` — check off when done, delete when shipped.
 - [ ] Sticky column headers and filter/sort tags in the expense table — keep them visible while scrolling down the list
 - [ ] Analytics: dynamic layout where user can toggle which panels to show — gastos ARS por categoría, gastos USD, suscripciones total, etc.
 - [ ] Analytics: per-card breakdown — spending totals and charge history per credit card
-- [ ] Categories: Category suggestion sometimes shows duplicated text. 
-- [ ] Categories: Filter badges above the expense table don't include newly created categories — only seed categories appear until a hard refresh
+- [x] Categories: Category suggestion sometimes shows duplicated text. 
+- [x] Categories: Filter badges above the expense table don't include newly created categories — only seed categories appear until a hard refresh
 - [ ] Links: restrict which expense types can be linked — e.g. one-time expenses may not need linking, similar to how one-time expenses skip the inflation button
 - [x] Consider removing paid/pending tracking — simplify to expense ledger + past statistics only; keep `paid` field in schema but hide the UI
 - [x] Deleting a recurring or installment expense should propagate the deletion to future months
