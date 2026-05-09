@@ -100,11 +100,6 @@ export function ExpenseTable({ items, monthId, keywordMap, categories, year, mon
     return [...cats].sort()
   }, [expenseItems, keywordMap, userKeywords])
 
-  const hasUncategorized = useMemo(
-    () => expenseItems.some(i => !i.category),
-    [expenseItems],
-  )
-
   function toggleSort(col: SortCol) {
     if (sortCol !== col) { setSortCol(col); setSortDir('asc') }
     else if (sortDir === 'asc') setSortDir('desc')
@@ -175,7 +170,7 @@ export function ExpenseTable({ items, monthId, keywordMap, categories, year, mon
                     </svg>
                   </button>
 
-                  {catDropdownOpen && (hasUncategorized || uniqueCategories.length > 0) && (
+                  {catDropdownOpen && (
                     <div className="absolute top-full mt-1.5 z-30 w-44 rounded-xl border border-[var(--border)] bg-[var(--card-bg)] shadow-lg py-1 overflow-hidden">
                       {filterCats.size > 0 && (
                         <>
@@ -188,28 +183,24 @@ export function ExpenseTable({ items, monthId, keywordMap, categories, year, mon
                           <div className="h-px bg-[var(--border)] mx-2 my-1" />
                         </>
                       )}
-                      {(hasUncategorized || filterCats.has('')) && (
-                        <>
-                          <button
-                            onClick={() => toggleCat('')}
-                            className="w-full flex items-center gap-2 px-3 py-1.5 text-xs hover:bg-[var(--border)]/40 transition-colors tracking-normal font-normal"
-                          >
-                            <span className={`w-3 h-3 rounded-sm border flex-shrink-0 flex items-center justify-center transition-colors ${
-                              filterCats.has('')
-                                ? 'bg-[var(--accent)] border-[var(--accent)]'
-                                : 'border-[var(--border)]'
-                            }`}>
-                              {filterCats.has('') && (
-                                <svg width="7" height="7" viewBox="0 0 7 7" fill="none" stroke="currentColor" strokeWidth="1.5" className="text-[var(--accent-fg)]">
-                                  <path d="M1 3.5l2 2 3-3"/>
-                                </svg>
-                              )}
-                            </span>
-                            <span className="text-[var(--muted-fg)] italic">{t('noCategory')}</span>
-                          </button>
-                          {uniqueCategories.length > 0 && <div className="h-px bg-[var(--border)] mx-2 my-1" />}
-                        </>
-                      )}
+                      <button
+                        onClick={() => toggleCat('')}
+                        className="w-full flex items-center gap-2 px-3 py-1.5 text-xs hover:bg-[var(--border)]/40 transition-colors tracking-normal font-normal"
+                      >
+                        <span className={`w-3 h-3 rounded-sm border flex-shrink-0 flex items-center justify-center transition-colors ${
+                          filterCats.has('')
+                            ? 'bg-[var(--accent)] border-[var(--accent)]'
+                            : 'border-[var(--border)]'
+                        }`}>
+                          {filterCats.has('') && (
+                            <svg width="7" height="7" viewBox="0 0 7 7" fill="none" stroke="currentColor" strokeWidth="1.5" className="text-[var(--accent-fg)]">
+                              <path d="M1 3.5l2 2 3-3"/>
+                            </svg>
+                          )}
+                        </span>
+                        <span className="text-[var(--muted-fg)] italic">{t('noCategory')}</span>
+                      </button>
+                      {uniqueCategories.length > 0 && <div className="h-px bg-[var(--border)] mx-2 my-1" />}
                       {uniqueCategories.map(cat => (
                         <button
                           key={cat}
