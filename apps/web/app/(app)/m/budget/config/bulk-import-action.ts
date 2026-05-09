@@ -30,14 +30,19 @@ export async function bulkImportStatementAction(
       userId,
       monthId: budgetMonth.id,
       isCard: true,
-      name: { contains: cardName, mode: 'insensitive' },
+      name: { equals: cardName, mode: 'insensitive' },
     },
     select: { id: true, currency: true },
   })
   if (!card) throw new Error(`Card "${cardName}" not found in month ${year}-${month}`)
 
+  const validTransactions = transactions.filter(tx => {
+    const amount = tx.currency === 'ARS' ? tx.amountARS : tx.amountUSD
+    return amount != null && amount > 0
+  })
+
   await Promise.all(
-    transactions.map(tx =>
+    validTransactions.map(tx =>
       addExpense({
         userId,
         monthId: budgetMonth.id,
@@ -53,5 +58,5 @@ export async function bulkImportStatementAction(
   )
 
   revalidatePath('/m/budget')
-  return { imported: transactions.length }
+  return { imported: validTransactions.length }
 }
