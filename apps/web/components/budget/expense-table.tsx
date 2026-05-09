@@ -101,8 +101,8 @@ export function ExpenseTable({ items, monthId, keywordMap, categories, year, mon
   }, [expenseItems, keywordMap, userKeywords])
 
   const hasUncategorized = useMemo(
-    () => expenseItems.some(i => !(i.category ?? matchCategory(i.name, keywordMap))),
-    [expenseItems, keywordMap],
+    () => expenseItems.some(i => !i.category),
+    [expenseItems],
   )
 
   function toggleSort(col: SortCol) {
@@ -121,8 +121,14 @@ export function ExpenseTable({ items, monthId, keywordMap, categories, year, mon
 
   const visibleExpenses = useMemo(() => {
     let result = [...expenseItems]
-    if (filterCats.size > 0)
-      result = result.filter(i => filterCats.has(i.category ?? matchCategory(i.name, keywordMap) ?? ''))
+    if (filterCats.size > 0) {
+      result = result.filter(i => {
+        const stored = i.category?.toLowerCase().trim() ?? ''
+        if (!stored && filterCats.has('')) return true
+        const resolved = (i.category ?? matchCategory(i.name, keywordMap))?.toLowerCase().trim() ?? ''
+        return filterCats.has(resolved)
+      })
+    }
     if (sortCol) {
       result.sort((a, b) => {
         let cmp = 0
