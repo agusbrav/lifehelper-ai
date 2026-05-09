@@ -7,6 +7,7 @@ import { addCategoryKeywordAction, removeCategoryKeywordAction } from '@/app/(ap
 import { resetMonthAction, deletePastMonthsAction } from '@/app/(app)/m/budget/actions'
 import { RenameCardInput } from '@/app/(app)/m/budget/settings/rename-card-input'
 import { CATEGORY_SEEDS } from '@lifehelper/budget'
+import { StatementImportDialog } from './statement-import-dialog'
 
 type Card = { id: string; name: string; currency: string }
 type KeywordRecord = { id: string; keyword: string; category: string }
@@ -30,6 +31,7 @@ export function BudgetConfigPanel({ year, month, cards, userKeywords }: Props) {
   const [resetPending, startResetTransition] = useTransition()
   const [deletePastConfirming, setDeletePastConfirming] = useState(false)
   const [deletePastPending, startDeletePastTransition] = useTransition()
+  const [importingCard, setImportingCard] = useState<string | null>(null)
 
   // Add card state
   const [newCardName, setNewCardName] = useState('')
@@ -270,6 +272,12 @@ export function BudgetConfigPanel({ year, month, cards, userKeywords }: Props) {
                                     {card.currency === 'USD' ? 'USD' : 'ARS'}
                                   </button>
                                   <button
+                                    onClick={() => setImportingCard(card.name)}
+                                    className="text-xs text-[var(--muted-fg)] hover:text-[var(--accent)] transition-colors opacity-0 group-hover:opacity-100"
+                                  >
+                                    {t('importStatement')}
+                                  </button>
+                                  <button
                                     onClick={() => handleRemoveCard(card.id, card.name)}
                                     className="text-xs text-[var(--muted-fg)] hover:text-rose-400 transition-colors opacity-0 group-hover:opacity-100"
                                   >
@@ -405,6 +413,15 @@ export function BudgetConfigPanel({ year, month, cards, userKeywords }: Props) {
 
           </div>
         </div>
+      )}
+
+      {importingCard && (
+        <StatementImportDialog
+          cardName={importingCard}
+          year={year}
+          month={month}
+          onClose={() => setImportingCard(null)}
+        />
       )}
     </>
   )
