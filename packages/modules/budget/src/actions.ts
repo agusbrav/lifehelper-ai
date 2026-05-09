@@ -305,7 +305,7 @@ export async function addExpense(input: AddExpenseInput) {
       userId: input.userId,
       parentId: input.parentId ?? null,
       name: input.name,
-      category: input.category ?? null,
+      category: input.category?.toLowerCase().trim() ?? null,
       currency: input.currency ?? 'ARS',
       amount: input.amount ?? null,
       recurring,
@@ -339,7 +339,7 @@ export async function addInstallment(input: AddInstallmentInput) {
       userId: input.userId,
       parentId: input.parentId ?? null,
       name: input.name,
-      category: input.category ?? null,
+      category: input.category?.toLowerCase().trim() ?? null,
       amount: input.amountCents,
       recurring: false,
       installmentTotal: input.totalPayments,
@@ -581,7 +581,7 @@ export async function fetchCategoryHistory(userId: string): Promise<Record<strin
   for (const item of items) {
     const key = item.name.toLowerCase()
     if (map[key] === undefined && item.category) {
-      map[key] = item.category
+      map[key] = item.category.toLowerCase().trim()
     }
   }
   return map

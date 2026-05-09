@@ -1,7 +1,7 @@
 'use server'
 import { cookies } from 'next/headers'
 import { getSession, db } from '@lifehelper/core'
-import { addExpense, getOrCreateMonth } from '@lifehelper/budget'
+import { addExpense, addInstallment, getOrCreateMonth, getCategoryKeywords, fetchCategoryHistory, buildKeywordMap, buildTypeMap, matchCategory, matchItemType } from '@lifehelper/budget'
 import { revalidatePath } from 'next/cache'
 import type { ParsedTransaction } from './parse-statement-action'
 
@@ -13,8 +13,10 @@ async function getAuthedSession() {
   return session
 }
 
+type TransactionWithMeta = ParsedTransaction & { remainingPayments?: number; itemType?: string }
+
 export async function bulkImportStatementAction(
-  transactions: ParsedTransaction[],
+  transactions: TransactionWithMeta[],
   cardName: string,
   year: number,
   month: number,
@@ -36,6 +38,20 @@ export async function bulkImportStatementAction(
   })
   if (!card) throw new Error(`Card "${cardName}" not found in month ${year}-${month}`)
 
+  await db.budgetItem.deleteMany({
+    where: { userId, monthId: budgetMonth.id, parentId: card.id },
+  })
+
+  const [historyMap, userKeywordRecords] = await Promise.all([
+    fetchCategoryHistory(userId),
+    getCategoryKeywords(userId),
+  ])
+  const userKeywords = Object.fromEntries(
+    userKeywordRecords.filter(r => r.category != null).map(r => [r.keyword, r.category as string])
+  )
+  const keywordMap = buildKeywordMap(historyMap, userKeywords)
+  const typeMapFromKeywords = buildTypeMap(userKeywordRecords)
+
   const validTransactions = transactions.filter(tx => {
     const amount = tx.currency === 'ARS' ? tx.amountARS : tx.amountUSD
     return amount != null && amount > 0
@@ -43,17 +59,34 @@ export async function bulkImportStatementAction(
 
   let imported = 0
   for (const tx of validTransactions) {
-    await addExpense({
-      userId,
-      monthId: budgetMonth.id,
-      parentId: card.id,
-      name: tx.description,
-      amount: tx.currency === 'ARS'
-        ? Math.round((tx.amountARS ?? 0) * 100)
-        : Math.round((tx.amountUSD ?? 0) * 100),
-      currency: tx.currency,
-      itemType: 'one_time',
-    })
+    const amountCents = tx.currency === 'ARS'
+      ? Math.round((tx.amountARS ?? 0) * 100)
+      : Math.round((tx.amountUSD ?? 0) * 100)
+    const category = matchCategory(tx.description, keywordMap) ?? undefined
+
+    if (tx.remainingPayments && tx.remainingPayments > 1) {
+      await addInstallment({
+        userId,
+        monthId: budgetMonth.id,
+        parentId: card.id,
+        name: tx.description,
+        amountCents,
+        totalPayments: tx.remainingPayments,
+        currency: tx.currency,
+        category,
+      })
+    } else {
+      await addExpense({
+        userId,
+        monthId: budgetMonth.id,
+        parentId: card.id,
+        name: tx.description,
+        amount: amountCents,
+        currency: tx.currency,
+        itemType: tx.itemType ?? matchItemType(tx.description, typeMapFromKeywords) ?? 'one_time',
+        category,
+      })
+    }
     imported++
   }
 

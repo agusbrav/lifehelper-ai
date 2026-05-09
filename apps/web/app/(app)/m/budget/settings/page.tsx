@@ -52,6 +52,7 @@ export default async function BudgetSettingsPage() {
                       cardName={card.name}
                       label={t('delete')}
                       confirm={t('removeCardConfirm', { name: card.name })}
+                      removeHint={t('settingsRemoveHint')}
                     />
                   </td>
                 </tr>

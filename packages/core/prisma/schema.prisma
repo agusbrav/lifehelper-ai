@@ -101,6 +101,8 @@ model ModuleLink {
   @@map("module_links")
 }
 
+
+
 // Fragment — NO datasource or generator blocks.
 
 model BudgetMonth {
@@ -165,7 +167,8 @@ model CategoryKeyword {
   id        String   @id @default(cuid())
   userId    String
   keyword   String
-  category  String
+  category  String?
+  itemType  String?
   createdAt DateTime @default(now())
 
   @@unique([userId, keyword])

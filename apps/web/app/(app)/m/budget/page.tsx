@@ -1,11 +1,12 @@
 import { cookies } from 'next/headers'
 import { redirect } from 'next/navigation'
 import { getSession } from '@lifehelper/core'
-import { getOrCreateMonth, fetchCategoryHistory, buildKeywordMap, knownCategories, getFirstMonth, getCardsForUser, getCategoryKeywords, getLinksForItems } from '@lifehelper/budget'
+import { getOrCreateMonth, fetchCategoryHistory, buildKeywordMap, buildTypeMap, knownCategories, getFirstMonth, getCardsForUser, getCategoryKeywords, getLinksForItems } from '@lifehelper/budget'
 import { getTranslations } from 'next-intl/server'
 import { MonthNav } from '@/components/budget/month-nav'
 import { SummaryBar } from '@/components/budget/summary-bar'
 import { ExpenseTable } from '@/components/budget/expense-table'
+import { BudgetConfigPanel } from '@/components/budget/budget-config-panel'
 import Link from 'next/link'
 
 type Props = { searchParams: Promise<{ year?: string; month?: string }> }
@@ -63,9 +64,13 @@ export default async function BudgetPage({ searchParams }: Props) {
     ...items.flatMap(i => (i.children ?? []).map(c => c.id)),
   ]
   const linksMap = await getLinksForItems(session.user.id, 'budget', allItemIds)
-  const userKeywords = Object.fromEntries(userKeywordRecords.map(r => [r.keyword, r.category]))
+  const userKeywords = Object.fromEntries(
+    userKeywordRecords.filter(r => r.category != null).map(r => [r.keyword, r.category as string])
+  )
+  const typeMap = buildTypeMap(userKeywordRecords)
   const keywordMap = buildKeywordMap(historyMap, userKeywords)
-  const categories = knownCategories(keywordMap)
+  const HIDDEN_CATS = new Set(['system', 'tarjetas'])
+  const categories = knownCategories(keywordMap).filter(c => !HIDDEN_CATS.has(c))
 
   type DbItem = typeof items[number]
   // A card's currency is authoritative for its charges. Children of a USD card are always USD
@@ -105,6 +110,7 @@ export default async function BudgetPage({ searchParams }: Props) {
           >
             {t('analyticsLink')}
           </Link>
+          <BudgetConfigPanel year={year} month={month} cards={cards} userKeywords={userKeywordRecords} />
         </div>
       </div>
 
@@ -117,7 +123,6 @@ export default async function BudgetPage({ searchParams }: Props) {
         year={year}
         month={month}
         monthContext={monthContext}
-        cards={cards}
         userKeywords={userKeywordRecords}
         linksMap={linksMap}
       />

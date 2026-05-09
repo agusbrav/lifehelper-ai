@@ -4,6 +4,7 @@ import { useTranslations } from 'next-intl'
 import Link from 'next/link'
 import { AnalyticsMonthNav } from './analytics-month-nav'
 import { AnalyticsDashboard } from './analytics-dashboard'
+import { AnalyticsConfigPanel } from './analytics-config-panel'
 import type {
   CategoryTotal,
   TypeTotal,
@@ -64,9 +65,12 @@ export function AnalyticsPageClient({
             {t('byType')}
           </button>
         </div>
-        <Link href="/m/budget" className="text-sm text-[var(--accent)] hover:opacity-80 font-medium">
-          {t('backToTable')}
-        </Link>
+        <div className="flex items-center gap-3 ml-auto">
+          <Link href="/m/budget" className="text-sm text-[var(--accent)] hover:opacity-80 font-medium">
+            {t('backToTable')}
+          </Link>
+          <AnalyticsConfigPanel />
+        </div>
       </div>
       <AnalyticsDashboard viewMode={viewMode} {...dashboardProps} />
     </>

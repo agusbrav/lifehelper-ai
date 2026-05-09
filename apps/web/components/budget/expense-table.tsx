@@ -1,10 +1,10 @@
 'use client'
-import { useState, useMemo } from 'react'
+import { useState, useMemo, useRef, useEffect } from 'react'
 import { useTranslations } from 'next-intl'
 import type { ResolvedLink } from '@lifehelper/budget'
+import { matchCategory } from '@lifehelper/budget'
 import { ExpenseRow } from './expense-row'
 import { AddExpenseRow } from './add-expense-row'
-import { BudgetConfigPanel } from './budget-config-panel'
 
 type Item = {
   id: string
@@ -22,8 +22,7 @@ type Item = {
   children: Item[]
 }
 
-type Card = { id: string; name: string; currency: string }
-type KeywordRecord = { id: string; keyword: string; category: string }
+type KeywordRecord = { id: string; keyword: string; category: string | null; itemType: string | null }
 
 type Props = {
   items: Item[]
@@ -34,19 +33,12 @@ type Props = {
   year: number
   month: number
   monthContext: 'current' | 'next' | 'past'
-  cards: Card[]
   userKeywords: KeywordRecord[]
   linksMap: Record<string, ResolvedLink[]>
 }
 
-type SortCol = 'name' | 'category' | 'amount'
+type SortCol = 'name' | 'amount'
 type SortDir = 'asc' | 'desc'
-
-function resolvedType(item: Item): string {
-  if (item.isCard) return 'card'
-  if (item.installmentTotal !== null) return 'installment'
-  return item.itemType
-}
 
 function effectiveAmount(item: Item): number {
   if (item.isCard && item.children.length > 0)
@@ -59,13 +51,24 @@ function SortArrow({ col, sortCol, sortDir }: { col: SortCol; sortCol: SortCol |
   return <span className="ml-0.5 text-[9px]">{sortDir === 'asc' ? '▲' : '▼'}</span>
 }
 
-export function ExpenseTable({ items, monthId, keywordMap, categories, year, month, monthContext, cards, userKeywords, linksMap }: Props) {
+export function ExpenseTable({ items, monthId, keywordMap, categories, year, month, monthContext, userKeywords, linksMap }: Props) {
   const t = useTranslations('budget')
 
   const [sortCol, setSortCol] = useState<SortCol | null>(null)
   const [sortDir, setSortDir] = useState<SortDir>('asc')
   const [filterCats, setFilterCats] = useState<Set<string>>(new Set())
-  const [filterTypes, setFilterTypes] = useState<Set<string>>(new Set())
+  const [catDropdownOpen, setCatDropdownOpen] = useState(false)
+  const catDropdownRef = useRef<HTMLDivElement>(null)
+
+  useEffect(() => {
+    if (!catDropdownOpen) return
+    function handleClickOutside(e: MouseEvent) {
+      if (catDropdownRef.current && !catDropdownRef.current.contains(e.target as Node))
+        setCatDropdownOpen(false)
+    }
+    document.addEventListener('mousedown', handleClickOutside)
+    return () => document.removeEventListener('mousedown', handleClickOutside)
+  }, [catDropdownOpen])
 
   const cardItems = useMemo(() => {
     const cards = items.filter(i => i.isCard)
@@ -73,7 +76,6 @@ export function ExpenseTable({ items, monthId, keywordMap, categories, year, mon
     return [...cards].sort((a, b) => {
       let cmp = 0
       if (sortCol === 'name') cmp = a.name.localeCompare(b.name, undefined, { sensitivity: 'base' })
-      else if (sortCol === 'category') cmp = (a.category ?? '').localeCompare(b.category ?? '', undefined, { sensitivity: 'base' })
       else if (sortCol === 'amount') cmp = effectiveAmount(a) - effectiveAmount(b)
       return sortDir === 'asc' ? cmp : -cmp
     })
@@ -81,10 +83,22 @@ export function ExpenseTable({ items, monthId, keywordMap, categories, year, mon
   const expenseItems = useMemo(() => items.filter(i => !i.isCard), [items])
   const allCards = cardItems.map(i => ({ id: i.id, name: i.name }))
 
-  const uniqueCategories = useMemo(
-    () => [...new Set(expenseItems.map(i => i.category).filter((c): c is string => c !== null))].sort(),
-    [expenseItems],
-  )
+  const HIDDEN_CATS = new Set(['system', 'tarjetas'])
+
+  const uniqueCategories = useMemo(() => {
+    const cats = new Set<string>()
+    // From current expenses (stored or keyword-matched)
+    for (const i of expenseItems) {
+      const cat = (i.category ?? matchCategory(i.name, keywordMap))?.toLowerCase().trim()
+      if (cat && !HIDDEN_CATS.has(cat)) cats.add(cat)
+    }
+    // Always include user-defined categories — they're intentional even if no expense matches yet
+    for (const r of userKeywords) {
+      const cat = r.category?.toLowerCase().trim()
+      if (cat && !HIDDEN_CATS.has(cat)) cats.add(cat)
+    }
+    return [...cats].sort()
+  }, [expenseItems, keywordMap, userKeywords])
 
   function toggleSort(col: SortCol) {
     if (sortCol !== col) { setSortCol(col); setSortDir('asc') }
@@ -100,110 +114,32 @@ export function ExpenseTable({ items, monthId, keywordMap, categories, year, mon
     })
   }
 
-  function toggleType(type: string) {
-    setFilterTypes(prev => {
-      const next = new Set(prev)
-      next.has(type) ? next.delete(type) : next.add(type)
-      return next
-    })
-  }
-
   const visibleExpenses = useMemo(() => {
     let result = [...expenseItems]
     if (filterCats.size > 0)
-      result = result.filter(i => filterCats.has(i.category ?? ''))
-    if (filterTypes.size > 0)
-      result = result.filter(i => filterTypes.has(resolvedType(i)))
+      result = result.filter(i => filterCats.has(i.category ?? matchCategory(i.name, keywordMap) ?? ''))
     if (sortCol) {
       result.sort((a, b) => {
         let cmp = 0
         if (sortCol === 'name')
           cmp = a.name.localeCompare(b.name, undefined, { sensitivity: 'base' })
-        else if (sortCol === 'category')
-          cmp = (a.category ?? '').localeCompare(b.category ?? '', undefined, { sensitivity: 'base' })
         else if (sortCol === 'amount')
           cmp = effectiveAmount(a) - effectiveAmount(b)
         return sortDir === 'asc' ? cmp : -cmp
       })
     }
     return result
-  }, [expenseItems, sortCol, sortDir, filterCats, filterTypes])
+  }, [expenseItems, sortCol, sortDir, filterCats])
 
-  // Cards show unless a non-card type filter or any category filter is active
-  const showCards = cardItems.length > 0
-    && (filterTypes.size === 0 || filterTypes.has('card'))
-    && filterCats.size === 0
-
-  // Expenses show unless the only active type filter is 'card'
-  const showExpenses = !(filterTypes.size === 1 && filterTypes.has('card'))
-
-  const hasFilters = filterCats.size > 0 || filterTypes.size > 0
+  const showCards = cardItems.length > 0 && filterCats.size === 0
 
   const inactiveCls = 'bg-transparent text-[var(--muted-fg)] border-[var(--border)] hover:text-[var(--fg)]'
 
-  const typeFilters = [
-    { key: 'recurring',    label: t('recurringBadge'),    activeCls: 'bg-blue-500/15   text-blue-400   border-blue-500/30'   },
-    { key: 'subscription', label: t('subscriptionBadge'), activeCls: 'bg-pink-500/15   text-pink-400   border-pink-500/30'   },
-    { key: 'installment',  label: t('installmentBadge'),  activeCls: 'bg-amber-500/15  text-amber-400  border-amber-500/30'  },
-    { key: 'card',         label: t('addChargeBadge'),    activeCls: 'bg-purple-500/15 text-purple-400 border-purple-500/30' },
-    { key: 'one_time',     label: t('oneTimeBadge'),      activeCls: 'bg-cyan-500/15   text-cyan-400   border-cyan-500/30'   },
-  ]
-
   const sharedRowProps = { monthId, keywordMap, categories, year, month, monthContext }
-  const totalVisible = (showCards ? cardItems.length : 0) + (showExpenses ? visibleExpenses.length : 0)
+  const totalVisible = (showCards ? cardItems.length : 0) + visibleExpenses.length
 
   return (
     <div className="rounded-2xl border border-[var(--border)] bg-[var(--card-bg)] overflow-hidden">
-
-      {/* Filter bar — config button always visible; filters only when there are items */}
-      <div className="px-4 py-2 border-b border-[var(--border)] flex flex-wrap gap-1.5 items-center">
-        {items.length > 0 && (
-          <>
-            {typeFilters.map(f => (
-              <button
-                key={f.key}
-                onClick={() => toggleType(f.key)}
-                className={`px-2 py-0.5 rounded-full text-xs font-medium border transition-colors ${
-                  filterTypes.has(f.key) ? f.activeCls : inactiveCls
-                }`}
-              >
-                {f.label}
-              </button>
-            ))}
-
-            {uniqueCategories.length > 0 && (
-              <>
-                <span className="w-px h-3.5 bg-[var(--border)] mx-0.5 self-center" />
-                {uniqueCategories.map(cat => (
-                  <button
-                    key={cat}
-                    onClick={() => toggleCat(cat)}
-                    className={`px-2 py-0.5 rounded-full text-xs font-medium border capitalize transition-colors ${
-                      filterCats.has(cat)
-                        ? 'bg-[var(--accent)] text-[var(--accent-fg)] border-[var(--accent)]'
-                        : inactiveCls
-                    }`}
-                  >
-                    {cat}
-                  </button>
-                ))}
-              </>
-            )}
-          </>
-        )}
-
-        <span className="ml-auto flex items-center gap-2">
-          {hasFilters && (
-            <button
-              onClick={() => { setFilterCats(new Set()); setFilterTypes(new Set()) }}
-              className="text-xs text-[var(--muted-fg)] hover:text-rose-400 transition-colors"
-            >
-              {t('clearFilters')}
-            </button>
-          )}
-          <BudgetConfigPanel year={year} month={month} cards={cards} userKeywords={userKeywords} />
-        </span>
-      </div>
 
       <div className="overflow-x-auto">
         <table className="w-full border-collapse text-sm">
@@ -216,10 +152,54 @@ export function ExpenseTable({ items, monthId, keywordMap, categories, year, mon
                 </button>
               </th>
               <th className="hidden md:table-cell text-center py-2.5 px-3 text-xs font-medium text-[var(--muted-fg)] uppercase tracking-wide w-36">
-                <button onClick={() => toggleSort('category')} className="flex items-center justify-center w-full hover:text-[var(--fg)] transition-colors">
-                  {t('category')}
-                  <SortArrow col="category" sortCol={sortCol} sortDir={sortDir} />
-                </button>
+                <div className="relative flex justify-center" ref={catDropdownRef}>
+                  <button
+                    onClick={() => setCatDropdownOpen(o => !o)}
+                    className={`flex items-center gap-1 hover:text-[var(--fg)] transition-colors ${filterCats.size > 0 ? 'text-[var(--accent)]' : ''}`}
+                  >
+                    {t('category')}
+                    {filterCats.size > 0 && <span className="text-[10px]">({filterCats.size})</span>}
+                    <svg width="7" height="7" viewBox="0 0 8 8" fill="currentColor" className={`transition-transform ${catDropdownOpen ? 'rotate-180' : ''}`}>
+                      <path d="M0 2l4 4 4-4z"/>
+                    </svg>
+                  </button>
+
+                  {catDropdownOpen && uniqueCategories.length > 0 && (
+                    <div className="absolute top-full mt-1.5 z-30 w-44 rounded-xl border border-[var(--border)] bg-[var(--card-bg)] shadow-lg py-1 overflow-hidden">
+                      {filterCats.size > 0 && (
+                        <>
+                          <button
+                            onClick={() => setFilterCats(new Set())}
+                            className="w-full text-left px-3 py-1.5 text-xs text-[var(--accent)] hover:bg-[var(--border)]/40 transition-colors normal-case tracking-normal font-normal"
+                          >
+                            {t('clearFilters')}
+                          </button>
+                          <div className="h-px bg-[var(--border)] mx-2 my-1" />
+                        </>
+                      )}
+                      {uniqueCategories.map(cat => (
+                        <button
+                          key={cat}
+                          onClick={() => toggleCat(cat)}
+                          className="w-full flex items-center gap-2 px-3 py-1.5 text-xs hover:bg-[var(--border)]/40 transition-colors tracking-normal font-normal"
+                        >
+                          <span className={`w-3 h-3 rounded-sm border flex-shrink-0 flex items-center justify-center transition-colors ${
+                            filterCats.has(cat)
+                              ? 'bg-[var(--accent)] border-[var(--accent)]'
+                              : 'border-[var(--border)]'
+                          }`}>
+                            {filterCats.has(cat) && (
+                              <svg width="7" height="7" viewBox="0 0 7 7" fill="none" stroke="currentColor" strokeWidth="1.5" className="text-[var(--accent-fg)]">
+                                <path d="M1 3.5l2 2 3-3"/>
+                              </svg>
+                            )}
+                          </span>
+                          <span className="text-[var(--fg)]">{cat.charAt(0).toUpperCase() + cat.slice(1)}</span>
+                        </button>
+                      ))}
+                    </div>
+                  )}
+                </div>
               </th>
               <th className="text-right py-2.5 px-3 text-xs font-medium text-[var(--muted-fg)] uppercase tracking-wide w-28">
                 <button onClick={() => toggleSort('amount')} className="flex items-center justify-end w-full hover:text-[var(--fg)] transition-colors">
@@ -246,7 +226,7 @@ export function ExpenseTable({ items, monthId, keywordMap, categories, year, mon
             )}
 
             {/* Divider between cards and expenses */}
-            {showCards && showExpenses && visibleExpenses.length > 0 && (
+            {showCards && visibleExpenses.length > 0 && (
               <tr className="bg-[var(--muted)]/60 border-t border-[var(--border)]">
                 <td colSpan={4} className="py-1 pl-4 text-[10px] font-semibold text-[var(--muted-fg)] uppercase tracking-widest">
                   {t('expense')}s
@@ -255,7 +235,7 @@ export function ExpenseTable({ items, monthId, keywordMap, categories, year, mon
             )}
 
             {/* Regular expenses */}
-            {showExpenses && visibleExpenses.map(item => (
+            {visibleExpenses.map(item => (
               <ExpenseRow key={item.id} item={item} {...sharedRowProps} links={linksMap[item.id] ?? []} linksMap={linksMap} />
             ))}
 

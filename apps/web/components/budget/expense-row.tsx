@@ -1,5 +1,6 @@
 'use client'
 import { useState, useEffect, useLayoutEffect, useRef, useTransition } from 'react'
+import { createPortal } from 'react-dom'
 
 const useIsomorphicLayoutEffect = typeof window !== 'undefined' ? useLayoutEffect : useEffect
 import { useTranslations, useFormatter } from 'next-intl'
@@ -7,6 +8,7 @@ import type { ResolvedLink } from '@lifehelper/budget'
 import { setAmountAction, setAmountNextMonthAction, deleteItemAction, deleteLinkAction } from '@/app/(app)/m/budget/actions'
 import { ExpenseForm } from './expense-form'
 import { LinkPicker } from './link-picker'
+import { ConfirmDialog } from '@/components/confirm-dialog'
 
 type Item = {
   id: string
@@ -48,6 +50,7 @@ export function ExpenseRow({ item, depth = 0, monthId, keywordMap, categories, y
   const fmt = itemCurrency === 'USD' ? fmtUsd : fmtArs
   const [editing, setEditing] = useState(false)
   const [collapsed, setCollapsed] = useState(item.isCard)
+  const [showImportWarning, setShowImportWarning] = useState(false)
   useIsomorphicLayoutEffect(() => {
     if (!item.isCard) return
     const stored = localStorage.getItem(`budget:card:${item.name}:collapsed`)
@@ -75,9 +78,10 @@ export function ExpenseRow({ item, depth = 0, monthId, keywordMap, categories, y
   const children = item.children ?? []
   const hasChildren = children.length > 0
 
-  const childrenSum = children
-    .filter(c => (c.currency === 'USD' || itemCurrency === 'USD' ? 'USD' : 'ARS') === itemCurrency)
-    .reduce((s, c) => s + (c.amount ?? 0), 0)
+  const arsChildrenSum = children.filter(c => (c.currency ?? 'ARS') !== 'USD').reduce((s, c) => s + (c.amount ?? 0), 0)
+  const usdChildrenSum = children.filter(c => (c.currency ?? 'ARS') === 'USD').reduce((s, c) => s + (c.amount ?? 0), 0)
+  const childrenSum = itemCurrency === 'USD' ? usdChildrenSum : arsChildrenSum
+  const hasMixedCurrencies = isCard && hasChildren && arsChildrenSum > 0 && usdChildrenSum > 0
   const displayAmount = isCard && hasChildren ? childrenSum : item.amount
 
   const dotColor = isCard
@@ -177,17 +181,17 @@ export function ExpenseRow({ item, depth = 0, monthId, keywordMap, categories, y
                 {t('installmentBadge')}
               </span>
             )}
-            {!isCard && item.installmentTotal === null && item.itemType === 'recurring' && !isSubItem && (
+            {!isCard && item.installmentTotal === null && item.itemType === 'recurring' && (
               <span className="text-xs px-1.5 py-0.5 rounded-full bg-blue-500/15 text-blue-400 font-medium flex-shrink-0">
                 {t('recurringBadge')}
               </span>
             )}
-            {!isCard && item.installmentTotal === null && item.itemType === 'subscription' && !isSubItem && (
+            {!isCard && item.installmentTotal === null && item.itemType === 'subscription' && (
               <span className="text-xs px-1.5 py-0.5 rounded-full bg-pink-500/15 text-pink-400 font-medium flex-shrink-0">
                 {t('subscriptionBadge')}
               </span>
             )}
-            {!isCard && item.installmentTotal === null && item.itemType === 'one_time' && !isSubItem && (
+            {!isCard && item.installmentTotal === null && item.itemType === 'one_time' && (
               <span className="text-xs px-1.5 py-0.5 rounded-full bg-cyan-500/15 text-cyan-400 font-medium flex-shrink-0">
                 {t('oneTimeBadge')}
               </span>
@@ -252,7 +256,15 @@ export function ExpenseRow({ item, depth = 0, monthId, keywordMap, categories, y
               )}
               {isCard && !isSubItem && (
                 <button
-                  onClick={() => { setAddingCharge(a => !a); if (collapsed) toggleCollapsed() }}
+                  onClick={() => {
+                    const importKey = `budget:import:${item.name}:${year}-${month}`
+                    if (localStorage.getItem(importKey) === 'true') {
+                      setShowImportWarning(true)
+                      return
+                    }
+                    setAddingCharge(a => !a)
+                    if (collapsed) toggleCollapsed()
+                  }}
                   className="text-xs text-purple-400 hover:text-purple-300 transition-colors opacity-0 group-hover:opacity-100"
                 >
                   {t('addCharge')}
@@ -264,7 +276,7 @@ export function ExpenseRow({ item, depth = 0, monthId, keywordMap, categories, y
 
         {/* Category */}
         <td className="hidden md:table-cell py-2.5 px-3 text-sm text-[var(--muted-fg)] w-36 text-center">
-          <span className="capitalize">{item.category ?? ''}</span>
+          <span>{item.category ? item.category.charAt(0).toUpperCase() + item.category.slice(1) : ''}</span>
         </td>
 
         {/* Amount */}
@@ -279,6 +291,11 @@ export function ExpenseRow({ item, depth = 0, monthId, keywordMap, categories, y
               onKeyDown={handleAmountKeyDown}
               className="w-24 text-right bg-[var(--muted)] border border-[var(--accent)] rounded-md px-2 py-0.5 text-sm outline-none text-[var(--fg)]"
             />
+          ) : hasMixedCurrencies ? (
+            <div className="flex flex-col items-end leading-tight cursor-default">
+              <span className="font-medium tabular-nums text-purple-400">{fmtArs(arsChildrenSum)}</span>
+              <span className="font-medium tabular-nums text-blue-400 text-xs">{fmtUsd(usdChildrenSum)}</span>
+            </div>
           ) : (
             <button
               onClick={handleAmountClick}
@@ -300,16 +317,15 @@ export function ExpenseRow({ item, depth = 0, monthId, keywordMap, categories, y
 
         {/* Delete */}
         <td className="py-2.5 pr-3 text-center w-8">
-          <button
-            onClick={() => {
-              if (isCard && !window.confirm(`¿Eliminar la tarjeta "${item.name}"? Se eliminarán también todos sus cargos.`)) return
-              startTransition(() => deleteItemAction(item.id))
-            }}
-            className="opacity-0 group-hover:opacity-100 text-[var(--muted-fg)] hover:text-rose-400 transition-all text-xs"
-            aria-label={t('delete')}
-          >
-            ✕
-          </button>
+          {!isCard && (
+            <button
+              onClick={() => startTransition(() => deleteItemAction(item.id))}
+              className="opacity-0 group-hover:opacity-100 text-[var(--muted-fg)] hover:text-rose-400 transition-all text-xs"
+              aria-label={t('delete')}
+            >
+              ✕
+            </button>
+          )}
         </td>
       </tr>
 
@@ -436,6 +452,22 @@ export function ExpenseRow({ item, depth = 0, monthId, keywordMap, categories, y
       {!collapsed && children.map(child => (
         <ExpenseRow key={child.id} item={child} depth={depth + 1} monthId={monthId} keywordMap={keywordMap} categories={categories} year={year} month={month} monthContext={monthContext} links={linksMap?.[child.id] ?? []} linksMap={linksMap} />
       ))}
+
+      {showImportWarning && createPortal(
+        <ConfirmDialog
+          message={`"${item.name}" tiene un resumen importado este mes.`}
+          detail="Mezclar cargos manuales puede generar duplicados."
+          confirmLabel="Agregar de todas formas"
+          cancelLabel="Cancelar"
+          onConfirm={() => {
+            setShowImportWarning(false)
+            setAddingCharge(true)
+            if (collapsed) toggleCollapsed()
+          }}
+          onCancel={() => setShowImportWarning(false)}
+        />,
+        document.body
+      )}
     </>
   )
 }

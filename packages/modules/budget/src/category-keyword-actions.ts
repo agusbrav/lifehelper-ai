@@ -4,13 +4,14 @@ import { CATEGORY_SEEDS } from './category-seeds'
 export type CategoryKeywordRecord = {
   id: string
   keyword: string
-  category: string
+  category: string | null
+  itemType: string | null
 }
 
 export async function getCategoryKeywords(userId: string): Promise<CategoryKeywordRecord[]> {
   return db.categoryKeyword.findMany({
     where: { userId },
-    select: { id: true, keyword: true, category: true },
+    select: { id: true, keyword: true, category: true, itemType: true },
     orderBy: [{ category: 'asc' }, { keyword: 'asc' }],
   })
 }
@@ -18,15 +19,30 @@ export async function getCategoryKeywords(userId: string): Promise<CategoryKeywo
 export async function addCategoryKeyword(input: {
   userId: string
   keyword: string
-  category: string
+  category?: string
+  itemType?: string
 }): Promise<void> {
   const keyword = input.keyword.toLowerCase().trim()
-  const category = input.category.toLowerCase().trim()
-  if (!keyword || !category) return
+  const category = input.category?.toLowerCase().trim() || null
+  const itemType = input.itemType || null
+  if (!keyword || (!category && !itemType)) return
   await db.categoryKeyword.upsert({
     where: { userId_keyword: { userId: input.userId, keyword } },
-    create: { userId: input.userId, keyword, category },
-    update: { category },
+    create: { userId: input.userId, keyword, category, itemType },
+    update: { category: category ?? undefined, itemType },
+  })
+}
+
+export async function setKeywordItemType(input: {
+  userId: string
+  keywordId: string
+  itemType: string | null
+}): Promise<void> {
+  const record = await db.categoryKeyword.findUnique({ where: { id: input.keywordId } })
+  if (!record || record.userId !== input.userId) throw new Error('Forbidden')
+  await db.categoryKeyword.update({
+    where: { id: input.keywordId },
+    data: { itemType: input.itemType },
   })
 }
 

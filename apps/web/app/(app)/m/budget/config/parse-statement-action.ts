@@ -15,13 +15,16 @@ export type ParsedTransaction = {
 const PARSE_PROMPT = `You are parsing an Argentine credit card statement (resumen de tarjeta de credito).
 Extract all purchase/consumption/service transactions from the raw text below.
 
-EXCLUDE (do not include in output):
-- Tax lines: anything containing IMPUESTO, IIBB, IVA RG, DB.RG, SELLOS, PERCEP
+EXCLUDE entirely (do not include in output):
 - Bank fees: PROT. PAGOS, PLAN PROT, CUOTA MANTENIMIENTO, CARGO
 - Payments: SU PAGO, PAGO EN PESOS
 - Balance lines: SALDO ANTERIOR, Total Consumos
 
-INCLUDE: purchases, subscriptions, fuel, insurance services, online services, restaurants, etc.
+GROUP into a single entry with description "Impuestos y sellos":
+- All tax lines: anything containing IMPUESTO, IIBB, IVA RG, DB.RG, SELLOS, PERCEP, IMPUESTO PAIS
+- Sum their ARS amounts into one entry. If none exist, omit this entry entirely.
+
+INCLUDE individually: purchases, subscriptions, fuel, insurance services, online services, restaurants, etc.
 
 Argentine number format: "88.000,00" = 88000.00 (dots are thousands separators, comma is decimal).
 

@@ -62,7 +62,8 @@ model CategoryKeyword {
   id        String   @id @default(cuid())
   userId    String
   keyword   String
-  category  String
+  category  String?
+  itemType  String?
   createdAt DateTime @default(now())
 
   @@unique([userId, keyword])

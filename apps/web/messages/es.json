@@ -121,7 +121,11 @@
     "importImporting": "Importando...",
     "importDone": "Importado correctamente",
     "importError": "Error al procesar el PDF. Intentá de nuevo.",
-    "importNoneSelected": "Seleccioná al menos una transacción"
+    "importNoneSelected": "Seleccioná al menos una transacción",
+    "importClose": "Cerrar",
+    "typesTab": "Tipos",
+    "typesHint": "Las reglas de tipo detectan automáticamente suscripciones y gastos recurrentes al importar resúmenes de tarjeta.",
+    "addTypeRule": "Agregar regla"
   },
   "analytics": {
     "title": "Análisis de Presupuesto",

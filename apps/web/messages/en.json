@@ -121,7 +121,11 @@
     "importImporting": "Importing...",
     "importDone": "Imported successfully",
     "importError": "Error processing PDF. Please try again.",
-    "importNoneSelected": "Select at least one transaction"
+    "importNoneSelected": "Select at least one transaction",
+    "importClose": "Close",
+    "typesTab": "Types",
+    "typesHint": "Type rules auto-detect subscriptions and recurring expenses when importing card statements.",
+    "addTypeRule": "Add rule"
   },
   "analytics": {
     "title": "Budget Analytics",

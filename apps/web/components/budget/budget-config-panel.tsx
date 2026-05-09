@@ -3,14 +3,15 @@ import { useState, useTransition, useRef } from 'react'
 import { useTranslations } from 'next-intl'
 import { useRouter } from 'next/navigation'
 import { addCardAction, removeCardAction, renameCardAction, setCardCurrencyAction } from '@/app/(app)/m/budget/settings/actions'
-import { addCategoryKeywordAction, removeCategoryKeywordAction } from '@/app/(app)/m/budget/config/actions'
+import { addCategoryKeywordAction, removeCategoryKeywordAction, addTypeKeywordAction, setKeywordItemTypeAction } from '@/app/(app)/m/budget/config/actions'
 import { resetMonthAction, deletePastMonthsAction } from '@/app/(app)/m/budget/actions'
 import { RenameCardInput } from '@/app/(app)/m/budget/settings/rename-card-input'
 import { CATEGORY_SEEDS } from '@lifehelper/budget'
 import { StatementImportDialog } from './statement-import-dialog'
+import { ConfirmDialog } from '@/components/confirm-dialog'
 
 type Card = { id: string; name: string; currency: string }
-type KeywordRecord = { id: string; keyword: string; category: string }
+type KeywordRecord = { id: string; keyword: string; category: string | null; itemType: string | null }
 
 type Props = {
   year: number
@@ -19,7 +20,8 @@ type Props = {
   userKeywords: KeywordRecord[]
 }
 
-type Tab = 'general' | 'tarjetas' | 'categorias'
+type Tab = 'general' | 'tarjetas' | 'categorias' | 'tipos'
+type TxType = 'one_time' | 'subscription' | 'recurring'
 
 export function BudgetConfigPanel({ year, month, cards, userKeywords }: Props) {
   const t = useTranslations('budget')
@@ -32,6 +34,7 @@ export function BudgetConfigPanel({ year, month, cards, userKeywords }: Props) {
   const [deletePastConfirming, setDeletePastConfirming] = useState(false)
   const [deletePastPending, startDeletePastTransition] = useTransition()
   const [importingCard, setImportingCard] = useState<string | null>(null)
+  const [removingCard, setRemovingCard] = useState<Card | null>(null)
 
   // Add card state
   const [newCardName, setNewCardName] = useState('')
@@ -43,19 +46,28 @@ export function BudgetConfigPanel({ year, month, cards, userKeywords }: Props) {
   const [addingToCategory, setAddingToCategory] = useState<string | null>(null)
   const addKwInputRef = useRef<HTMLInputElement>(null)
 
+  const typeMap = Object.fromEntries(
+    userKeywords.filter(r => r.itemType != null).map(r => [r.keyword, r.itemType!])
+  )
+
+  // Type rules state
+  const [addingToType, setAddingToType] = useState<TxType | null>(null)
+  const addTypeKwInputRef = useRef<HTMLInputElement>(null)
+
   const HIDDEN_CATEGORIES = new Set(['system', 'tarjetas'])
 
   // Derived: all known categories (seeds + user), excluding internal/managed ones
   const seedCategories = [...new Set(Object.values(CATEGORY_SEEDS))].filter(c => !HIDDEN_CATEGORIES.has(c)).sort()
-  const visibleKeywords = userKeywords.filter(r => !HIDDEN_CATEGORIES.has(r.category))
-  const userCategories = [...new Set(visibleKeywords.map(r => r.category))].sort()
+  const visibleKeywords = userKeywords.filter(r => r.category != null && !HIDDEN_CATEGORIES.has(r.category))
+  const userCategories = [...new Set(visibleKeywords.map(r => r.category as string))].sort()
   const allCategories = [...new Set([...seedCategories, ...userCategories])].sort()
 
   // Group user keywords by category
   const byCategory = visibleKeywords.reduce<Record<string, KeywordRecord[]>>((acc, r) => {
-    ;(acc[r.category] ??= []).push(r)
+    ;(acc[r.category!] ??= []).push(r)
     return acc
   }, {})
+
 
   function handleAddCard(e: React.FormEvent) {
     e.preventDefault()
@@ -67,9 +79,8 @@ export function BudgetConfigPanel({ year, month, cards, userKeywords }: Props) {
     startTransition(() => addCardAction(fd))
   }
 
-  function handleRemoveCard(cardId: string, cardName: string) {
-    if (!window.confirm(t('removeCardConfirm', { name: cardName }))) return
-    startTransition(() => removeCardAction(cardId))
+  function handleRemoveCard(card: Card) {
+    setRemovingCard(card)
   }
 
   function handleToggleCurrency(cardId: string, current: string) {
@@ -171,6 +182,9 @@ export function BudgetConfigPanel({ year, month, cards, userKeywords }: Props) {
               </button>
               <button className={tabCls(tab === 'categorias')} onClick={() => setTab('categorias')}>
                 {t('categoriesTitle')}
+              </button>
+              <button className={tabCls(tab === 'tipos')} onClick={() => setTab('tipos')}>
+                {t('typesTab')}
               </button>
             </div>
 
@@ -278,7 +292,7 @@ export function BudgetConfigPanel({ year, month, cards, userKeywords }: Props) {
                                     {t('importStatement')}
                                   </button>
                                   <button
-                                    onClick={() => handleRemoveCard(card.id, card.name)}
+                                    onClick={() => handleRemoveCard(card)}
                                     className="text-xs text-[var(--muted-fg)] hover:text-rose-400 transition-colors opacity-0 group-hover:opacity-100"
                                   >
                                     {t('delete')}
@@ -409,6 +423,81 @@ export function BudgetConfigPanel({ year, month, cards, userKeywords }: Props) {
                   </div>
                 </div>
               )}
+
+              {/* ── Tipos tab ── */}
+              {tab === 'tipos' && (() => {
+                const TYPES: TxType[] = ['subscription', 'recurring', 'one_time']
+                const TYPE_STYLE: Record<TxType, { label: string; className: string }> = {
+                  one_time:     { label: t('oneTimeBadge'),      className: 'bg-cyan-500/15 text-cyan-400' },
+                  subscription: { label: t('subscriptionBadge'), className: 'bg-pink-500/15 text-pink-400' },
+                  recurring:    { label: t('recurringBadge'),    className: 'bg-blue-500/15 text-blue-400' },
+                }
+                const byType = userKeywords
+                  .filter(r => r.itemType != null)
+                  .reduce<Record<string, KeywordRecord[]>>((acc, r) => {
+                    ;(acc[r.itemType!] ??= []).push(r)
+                    return acc
+                  }, {})
+                return (
+                  <div className="space-y-4">
+                    <p className="text-sm text-[var(--muted-fg)]">{t('typesHint')}</p>
+                    {TYPES.map(type => {
+                      const keywords = byType[type] ?? []
+                      const isAdding = addingToType === type
+                      const style = TYPE_STYLE[type]
+                      return (
+                        <div key={type} className="rounded-xl border border-[var(--border)] overflow-hidden">
+                          <div className="flex items-center justify-between px-4 py-2 bg-[var(--bg)]">
+                            <span className={`text-xs font-semibold px-1.5 py-0.5 rounded-full ${style.className}`}>
+                              {style.label}
+                            </span>
+                            <button
+                              onClick={() => {
+                                setAddingToType(isAdding ? null : type)
+                                setTimeout(() => addTypeKwInputRef.current?.focus(), 50)
+                              }}
+                              className="text-xs text-[var(--accent)] hover:opacity-80 transition-opacity"
+                            >
+                              + palabra
+                            </button>
+                          </div>
+                          {keywords.length > 0 && (
+                            <div className="px-4 py-2 flex flex-wrap gap-1.5">
+                              {keywords.map(r => (
+                                <span
+                                  key={r.id}
+                                  className="group inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-xs bg-[var(--border)] text-[var(--fg)]"
+                                >
+                                  {r.keyword}
+                                  <button
+                                    onClick={() => startTransition(() => setKeywordItemTypeAction(r.id, null))}
+                                    className="opacity-0 group-hover:opacity-100 text-[var(--muted-fg)] hover:text-rose-400 transition-all leading-none"
+                                  >
+                                    ×
+                                  </button>
+                                </span>
+                              ))}
+                            </div>
+                          )}
+                          {isAdding && (
+                            <div className="px-4 pb-3 flex gap-2">
+                              <InlineKeywordInput
+                                inputRef={addTypeKwInputRef}
+                                onConfirm={kw => {
+                                  startTransition(() => addTypeKeywordAction(kw, type))
+                                  setAddingToType(null)
+                                }}
+                                onCancel={() => setAddingToType(null)}
+                                inputCls={inputCls}
+                              />
+                            </div>
+                          )}
+                        </div>
+                      )
+                    })}
+                  </div>
+                )
+              })()}
             </div>
 
           </div>
@@ -420,7 +509,23 @@ export function BudgetConfigPanel({ year, month, cards, userKeywords }: Props) {
           cardName={importingCard}
           year={year}
           month={month}
+          typeMap={typeMap}
           onClose={() => setImportingCard(null)}
+        />
+      )}
+
+      {removingCard && (
+        <ConfirmDialog
+          message={t('removeCardConfirm', { name: removingCard.name })}
+          detail={t('settingsRemoveHint')}
+          confirmLabel={t('delete')}
+          cancelLabel={t('cancel')}
+          danger
+          onConfirm={() => {
+            startTransition(() => removeCardAction(removingCard.id))
+            setRemovingCard(null)
+          }}
+          onCancel={() => setRemovingCard(null)}
         />
       )}
     </>
