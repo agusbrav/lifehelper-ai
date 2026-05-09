@@ -57,19 +57,29 @@ export async function parseStatementAction(formData: FormData): Promise<ParsedTr
   if (!file) throw new Error('No PDF file provided')
 
   const buffer = Buffer.from(await file.arrayBuffer())
-  const pdfParseModule = await import('pdf-parse')
-  const pdfParse = (pdfParseModule as unknown as { default: (buf: Buffer) => Promise<{ text: string }> }).default ?? pdfParseModule
-  const { text } = await (pdfParse as (buf: Buffer) => Promise<{ text: string }>)(buffer)
+  const { PDFParse } = await import('pdf-parse') as unknown as { PDFParse: new (opts: { data: Buffer }) => { getText(): Promise<{ text: string }> } }
+  const parser = new PDFParse({ data: buffer })
+  const { text } = await parser.getText()
 
   const anthropic = new Anthropic()
   const response = await anthropic.messages.create({
     model: 'claude-haiku-4-5-20251001',
-    max_tokens: 4096,
+    max_tokens: 8192,
     messages: [{ role: 'user', content: PARSE_PROMPT + text }],
   })
 
-  const raw = response.content[0]
-  if (!raw || raw.type !== 'text') throw new Error('Unexpected response type from Claude')
+  if (response.stop_reason !== 'end_turn') throw new Error('Statement too large to process')
 
-  return JSON.parse(raw.text) as ParsedTransaction[]
+  const textBlock = response.content.find(b => b.type === 'text')
+  if (!textBlock || textBlock.type !== 'text') throw new Error('Unexpected response type from Claude')
+
+  const cleaned = textBlock.text.trim().replace(/^```(?:json)?\s*|\s*```$/g, '')
+  let parsed: unknown
+  try {
+    parsed = JSON.parse(cleaned)
+  } catch {
+    throw new Error(`Could not parse Claude response: ${cleaned.slice(0, 200)}`)
+  }
+  if (!Array.isArray(parsed)) throw new Error('Claude response is not a transaction array')
+  return parsed as ParsedTransaction[]
 }
