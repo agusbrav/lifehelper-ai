@@ -344,16 +344,16 @@ export function ExpenseRow({ item, depth = 0, monthId, keywordMap, categories, y
               className="w-24 text-right bg-[var(--muted)] border border-[var(--accent)] rounded-md px-2 py-0.5 text-sm outline-none text-[var(--fg)]"
             />
           ) : isCard && hasChildren ? (
-            <div className={`flex flex-col items-end leading-tight cursor-default ${arsChildrenSum === 0 !== (usdChildrenSum === 0) ? 'justify-center' : ''}`}>
+            <div className="flex flex-col items-end justify-center leading-tight cursor-default min-h-[2.1rem]">
               {itemCurrency === 'USD' ? (
                 <>
-                  <span className={`font-medium tabular-nums text-blue-400 ${usdChildrenSum === 0 ? 'invisible' : ''}`}>{fmtUsd(usdChildrenSum)}</span>
-                  <span className={`font-medium tabular-nums text-purple-400 text-xs ${arsChildrenSum === 0 ? 'invisible' : ''}`}>{fmtArs(arsChildrenSum)}</span>
+                  {usdChildrenSum > 0 && <span className="font-medium tabular-nums text-blue-400">{fmtUsd(usdChildrenSum)}</span>}
+                  {arsChildrenSum > 0 && <span className="font-medium tabular-nums text-purple-400 text-xs">{fmtArs(arsChildrenSum)}</span>}
                 </>
               ) : (
                 <>
-                  <span className={`font-medium tabular-nums text-purple-400 ${arsChildrenSum === 0 ? 'invisible' : ''}`}>{fmtArs(arsChildrenSum)}</span>
-                  <span className={`font-medium tabular-nums text-blue-400 text-xs ${usdChildrenSum === 0 ? 'invisible' : ''}`}>{fmtUsd(usdChildrenSum)}</span>
+                  {arsChildrenSum > 0 && <span className="font-medium tabular-nums text-purple-400">{fmtArs(arsChildrenSum)}</span>}
+                  {usdChildrenSum > 0 && <span className="font-medium tabular-nums text-blue-400 text-xs">{fmtUsd(usdChildrenSum)}</span>}
                 </>
               )}
             </div>
