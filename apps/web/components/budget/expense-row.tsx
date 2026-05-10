@@ -344,7 +344,7 @@ export function ExpenseRow({ item, depth = 0, monthId, keywordMap, categories, y
               className="w-24 text-right bg-[var(--muted)] border border-[var(--accent)] rounded-md px-2 py-0.5 text-sm outline-none text-[var(--fg)]"
             />
           ) : isCard && hasChildren ? (
-            <div className="flex flex-col items-end leading-tight cursor-default">
+            <div className={`flex flex-col items-end leading-tight cursor-default ${arsChildrenSum === 0 !== (usdChildrenSum === 0) ? 'justify-center' : ''}`}>
               {itemCurrency === 'USD' ? (
                 <>
                   <span className={`font-medium tabular-nums text-blue-400 ${usdChildrenSum === 0 ? 'invisible' : ''}`}>{fmtUsd(usdChildrenSum)}</span>
