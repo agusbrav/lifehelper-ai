@@ -164,6 +164,8 @@
     "collapseChat": "Cerrar chat",
     "expandChat": "Abrir chat",
     "inputLabel": "Escribir mensaje",
-    "sendLabel": "Enviar"
+    "sendLabel": "Enviar",
+    "attachLabel": "Adjuntar archivo",
+    "attachedFile": "Adjunto"
   }
 }

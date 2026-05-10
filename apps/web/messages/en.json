@@ -164,6 +164,8 @@
     "collapseChat": "Collapse chat",
     "expandChat": "Expand chat",
     "inputLabel": "Chat input",
-    "sendLabel": "Send"
+    "sendLabel": "Send",
+    "attachLabel": "Attach file",
+    "attachedFile": "Attached"
   }
 }

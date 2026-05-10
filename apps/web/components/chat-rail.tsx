@@ -33,8 +33,10 @@ export function ChatRail() {
   const [input, setInput] = useState('')
   const [spinnerLabel, setSpinnerLabel] = useState('Thinking…')
   const [loading, setLoading] = useState(false)
+  const [attachedFile, setAttachedFile] = useState<File | null>(null)
   const messagesEndRef = useRef<HTMLDivElement>(null)
   const welcomeSentRef = useRef(false)
+  const fileInputRef = useRef<HTMLInputElement>(null)
 
   const isBudget = context.module === 'budget'
   const meta = context.metadata as { year?: number; month?: number }
@@ -117,10 +119,17 @@ export function ChatRail() {
     }
   }
 
+  function handleFileChange(e: React.ChangeEvent<HTMLInputElement>) {
+    const file = e.target.files?.[0] ?? null
+    setAttachedFile(file)
+    e.target.value = ''
+  }
+
   function handleSend() {
-    if (!input.trim() || loading || !isBudget) return
+    if ((!input.trim() && !attachedFile) || loading || !isBudget) return
     const text = input.trim()
     setInput('')
+    setAttachedFile(null)
     send(text)
   }
 
@@ -170,28 +179,61 @@ export function ChatRail() {
             <div ref={messagesEndRef} />
           </div>
 
-          <div className="flex items-center gap-2 px-3 py-2 border-t border-[var(--border)]">
+          <div className="border-t border-[var(--border)]">
             <input
-              type="text"
-              aria-label={t('inputLabel')}
-              value={input}
-              onChange={e => setInput(e.target.value)}
-              onKeyDown={e => e.key === 'Enter' && handleSend()}
-              placeholder={isBudget ? t('placeholder') : t('dashboardHint')}
-              disabled={!isBudget || loading}
-              className="flex-1 text-sm bg-transparent outline-none text-[var(--fg)] placeholder:text-[var(--muted-fg)] disabled:opacity-50"
+              ref={fileInputRef}
+              type="file"
+              accept="image/*,.pdf"
+              onChange={handleFileChange}
+              className="sr-only"
             />
-            <button
-              onClick={handleSend}
-              disabled={!input.trim() || !isBudget || loading}
-              aria-label={t('sendLabel')}
-              className="text-[var(--accent)] hover:opacity-80 disabled:opacity-30 transition-opacity"
-            >
-              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                <line x1="22" y1="2" x2="11" y2="13"/>
-                <polygon points="22 2 15 22 11 13 2 9 22 2"/>
-              </svg>
-            </button>
+            {attachedFile && (
+              <div className="flex items-center gap-1.5 px-3 pt-2">
+                <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="text-[var(--muted-fg)] flex-shrink-0">
+                  <path d="M21.44 11.05l-9.19 9.19a6 6 0 0 1-8.49-8.49l9.19-9.19a4 4 0 0 1 5.66 5.66l-9.2 9.19a2 2 0 0 1-2.83-2.83l8.49-8.48"/>
+                </svg>
+                <span className="text-xs text-[var(--muted-fg)] truncate flex-1 max-w-[200px]">{attachedFile.name}</span>
+                <button
+                  onClick={() => setAttachedFile(null)}
+                  className="text-[var(--muted-fg)] hover:text-rose-400 transition-colors text-xs leading-none flex-shrink-0"
+                >
+                  ✕
+                </button>
+              </div>
+            )}
+            <div className="flex items-center gap-2 px-3 py-2">
+              <button
+                onClick={() => fileInputRef.current?.click()}
+                disabled={loading}
+                aria-label={t('attachLabel')}
+                className="text-[var(--muted-fg)] hover:text-[var(--fg)] disabled:opacity-30 transition-colors flex-shrink-0"
+              >
+                <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                  <path d="M21.44 11.05l-9.19 9.19a6 6 0 0 1-8.49-8.49l9.19-9.19a4 4 0 0 1 5.66 5.66l-9.2 9.19a2 2 0 0 1-2.83-2.83l8.49-8.48"/>
+                </svg>
+              </button>
+              <input
+                type="text"
+                aria-label={t('inputLabel')}
+                value={input}
+                onChange={e => setInput(e.target.value)}
+                onKeyDown={e => e.key === 'Enter' && handleSend()}
+                placeholder={isBudget ? t('placeholder') : t('dashboardHint')}
+                disabled={!isBudget || loading}
+                className="flex-1 text-sm bg-transparent outline-none text-[var(--fg)] placeholder:text-[var(--muted-fg)] disabled:opacity-50"
+              />
+              <button
+                onClick={handleSend}
+                disabled={(!input.trim() && !attachedFile) || !isBudget || loading}
+                aria-label={t('sendLabel')}
+                className="text-[var(--accent)] hover:opacity-80 disabled:opacity-30 transition-opacity"
+              >
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                  <line x1="22" y1="2" x2="11" y2="13"/>
+                  <polygon points="22 2 15 22 11 13 2 9 22 2"/>
+                </svg>
+              </button>
+            </div>
           </div>
         </div>
       )}
