@@ -12,7 +12,7 @@ Format: `- [ ] description` — check off when done, delete when shipped.
 - [x] Card management settings page (`/m/budget/settings`) — separate `Card` model, add/remove cards outside the monthly table
 - [x] Change expense type inline — click the type badge to cycle one-time → subscription → recurring; propagates correctly (becoming recurring: propagate forward; becoming one-time: remove from future months; subscription↔recurring: update future months)
 - [x] Change category inline from the expense table — click the category cell to edit; datalist of known categories; "Sin categoría" shown when empty
-- [ ] Smoother hover effect on expense table rows — current transition feels abrupt
+- [x] Smoother hover effect on expense table rows — current transition feels abrupt
 - [ ] Dates per expense — allow tagging an expense with a specific date within the month
 - [ ] Custom tags alongside categories — e.g. link a food expense to a specific trip and filter by it
 - [ ] Link budget expenses to other modules (trip planner, shared expenses)
