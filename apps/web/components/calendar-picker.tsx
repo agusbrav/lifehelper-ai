@@ -63,8 +63,15 @@ export function CalendarPicker({ anchorEl, value, onChange, onClear, onClose }: 
       const target = e.target as Node
       if (!panelRef.current?.contains(target) && !anchorEl?.contains(target)) onClose()
     }
+    function handleKey(e: KeyboardEvent) {
+      if (e.key === 'Escape') onClose()
+    }
     document.addEventListener('mousedown', handleDown)
-    return () => document.removeEventListener('mousedown', handleDown)
+    document.addEventListener('keydown', handleKey)
+    return () => {
+      document.removeEventListener('mousedown', handleDown)
+      document.removeEventListener('keydown', handleKey)
+    }
   }, [anchorEl, onClose])
 
   if (!anchorEl) return null
