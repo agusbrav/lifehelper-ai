@@ -77,11 +77,14 @@ export function CalendarPicker({ anchorEl, value, onChange, onClear, onClose }: 
   if (!anchorEl) return null
 
   const rect = anchorEl.getBoundingClientRect()
+  const panelHeight = 260
+  const openUpward = rect.bottom + 4 + panelHeight > window.innerHeight
+  const top = openUpward ? rect.top - panelHeight - 4 : rect.bottom + 4
 
   const panel = (
     <div
       ref={panelRef}
-      style={{ position: 'fixed', top: rect.bottom + 4, left: rect.left, zIndex: 9999 }}
+      style={{ position: 'fixed', top, left: rect.left, zIndex: 9999 }}
       className="rounded-xl border border-[var(--border)] bg-[var(--card-bg)] shadow-xl p-3 w-56 select-none"
     >
       <DayPicker
