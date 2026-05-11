@@ -159,7 +159,7 @@ const maxItem = Math.max(...viewItems.map(item => item.total), 1)
 
       {/* Split: donut left, table right */}
       <section>
-        <div className="grid grid-cols-1 md:grid-cols-[280px_1fr] gap-6 items-start">
+        <div className="grid grid-cols-1 md:grid-cols-[minmax(200px,30%)_1fr] gap-6 items-start">
 
           {/* Left: donut + legend */}
           <div className="flex flex-col items-center gap-4">
@@ -462,7 +462,7 @@ const maxItem = Math.max(...viewItems.map(item => item.total), 1)
             <h2 className="text-xs font-semibold text-[var(--muted-fg)] mb-3 uppercase tracking-wide">
               {t('usdTitle')}
             </h2>
-            <div className="grid grid-cols-1 md:grid-cols-[280px_1fr] gap-6 items-start">
+            <div className="grid grid-cols-1 md:grid-cols-[minmax(200px,30%)_1fr] gap-6 items-start">
               <div className="flex flex-col items-center gap-4">
                 <DonutChart
                   segments={usdItems.map(c => ({ category: c.category ?? '__null__', value: c.total, color: usdColorMap.get(c.category) ?? PALETTE[0]! }))}
