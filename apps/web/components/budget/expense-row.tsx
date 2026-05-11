@@ -628,7 +628,7 @@ export function ExpenseRow({ item, depth = 0, monthId, keywordMap, categories, y
         document.body
       )}
 
-      {importDialogOpen && (
+      {importDialogOpen && createPortal(
         <StatementImportDialog
           cardName={item.name}
           year={year}
@@ -638,7 +638,8 @@ export function ExpenseRow({ item, depth = 0, monthId, keywordMap, categories, y
             setImportDialogOpen(false)
             setStatementImported(localStorage.getItem(`budget:import:${item.name}:${year}-${month}`) === 'true')
           }}
-        />
+        />,
+        document.body
       )}
     </>
   )
