@@ -19,6 +19,7 @@ type Item = {
   installmentTotal: number | null
   installmentNumber: number | null
   parentId: string | null
+  expenseDate: Date | null
   children: Item[]
 }
 
@@ -225,6 +226,9 @@ export function ExpenseTable({ items, monthId, keywordMap, categories, year, mon
                   )}
                 </div>
               </th>
+              <th className="hidden md:table-cell text-center py-2.5 px-3 text-xs font-medium text-[var(--muted-fg)] uppercase tracking-wide w-10">
+                {t('date')}
+              </th>
               <th className="text-right py-2.5 px-3 text-xs font-medium text-[var(--muted-fg)] uppercase tracking-wide w-28">
                 <button onClick={() => toggleSort('amount')} className="flex items-center justify-end w-full hover:text-[var(--fg)] transition-colors">
                   {t('amount')}
@@ -239,7 +243,7 @@ export function ExpenseTable({ items, monthId, keywordMap, categories, year, mon
             {showCards && (
               <>
                 <tr className="bg-purple-500/5 border-t border-[var(--border)]">
-                  <td colSpan={4} className="py-1 pl-4 text-[10px] font-semibold text-purple-400 uppercase tracking-widest">
+                  <td colSpan={5} className="py-1 pl-4 text-[10px] font-semibold text-purple-400 uppercase tracking-widest">
                     {t('addChargeBadge')}s
                   </td>
                 </tr>
@@ -252,7 +256,7 @@ export function ExpenseTable({ items, monthId, keywordMap, categories, year, mon
             {/* Divider between cards and expenses */}
             {showCards && visibleExpenses.length > 0 && (
               <tr className="bg-[var(--muted)]/60 border-t border-[var(--border)]">
-                <td colSpan={4} className="py-1 pl-4 text-[10px] font-semibold text-[var(--muted-fg)] uppercase tracking-widest">
+                <td colSpan={5} className="py-1 pl-4 text-[10px] font-semibold text-[var(--muted-fg)] uppercase tracking-widest">
                   {t('expense')}s
                 </td>
               </tr>

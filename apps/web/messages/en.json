@@ -127,7 +127,9 @@
     "importClose": "Close",
     "typesTab": "Types",
     "typesHint": "Type rules auto-detect subscriptions and recurring expenses when importing card statements.",
-    "addTypeRule": "Add rule"
+    "addTypeRule": "Add rule",
+    "date": "Date",
+    "setDate": "Set date"
   },
   "analytics": {
     "title": "Budget Analytics",
@@ -166,6 +168,15 @@
     "inputLabel": "Chat input",
     "sendLabel": "Send",
     "attachLabel": "Attach file",
-    "attachedFile": "Attached"
+    "attachedFile": "Attached",
+    "spinnerAdding": "Adding…",
+    "spinnerUpdating": "Updating…",
+    "spinnerCreating": "Creating…",
+    "spinnerChecking": "Checking…",
+    "spinnerThinking": "Thinking…",
+    "spinnerAnalyzing": "Analyzing…",
+    "errorGeneric": "Something went wrong. Please try again.",
+    "errorPdfParse": "Could not parse the PDF. Please try again.",
+    "importSuccess": "Imported **{count}** transactions to **{card}**."
   }
 }

@@ -127,7 +127,9 @@
     "importClose": "Cerrar",
     "typesTab": "Tipos",
     "typesHint": "Las reglas de tipo detectan automáticamente suscripciones y gastos recurrentes al importar resúmenes de tarjeta.",
-    "addTypeRule": "Agregar regla"
+    "addTypeRule": "Agregar regla",
+    "date": "Fecha",
+    "setDate": "Establecer fecha"
   },
   "analytics": {
     "title": "Análisis de Presupuesto",
@@ -166,6 +168,15 @@
     "inputLabel": "Escribir mensaje",
     "sendLabel": "Enviar",
     "attachLabel": "Adjuntar archivo",
-    "attachedFile": "Adjunto"
+    "attachedFile": "Adjunto",
+    "spinnerAdding": "Agregando…",
+    "spinnerUpdating": "Actualizando…",
+    "spinnerCreating": "Creando…",
+    "spinnerChecking": "Verificando…",
+    "spinnerThinking": "Pensando…",
+    "spinnerAnalyzing": "Analizando…",
+    "errorGeneric": "Algo salió mal. Intentá de nuevo.",
+    "errorPdfParse": "No se pudo procesar el PDF. Intentá de nuevo.",
+    "importSuccess": "Se importaron **{count}** transacciones a **{card}**."
   }
 }

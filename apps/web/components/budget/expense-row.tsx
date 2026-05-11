@@ -5,7 +5,7 @@ import { createPortal } from 'react-dom'
 const useIsomorphicLayoutEffect = typeof window !== 'undefined' ? useLayoutEffect : useEffect
 import { useTranslations, useFormatter } from 'next-intl'
 import type { ResolvedLink } from '@lifehelper/budget'
-import { setAmountAction, setAmountNextMonthAction, deleteItemAction, deleteLinkAction, setItemTypeAction, setCategoryAction } from '@/app/(app)/m/budget/actions'
+import { setAmountAction, setAmountNextMonthAction, deleteItemAction, deleteLinkAction, setItemTypeAction, setCategoryAction, setExpenseDateAction } from '@/app/(app)/m/budget/actions'
 import { ExpenseForm } from './expense-form'
 import { LinkPicker } from './link-picker'
 import { ConfirmDialog } from '@/components/confirm-dialog'
@@ -23,6 +23,7 @@ type Item = {
   installmentTotal: number | null
   installmentNumber: number | null
   parentId: string | null
+  expenseDate: Date | null
   children: Item[]
 }
 
@@ -75,6 +76,36 @@ export function ExpenseRow({ item, depth = 0, monthId, keywordMap, categories, y
   const [editingCategory, setEditingCategory] = useState(false)
   const [categoryValue, setCategoryValue] = useState(item.category ?? '')
   const categoryInputRef = useRef<HTMLInputElement>(null)
+  const [editingDate, setEditingDate] = useState(false)
+  const [dateValue, setDateValue] = useState('')
+  const dateInputRef = useRef<HTMLInputElement>(null)
+
+  const dateDay = item.expenseDate
+    ? new Date(item.expenseDate).getUTCDate()
+    : null
+
+  function handleDateClick() {
+    if (isCard && !isSubItem) return
+    setDateValue(dateDay != null ? String(dateDay) : '')
+    setEditingDate(true)
+    setTimeout(() => { dateInputRef.current?.focus(); dateInputRef.current?.select() }, 0)
+  }
+
+  function saveDateEdit() {
+    const val = parseInt(dateValue, 10)
+    if (!isNaN(val) && val >= 1 && val <= 31) {
+      const date = new Date(Date.UTC(year, month - 1, val))
+      startTransition(() => setExpenseDateAction(item.id, date))
+    } else if (dateValue.trim() === '') {
+      startTransition(() => setExpenseDateAction(item.id, null))
+    }
+    setEditingDate(false)
+  }
+
+  function handleDateKeyDown(e: React.KeyboardEvent) {
+    if (e.key === 'Enter') saveDateEdit()
+    if (e.key === 'Escape') setEditingDate(false)
+  }
 
   const isCard = item.isCard
   const isSubItem = depth > 0
@@ -331,6 +362,34 @@ export function ExpenseRow({ item, depth = 0, monthId, keywordMap, categories, y
           )}
         </td>
 
+        {/* Date */}
+        <td className="hidden md:table-cell text-center py-2.5 px-3 w-10">
+          {isCard && !isSubItem ? (
+            <span className="text-[var(--muted-fg)] text-xs">-</span>
+          ) : editingDate ? (
+            <input
+              ref={dateInputRef}
+              type="number"
+              min={1}
+              max={31}
+              value={dateValue}
+              onChange={e => setDateValue(e.target.value)}
+              onBlur={saveDateEdit}
+              onKeyDown={handleDateKeyDown}
+              className="w-8 text-center rounded border border-[var(--border)] bg-[var(--bg)] text-[var(--fg)] text-xs px-1 tabular-nums outline-none"
+            />
+          ) : (
+            <button
+              onClick={handleDateClick}
+              disabled={isCard && !isSubItem}
+              title={t('setDate')}
+              className="text-xs tabular-nums w-full text-center text-[var(--muted-fg)] hover:text-[var(--fg)] transition-colors disabled:cursor-default"
+            >
+              {dateDay ?? '-'}
+            </button>
+          )}
+        </td>
+
         {/* Amount */}
         <td className="py-2.5 px-3 text-right text-sm w-28">
           {editing ? (
@@ -392,7 +451,7 @@ export function ExpenseRow({ item, depth = 0, monthId, keywordMap, categories, y
 
       {linkPickerOpen && (
         <tr className="border-t border-indigo-500/20 bg-indigo-500/5">
-          <td colSpan={4} className={`py-2.5 pr-4 ${depth === 0 ? 'pl-4' : 'pl-10'}`}>
+          <td colSpan={5} className={`py-2.5 pr-4 ${depth === 0 ? 'pl-4' : 'pl-10'}`}>
             <LinkPicker
               sourceModuleId="budget"
               sourceEntityId={item.id}
@@ -405,7 +464,7 @@ export function ExpenseRow({ item, depth = 0, monthId, keywordMap, categories, y
       {/* Inflation quick-adjust popover */}
       {inflationOpen && (
         <tr className="border-t border-indigo-500/20 bg-indigo-500/5">
-          <td colSpan={4} className={`py-3 pr-4 ${depth === 0 ? 'pl-4' : 'pl-10'}`}>
+          <td colSpan={5} className={`py-3 pr-4 ${depth === 0 ? 'pl-4' : 'pl-10'}`}>
             <div className="flex flex-col gap-3 max-w-sm">
               <span className="text-xs font-medium text-[var(--muted-fg)] uppercase tracking-wide">
                 {t('inflationTitle', { name: item.name })}
@@ -493,7 +552,7 @@ export function ExpenseRow({ item, depth = 0, monthId, keywordMap, categories, y
       {/* Inline add-charge form for credit card rows */}
       {isCard && addingCharge && (
         <tr className="border-t border-purple-500/20 bg-purple-500/5">
-          <td colSpan={4} className="py-2.5 pl-10 pr-4">
+          <td colSpan={5} className="py-2.5 pl-10 pr-4">
             <ExpenseForm
               monthId={monthId}
               keywordMap={keywordMap}
