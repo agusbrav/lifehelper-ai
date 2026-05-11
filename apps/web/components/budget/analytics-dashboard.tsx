@@ -13,11 +13,6 @@ import type {
 
 export type ViewMode = 'category' | 'type'
 
-const PALETTE = [
-  '#6366f1', '#f59e0b', '#10b981', '#ef4444',
-  '#d946ef', '#06b6d4', '#ec4899', '#84cc16',
-]
-
 const TYPE_COLORS: Record<string, string> = {
   recurring: '#3b82f6',
   subscription: '#ec4899',
@@ -26,9 +21,15 @@ const TYPE_COLORS: Record<string, string> = {
   'one-time': '#06b6d4',
 }
 
+// Golden-angle hue stepping: each category gets a hue maximally distant
+// from all previous ones, so colors never repeat regardless of category count.
+const GOLDEN_ANGLE = 137.508
 function buildColorMap(items: { category: string | null }[]): Map<string | null, string> {
   const map = new Map<string | null, string>()
-  items.forEach((c, i) => { map.set(c.category, PALETTE[i % PALETTE.length]!) })
+  items.forEach((c, i) => {
+    const hue = Math.round((i * GOLDEN_ANGLE) % 360)
+    map.set(c.category, `hsl(${hue}, 60%, 58%)`)
+  })
   return map
 }
 
@@ -118,7 +119,7 @@ export function AnalyticsDashboard({
         key: c.category ?? '__null__',
         label: c.category ?? t('uncategorized'),
         total: c.total,
-        color: categoryColorMap.get(c.category) ?? PALETTE[0]!,
+        color: categoryColorMap.get(c.category) ?? 'hsl(0,60%,58%)',
         avg3: avg3mo.find(a => a.category === c.category)?.avg ?? 0,
         avg6: avg6mo.find(a => a.category === c.category)?.avg ?? 0,
       }))
@@ -465,7 +466,7 @@ const maxItem = Math.max(...viewItems.map(item => item.total), 1)
             <div className="grid grid-cols-1 md:grid-cols-[220px_1fr] gap-6 items-start">
               <div className="flex flex-col items-center gap-4">
                 <DonutChart
-                  segments={usdItems.map(c => ({ category: c.category ?? '__null__', value: c.total, color: usdColorMap.get(c.category) ?? PALETTE[0]! }))}
+                  segments={usdItems.map(c => ({ category: c.category ?? '__null__', value: c.total, color: usdColorMap.get(c.category) ?? 'hsl(0,60%,58%)' }))}
                   total={usdTotal}
                   centerLabel={'USD ' + (usdTotal / 100).toLocaleString(locale, { maximumFractionDigits: 0 })}
                   onToggle={() => {}}
@@ -473,7 +474,7 @@ const maxItem = Math.max(...viewItems.map(item => item.total), 1)
                 <div className="w-full flex flex-col gap-1.5">
                   {usdItems.map(c => (
                     <div key={c.category ?? '__null__'} className="flex items-center gap-2 text-xs">
-                      <span className="w-2.5 h-2.5 rounded-full flex-shrink-0" style={{ background: usdColorMap.get(c.category) ?? PALETTE[0]! }} />
+                      <span className="w-2.5 h-2.5 rounded-full flex-shrink-0" style={{ background: usdColorMap.get(c.category) ?? 'hsl(0,60%,58%)' }} />
                       <span className="flex-1 capitalize">{usdLabel(c.category)}</span>
                       <span className="text-[var(--muted-fg)]">{usdTotal > 0 ? Math.round((c.total / usdTotal) * 100) : 0}%</span>
                     </div>
@@ -509,7 +510,7 @@ const maxItem = Math.max(...viewItems.map(item => item.total), 1)
                         <tr key={c.category ?? '__null__'} className="border-t border-[var(--border)] hover:bg-[var(--accent-muted)] transition-colors">
                           <td className="py-3 pl-5 font-medium text-[var(--fg)]">
                             <span className="flex items-center gap-2">
-                              <span className="w-2 h-2 rounded-full flex-shrink-0" style={{ background: usdColorMap.get(c.category) ?? PALETTE[0]! }} />
+                              <span className="w-2 h-2 rounded-full flex-shrink-0" style={{ background: usdColorMap.get(c.category) ?? 'hsl(0,60%,58%)' }} />
                               <span className="capitalize">{usdLabel(c.category)}</span>
                             </span>
                           </td>
