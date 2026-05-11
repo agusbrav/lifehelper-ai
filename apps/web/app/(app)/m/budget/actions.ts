@@ -2,7 +2,7 @@
 import { revalidatePath } from 'next/cache'
 import { cookies } from 'next/headers'
 import { getSession as resolveSession, db } from '@lifehelper/core'
-import { addExpense, addInstallment, setAmount, setAmountNextMonth, deleteItem, resetMonth, deletePastMonths, setItemType, setCategory, setExpenseDate } from '@lifehelper/budget'
+import { addExpense, addInstallment, setAmount, setAmountNextMonth, deleteItem, resetMonth, deletePastMonths, setItemType, setCategory, setExpenseDate, getOrCreateMonth } from '@lifehelper/budget'
 import { getLinkableModule, getLinkableModuleIds } from '@lifehelper/integrations'
 import { createLink, deleteLink } from '@lifehelper/core'
 
@@ -141,4 +141,38 @@ export async function deleteLinkAction(linkId: string): Promise<void> {
   const userId = await getUserId()
   await deleteLink(userId, linkId)
   revalidatePath('/m/budget')
+}
+
+type ReceiptExpenseInput = {
+  description: string
+  amountCents: number
+  currency: 'ARS' | 'USD'
+  expenseDate?: Date
+  category?: string
+}
+
+export async function addReceiptExpensesAction(
+  items: ReceiptExpenseInput[],
+  year: number,
+  month: number,
+): Promise<{ added: number }> {
+  const userId = await getUserId()
+  const budgetMonth = await getOrCreateMonth(userId, year, month)
+  if (!budgetMonth) throw new Error('Could not get or create month')
+
+  let added = 0
+  for (const item of items) {
+    await addExpense({
+      userId,
+      monthId: budgetMonth.id,
+      name: item.description,
+      amount: item.amountCents,
+      currency: item.currency,
+      category: item.category,
+      expenseDate: item.expenseDate,
+    })
+    added++
+  }
+  revalidatePath('/m/budget')
+  return { added }
 }

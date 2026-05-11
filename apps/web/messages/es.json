@@ -177,6 +177,7 @@
     "spinnerAnalyzing": "Analizando…",
     "errorGeneric": "Algo salió mal. Intentá de nuevo.",
     "errorPdfParse": "No se pudo procesar el PDF. Intentá de nuevo.",
-    "importSuccess": "Se importaron **{count}** transacciones a **{card}**."
+    "importSuccess": "Se importaron **{count}** transacciones a **{card}**.",
+    "receiptImportSuccess": "Se agregaron **{count}** gasto(s) del comprobante."
   }
 }
