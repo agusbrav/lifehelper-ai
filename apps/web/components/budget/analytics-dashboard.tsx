@@ -143,7 +143,7 @@ export function AnalyticsDashboard({
 
   const includedItems = viewItems.filter(item => !excluded.has(item.key))
   const includedSum = includedItems.reduce((s, item) => s + item.total, 0)
-  const maxItem = Math.max(...viewItems.map(item => item.total), 1)
+const maxItem = Math.max(...viewItems.map(item => item.total), 1)
   const maxMonthly = Math.max(...monthlyTotals.map(m => m.totalCents), 1)
 
   const donutSegments = includedItems.map(item => ({

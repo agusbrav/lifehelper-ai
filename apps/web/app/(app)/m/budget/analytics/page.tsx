@@ -101,15 +101,16 @@ export default async function BudgetAnalyticsPage({
 
   const categoryTotals = computeCategoryTotals(currentItems)
   const typeTotals = computeTypeTotals(currentItems)
-  const avg3mo = computeRollingAverage(last6, 3)
-  const avg6mo = computeRollingAverage(last6, 6)
+  const prevMonths = last6.slice(0, -1)
+  const avg3mo = computeRollingAverage(prevMonths, 3)
+  const avg6mo = computeRollingAverage(prevMonths, 6)
   const inflationAlerts = computeInflationAlerts(currentItems, threeMonthsAgoItems)
   const installments = computeInstallmentOverview(currentItems)
 
   const usdCategoryTotals = computeUsdCategoryTotals(currentItems)
   const usdTypeTotals = computeUsdTypeTotals(currentItems)
-  const usdAvg3mo = computeRollingAverage(last6, 3, computeUsdCategoryTotals)
-  const usdAvg6mo = computeRollingAverage(last6, 6, computeUsdCategoryTotals)
+  const usdAvg3mo = computeRollingAverage(prevMonths, 3, computeUsdCategoryTotals)
+  const usdAvg6mo = computeRollingAverage(prevMonths, 6, computeUsdCategoryTotals)
 
   const monthsForChart = availableMonths
     .filter(m => m.year < selectedYear || (m.year === selectedYear && m.month <= selectedMonth))
