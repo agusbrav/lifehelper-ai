@@ -24,13 +24,17 @@ function formatAmount(tx: ParsedTransaction): string {
 export function StatementImportDialog({ cardName, year, month, typeMap = {}, onClose }: Props) {
   const t = useTranslations('budget')
   const fileRef = useRef<HTMLInputElement>(null)
+  const didOpenRef = useRef(false)
 
   const [phase, setPhase] = useState<Phase>('idle')
 
   useEffect(() => {
     const input = fileRef.current
     if (!input) return
-    input.click()
+    if (!didOpenRef.current) {
+      didOpenRef.current = true
+      input.click()
+    }
     function handleCancel() { onClose() }
     input.addEventListener('cancel', handleCancel)
     return () => input.removeEventListener('cancel', handleCancel)
