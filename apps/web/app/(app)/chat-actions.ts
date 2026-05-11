@@ -1,7 +1,7 @@
 'use server'
 import Anthropic from '@anthropic-ai/sdk'
 import { cookies } from 'next/headers'
-import { getSession } from '@lifehelper/core'
+import { getSession, db } from '@lifehelper/core'
 import {
   getItemsForAnalytics,
   computeCategoryTotals,
@@ -9,6 +9,8 @@ import {
   budgetToolSchemas,
   buildBudgetSystemPrompt,
   executeBudgetTool,
+  getCategoryKeywords,
+  buildTypeMap,
 } from '@lifehelper/budget'
 import type { ChatContext } from '@/components/chat/chat-context'
 
@@ -22,6 +24,32 @@ async function getSessionOrThrow() {
   const session = token ? await getSession(token) : null
   if (!session) throw new Error('Unauthorized')
   return session
+}
+
+export async function getChatImportContext(year: number, month: number): Promise<{
+  cards: string[]
+  typeMap: Record<string, string>
+}> {
+  const session = await getSessionOrThrow()
+  const userId = session.user.id
+
+  const [budgetMonth, userKeywordRecords] = await Promise.all([
+    db.budgetMonth.findFirst({
+      where: { userId, year, month },
+      select: {
+        items: {
+          where: { isCard: true, parentId: null },
+          select: { name: true },
+          orderBy: { createdAt: 'asc' },
+        },
+      },
+    }),
+    getCategoryKeywords(userId),
+  ])
+
+  const cards = budgetMonth?.items.map(i => i.name) ?? []
+  const typeMap = buildTypeMap(userKeywordRecords)
+  return { cards, typeMap }
 }
 
 export async function sendChatMessage(

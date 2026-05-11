@@ -102,7 +102,6 @@ model ModuleLink {
 }
 
 
-
 // Fragment — NO datasource or generator blocks.
 
 model BudgetMonth {
