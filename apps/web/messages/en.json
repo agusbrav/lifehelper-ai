@@ -129,7 +129,8 @@
     "typesHint": "Type rules auto-detect subscriptions and recurring expenses when importing card statements.",
     "addTypeRule": "Add rule",
     "date": "Date",
-    "setDate": "Set date"
+    "setDate": "Set date",
+    "dueDateTitle": "Payment due date"
   },
   "analytics": {
     "title": "Budget Analytics",

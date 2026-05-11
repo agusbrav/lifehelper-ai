@@ -129,7 +129,8 @@
     "typesHint": "Las reglas de tipo detectan automáticamente suscripciones y gastos recurrentes al importar resúmenes de tarjeta.",
     "addTypeRule": "Agregar regla",
     "date": "Fecha",
-    "setDate": "Establecer fecha"
+    "setDate": "Establecer fecha",
+    "dueDateTitle": "Fecha de vencimiento"
   },
   "analytics": {
     "title": "Análisis de Presupuesto",

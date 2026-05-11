@@ -25,6 +25,7 @@ type Item = {
   installmentNumber: number | null
   parentId: string | null
   expenseDate: Date | null
+  dueDate: Date | null
   children: Item[]
 }
 
@@ -89,6 +90,9 @@ export function ExpenseRow({ item, depth = 0, monthId, keywordMap, categories, y
   const dateDay = item.expenseDate ? new Date(item.expenseDate).getUTCDate() : null
   const dateLabel = item.expenseDate
     ? `${String(new Date(item.expenseDate).getUTCDate()).padStart(2, '0')}/${String(new Date(item.expenseDate).getUTCMonth() + 1).padStart(2, '0')}`
+    : null
+  const dueDateLabel = item.dueDate
+    ? `${String(new Date(item.dueDate).getUTCDate()).padStart(2, '0')}/${String(new Date(item.dueDate).getUTCMonth() + 1).padStart(2, '0')}`
     : null
 
   function handleDateClick() {
@@ -372,7 +376,9 @@ export function ExpenseRow({ item, depth = 0, monthId, keywordMap, categories, y
         {/* Date */}
         <td className="hidden md:table-cell text-center py-2.5 px-3 w-16">
           {isCard && !isSubItem ? (
-            <span className="text-[var(--muted-fg)] text-xs">-</span>
+            <span className="text-[var(--muted-fg)] text-xs tabular-nums" title={t('dueDateTitle')}>
+              {dueDateLabel ?? '—'}
+            </span>
           ) : editingDate ? (
             <input
               ref={dateInputRef}

@@ -27,6 +27,7 @@ export function StatementImportDialog({ cardName, year, month, typeMap = {}, onC
 
   const [phase, setPhase] = useState<Phase>('idle')
   const [transactions, setTransactions] = useState<ParsedTransaction[]>([])
+  const [dueDate, setDueDate] = useState<string | null>(null)
   const [selected, setSelected] = useState<Set<number>>(new Set())
   const [remainingPayments, setRemainingPayments] = useState<Map<number, number>>(new Map())
   const [typeOverrides, setTypeOverrides] = useState<Map<number, string>>(new Map())
@@ -58,8 +59,9 @@ export function StatementImportDialog({ cardName, year, month, typeMap = {}, onC
     try {
       const fd = new FormData()
       fd.append('pdf', file)
-      const parsed = await parseStatementAction(fd)
+      const { transactions: parsed, dueDate: parsedDueDate } = await parseStatementAction(fd)
       setTransactions(parsed)
+      setDueDate(parsedDueDate)
       setSelected(new Set(parsed.map((_, i) => i)))
       const initRemaining = new Map<number, number>()
       parsed.forEach((tx, i) => {
@@ -104,7 +106,7 @@ export function StatementImportDialog({ cardName, year, month, typeMap = {}, onC
         const isInstallment = tx.installmentCurrent != null && tx.installmentTotal != null
         return [{ ...tx, remainingPayments: remainingPayments.get(i), itemType: isInstallment ? undefined : (typeOverrides.get(i) ?? 'one_time') }]
       })
-      await bulkImportStatementAction(toImport, cardName, year, month)
+      await bulkImportStatementAction(toImport, cardName, year, month, dueDate)
       localStorage.setItem(`budget:import:${cardName}:${year}-${month}`, 'true')
       setPhase('done')
     } catch {

@@ -378,6 +378,14 @@ export async function setExpenseDate(input: { userId: string; itemId: string; ex
   })
 }
 
+export async function setDueDate(input: { userId: string; itemId: string; dueDate: Date | null }) {
+  await assertOwnsItem(input.userId, input.itemId)
+  return db.budgetItem.update({
+    where: { id: input.itemId },
+    data: { dueDate: input.dueDate },
+  })
+}
+
 export async function togglePaid(input: { userId: string; itemId: string }) {
   const item = await assertOwnsItem(input.userId, input.itemId)
   return db.budgetItem.update({

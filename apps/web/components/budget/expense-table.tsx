@@ -20,6 +20,7 @@ type Item = {
   installmentNumber: number | null
   parentId: string | null
   expenseDate: Date | null
+  dueDate: Date | null
   children: Item[]
 }
 

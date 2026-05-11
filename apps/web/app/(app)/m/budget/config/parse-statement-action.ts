@@ -13,6 +13,11 @@ export type ParsedTransaction = {
   date: string | null
 }
 
+export type ParsedStatementResult = {
+  transactions: ParsedTransaction[]
+  dueDate: string | null
+}
+
 const PARSE_PROMPT = `You are parsing an Argentine credit card statement (resumen de tarjeta de credito).
 Extract all purchase/consumption/service transactions from the raw text below.
 
@@ -33,18 +38,23 @@ For installments, look for patterns like "C.10/12" meaning installment 10 of 12.
 
 For dates: look for patterns like "12/03", "12-MAR", "12/03/2026". The statement year is the current year unless explicitly shown otherwise.
 
-Return ONLY a valid JSON array, no markdown fences, no explanation:
-[
-  {
-    "description": "cleaned merchant name (remove reference codes like P1j2R3H3, MXG528XLY, etc.)",
-    "amountARS": <number or null>,
-    "amountUSD": <number or null>,
-    "currency": "ARS" or "USD",
-    "installmentCurrent": <number or null>,
-    "installmentTotal": <number or null>,
-    "date": "YYYY-MM-DD" or null
-  }
-]
+Also extract the card payment due date (vencimiento/fecha de pago/fecha de vencimiento). Look for labels like "Vencimiento:", "Fecha de Vencimiento:", "Fecha de Pago:", "Pagar antes del". Return it in "dueDate" as "YYYY-MM-DD" or null if not found.
+
+Return ONLY a valid JSON object, no markdown fences, no explanation:
+{
+  "dueDate": "YYYY-MM-DD" or null,
+  "transactions": [
+    {
+      "description": "cleaned merchant name (remove reference codes like P1j2R3H3, MXG528XLY, etc.)",
+      "amountARS": <number or null>,
+      "amountUSD": <number or null>,
+      "currency": "ARS" or "USD",
+      "installmentCurrent": <number or null>,
+      "installmentTotal": <number or null>,
+      "date": "YYYY-MM-DD" or null
+    }
+  ]
+}
 
 Statement text:
 `
@@ -57,7 +67,7 @@ async function getAuthedSession() {
   return session
 }
 
-export async function parseStatementAction(formData: FormData): Promise<ParsedTransaction[]> {
+export async function parseStatementAction(formData: FormData): Promise<ParsedStatementResult> {
   await getAuthedSession()
 
   const file = formData.get('pdf') as File | null
@@ -87,6 +97,12 @@ export async function parseStatementAction(formData: FormData): Promise<ParsedTr
   } catch {
     throw new Error(`Could not parse Claude response: ${cleaned.slice(0, 200)}`)
   }
-  if (!Array.isArray(parsed)) throw new Error('Claude response is not a transaction array')
-  return parsed as ParsedTransaction[]
+  if (Array.isArray(parsed)) {
+    return { transactions: parsed as ParsedTransaction[], dueDate: null }
+  }
+  if (typeof parsed === 'object' && parsed !== null && 'transactions' in parsed) {
+    const obj = parsed as { transactions: ParsedTransaction[]; dueDate?: string | null }
+    return { transactions: obj.transactions, dueDate: obj.dueDate ?? null }
+  }
+  throw new Error('Claude response is not a valid statement result')
 }

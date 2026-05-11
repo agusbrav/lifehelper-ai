@@ -1,7 +1,7 @@
 'use server'
 import { cookies } from 'next/headers'
 import { getSession, db } from '@lifehelper/core'
-import { addExpense, addInstallment, getOrCreateMonth, getCategoryKeywords, fetchCategoryHistory, buildKeywordMap, buildTypeMap, matchCategory, matchItemType } from '@lifehelper/budget'
+import { addExpense, addInstallment, getOrCreateMonth, getCategoryKeywords, fetchCategoryHistory, buildKeywordMap, buildTypeMap, matchCategory, matchItemType, setDueDate } from '@lifehelper/budget'
 import { revalidatePath } from 'next/cache'
 import type { ParsedTransaction } from './parse-statement-action'
 
@@ -20,6 +20,7 @@ export async function bulkImportStatementAction(
   cardName: string,
   year: number,
   month: number,
+  dueDate?: string | null,
 ): Promise<{ imported: number }> {
   const session = await getAuthedSession()
   const userId = session.user.id
@@ -91,6 +92,10 @@ export async function bulkImportStatementAction(
       })
     }
     imported++
+  }
+
+  if (dueDate) {
+    await setDueDate({ userId, itemId: card.id, dueDate: new Date(dueDate) })
   }
 
   revalidatePath('/m/budget')

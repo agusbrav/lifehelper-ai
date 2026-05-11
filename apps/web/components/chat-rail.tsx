@@ -16,7 +16,7 @@ const WELCOME_PROMPT =
 type SpinnerKey = 'spinnerAdding' | 'spinnerUpdating' | 'spinnerCreating' | 'spinnerChecking' | 'spinnerThinking' | 'spinnerAnalyzing'
 
 type ImportFlow =
-  | { type: 'statement'; transactions: ParsedTransaction[]; cards: string[]; typeMap: Record<string, string>; hint: string }
+  | { type: 'statement'; transactions: ParsedTransaction[]; dueDate: string | null; cards: string[]; typeMap: Record<string, string>; hint: string }
   | { type: 'receipt'; items: ParsedReceiptItem[]; hint: string }
 
 const SPINNER_PATTERNS: { pattern: RegExp; key: SpinnerKey }[] = [
@@ -150,11 +150,11 @@ export function ChatRail() {
     try {
       const fd = new FormData()
       fd.append('pdf', file)
-      const [transactions, importCtx] = await Promise.all([
+      const [{ transactions, dueDate }, importCtx] = await Promise.all([
         parseStatementAction(fd),
         getChatImportContext(meta.year!, meta.month!),
       ])
-      setImportFlow({ type: 'statement', transactions, cards: importCtx.cards, typeMap: importCtx.typeMap, hint })
+      setImportFlow({ type: 'statement', transactions, dueDate, cards: importCtx.cards, typeMap: importCtx.typeMap, hint })
     } catch {
       setMessages(prev => [...prev, { role: 'assistant', content: t('errorPdfParse') }])
     } finally {
@@ -237,6 +237,7 @@ export function ChatRail() {
               <div ref={importPanelRef}>
                 <ChatImportPanel
                   transactions={importFlow.transactions}
+                  dueDate={importFlow.dueDate}
                   cards={importFlow.cards}
                   typeMap={importFlow.typeMap}
                   year={meta.year!}
