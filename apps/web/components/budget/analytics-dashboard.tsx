@@ -502,7 +502,9 @@ const maxItem = Math.max(...viewItems.map(item => item.total), 1)
                     {usdItems.map(c => {
                       const avg3 = showUsdAvgCols ? (usdAvg3mo.find(a => a.category === c.category)?.avg ?? 0) : 0
                       const avg6 = showUsdAvgCols ? (usdAvg6mo.find(a => a.category === c.category)?.avg ?? 0) : 0
-                      const pct3 = avg3 > 0 ? Math.round(((c.total - avg3) / avg3) * 100) : 0
+                      const hasAvg = avg3 > 0
+                      const pct3 = hasAvg ? Math.round(((c.total - avg3) / avg3) * 100) : 0
+                      const pctOfTotal = usdTotal > 0 ? Math.round((c.total / usdTotal) * 100) : 0
                       return (
                         <tr key={c.category ?? '__null__'} className="border-t border-[var(--border)] hover:bg-[var(--accent-muted)] transition-colors">
                           <td className="py-3 pl-5 font-medium text-[var(--fg)]">
@@ -524,8 +526,8 @@ const maxItem = Math.max(...viewItems.map(item => item.total), 1)
                                 <div className="h-1.5 rounded-full bg-blue-400" style={{ width: `${Math.round((c.total / usdMax) * 100)}%` }} />
                               </div>
                               {showUsdAvgCols && (
-                                <span className={`text-xs font-medium w-10 text-right ${avg3 > 0 ? pctColor(pct3) : 'text-[var(--muted-fg)]'}`}>
-                                  {avg3 > 0 ? `${pct3 > 0 ? '+' : ''}${pct3}%` : '—'}
+                                <span className={`text-xs font-medium w-10 text-right ${hasAvg ? pctColor(pct3) : 'text-[var(--muted-fg)]'}`}>
+                                  {hasAvg ? `${pct3 > 0 ? '+' : ''}${pct3}%` : `${pctOfTotal}%`}
                                 </span>
                               )}
                             </div>
