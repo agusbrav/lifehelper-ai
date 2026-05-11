@@ -3,24 +3,34 @@ import { useState, useEffect, useRef } from 'react'
 import { useRouter } from 'next/navigation'
 import { useTranslations } from 'next-intl'
 import { useChatContext } from '@/components/chat/chat-context'
-import { sendChatMessage, type ChatMessage } from '@/app/(app)/chat-actions'
+import { sendChatMessage, getChatImportContext, type ChatMessage } from '@/app/(app)/chat-actions'
+import { parseStatementAction, type ParsedTransaction } from '@/app/(app)/m/budget/config/parse-statement-action'
+import { parseReceiptAction, type ParsedReceiptItem } from '@/app/(app)/m/budget/config/parse-receipt-action'
+import { ChatImportPanel } from '@/components/budget/chat-import-panel'
+import { ChatReceiptPanel } from '@/components/budget/chat-receipt-panel'
 import Markdown from 'react-markdown'
 
 const WELCOME_PROMPT =
   'Please greet me and share one specific data-driven insight about my spending this month.'
 
-const SPINNER_PATTERNS: { pattern: RegExp; label: string }[] = [
-  { pattern: /\b(add|agregar?|nueva?|nuevo|gasto)\b/i, label: 'Adding…' },
-  { pattern: /\b(update|cambi|modific|set|actuali)\b/i, label: 'Updating…' },
-  { pattern: /\b(create|crear|nuevo mes|nueva? mes)\b/i, label: 'Creating…' },
-  { pattern: /\b(cuánto|cuanto|total|resumen|inflaci|summary|how much)\b/i, label: 'Checking…' },
+type SpinnerKey = 'spinnerAdding' | 'spinnerUpdating' | 'spinnerCreating' | 'spinnerChecking' | 'spinnerThinking' | 'spinnerAnalyzing'
+
+type ImportFlow =
+  | { type: 'statement'; transactions: ParsedTransaction[]; cards: string[]; typeMap: Record<string, string>; hint: string }
+  | { type: 'receipt'; items: ParsedReceiptItem[]; hint: string }
+
+const SPINNER_PATTERNS: { pattern: RegExp; key: SpinnerKey }[] = [
+  { pattern: /\b(add|agregar?|nueva?|nuevo|gasto)\b/i, key: 'spinnerAdding' },
+  { pattern: /\b(update|cambi|modific|set|actuali)\b/i, key: 'spinnerUpdating' },
+  { pattern: /\b(create|crear|nuevo mes|nueva? mes)\b/i, key: 'spinnerCreating' },
+  { pattern: /\b(cuánto|cuanto|total|resumen|inflaci|summary|how much)\b/i, key: 'spinnerChecking' },
 ]
 
-function getSpinnerLabel(text: string): string {
-  for (const { pattern, label } of SPINNER_PATTERNS) {
-    if (pattern.test(text)) return label
+function getSpinnerKey(text: string): SpinnerKey {
+  for (const { pattern, key } of SPINNER_PATTERNS) {
+    if (pattern.test(text)) return key
   }
-  return 'Thinking…'
+  return 'spinnerThinking'
 }
 
 export function ChatRail() {
@@ -31,10 +41,12 @@ export function ChatRail() {
   const [open, setOpen] = useState(false)
   const [messages, setMessages] = useState<ChatMessage[]>([])
   const [input, setInput] = useState('')
-  const [spinnerLabel, setSpinnerLabel] = useState('Thinking…')
+  const [spinnerKey, setSpinnerKey] = useState<SpinnerKey>('spinnerThinking')
   const [loading, setLoading] = useState(false)
   const [attachedFile, setAttachedFile] = useState<File | null>(null)
+  const [importFlow, setImportFlow] = useState<ImportFlow | null>(null)
   const messagesEndRef = useRef<HTMLDivElement>(null)
+  const importPanelRef = useRef<HTMLDivElement>(null)
   const welcomeSentRef = useRef(false)
   const fileInputRef = useRef<HTMLInputElement>(null)
 
@@ -53,6 +65,11 @@ export function ChatRail() {
   useEffect(() => {
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' })
   }, [messages, loading])
+
+  useEffect(() => {
+    if (!importFlow) return
+    importPanelRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' })
+  }, [importFlow])
 
   // Auto-open when entering budget module
   useEffect(() => {
@@ -103,7 +120,7 @@ export function ChatRail() {
     const userMessage: ChatMessage = { role: 'user', content: text }
     const historyForApi = [...messages, userMessage]
     if (!hidden) setMessages(prev => [...prev, userMessage])
-    setSpinnerLabel(hidden ? 'Checking…' : getSpinnerLabel(text))
+    setSpinnerKey(hidden ? 'spinnerChecking' : getSpinnerKey(text))
     setLoading(true)
     try {
       const { message, mutated } = await sendChatMessage(historyForApi, context)
@@ -112,7 +129,7 @@ export function ChatRail() {
     } catch {
       setMessages(prev => [
         ...prev,
-        { role: 'assistant', content: 'Something went wrong. Please try again.' },
+        { role: 'assistant', content: t('errorGeneric') },
       ])
     } finally {
       setLoading(false)
@@ -125,11 +142,57 @@ export function ChatRail() {
     e.target.value = ''
   }
 
+  async function triggerPdfImport(file: File, hint: string) {
+    const userContent = hint ? `${hint}\n📎 ${file.name}` : `📎 ${file.name}`
+    setMessages(prev => [...prev, { role: 'user', content: userContent }])
+    setSpinnerKey('spinnerAnalyzing')
+    setLoading(true)
+    try {
+      const fd = new FormData()
+      fd.append('pdf', file)
+      const [transactions, importCtx] = await Promise.all([
+        parseStatementAction(fd),
+        getChatImportContext(meta.year!, meta.month!),
+      ])
+      setImportFlow({ type: 'statement', transactions, cards: importCtx.cards, typeMap: importCtx.typeMap, hint })
+    } catch {
+      setMessages(prev => [...prev, { role: 'assistant', content: t('errorPdfParse') }])
+    } finally {
+      setLoading(false)
+    }
+  }
+
+  async function triggerImageImport(file: File, hint: string) {
+    const userContent = hint ? `${hint}\n📎 ${file.name}` : `📎 ${file.name}`
+    setMessages(prev => [...prev, { role: 'user', content: userContent }])
+    setSpinnerKey('spinnerAnalyzing')
+    setLoading(true)
+    try {
+      const fd = new FormData()
+      fd.append('image', file)
+      const items = await parseReceiptAction(fd)
+      setImportFlow({ type: 'receipt', items, hint })
+    } catch {
+      setMessages(prev => [...prev, { role: 'assistant', content: t('errorPdfParse') }])
+    } finally {
+      setLoading(false)
+    }
+  }
+
   function handleSend() {
     if ((!input.trim() && !attachedFile) || loading || !isBudget) return
     const text = input.trim()
+    const file = attachedFile
     setInput('')
     setAttachedFile(null)
+    if (file?.type === 'application/pdf' && meta.year && meta.month) {
+      triggerPdfImport(file, text)
+      return
+    }
+    if (file && file.type.startsWith('image/') && meta.year && meta.month) {
+      triggerImageImport(file, text)
+      return
+    }
     send(text)
   }
 
@@ -170,10 +233,49 @@ export function ChatRail() {
                 </div>
               </div>
             ))}
+            {importFlow?.type === 'statement' && (
+              <div ref={importPanelRef}>
+                <ChatImportPanel
+                  transactions={importFlow.transactions}
+                  cards={importFlow.cards}
+                  typeMap={importFlow.typeMap}
+                  year={meta.year!}
+                  month={meta.month!}
+                  hint={importFlow.hint}
+                  onDone={(cardName, imported) => {
+                    setImportFlow(null)
+                    setMessages(prev => [...prev, {
+                      role: 'assistant',
+                      content: t('importSuccess', { count: imported, card: cardName }),
+                    }])
+                    router.refresh()
+                  }}
+                  onCancel={() => setImportFlow(null)}
+                />
+              </div>
+            )}
+            {importFlow?.type === 'receipt' && (
+              <div ref={importPanelRef}>
+                <ChatReceiptPanel
+                  items={importFlow.items}
+                  year={meta.year!}
+                  month={meta.month!}
+                  onDone={added => {
+                    setImportFlow(null)
+                    setMessages(prev => [...prev, {
+                      role: 'assistant',
+                      content: t('receiptImportSuccess', { count: added }),
+                    }])
+                    router.refresh()
+                  }}
+                  onCancel={() => setImportFlow(null)}
+                />
+              </div>
+            )}
             {loading && (
               <div className="text-xs px-3 py-1.5 rounded-xl max-w-[80%] bg-[var(--accent-muted)] text-[var(--muted-fg)] flex items-center gap-2">
                 <span className="inline-block w-3 h-3 border-2 border-[var(--accent)] border-t-transparent rounded-full animate-spin" />
-                {spinnerLabel}
+                {t(spinnerKey)}
               </div>
             )}
             <div ref={messagesEndRef} />
