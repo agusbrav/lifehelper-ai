@@ -162,7 +162,10 @@ export function computeTypeTotals(items: ItemSlim[]): TypeTotal[] {
     let type: TypeTotal['type']
     if (item.parentId !== null) {
       if (!idIsCard.get(item.parentId)) continue
-      type = 'card'
+      if (item.installmentTotal !== null) { type = 'installment' }
+      else if (item.itemType === 'subscription') { type = 'subscription' }
+      else if (item.itemType === 'recurring') { type = 'recurring' }
+      else { type = 'card' }
     } else {
       if (item.isCard) continue
       if (item.installmentTotal !== null) { type = 'installment' }
@@ -187,7 +190,10 @@ export function computeUsdTypeTotals(items: ItemSlim[]): TypeTotal[] {
     let type: TypeTotal['type']
     if (item.parentId !== null) {
       if (!idIsCard.get(item.parentId)) continue
-      type = 'card'
+      if (item.installmentTotal !== null) { type = 'installment' }
+      else if (item.itemType === 'subscription') { type = 'subscription' }
+      else if (item.itemType === 'recurring') { type = 'recurring' }
+      else { type = 'card' }
     } else {
       if (item.isCard) continue
       if (item.installmentTotal !== null) { type = 'installment' }

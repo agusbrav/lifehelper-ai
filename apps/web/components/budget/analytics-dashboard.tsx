@@ -199,14 +199,13 @@ const maxItem = Math.max(...viewItems.map(item => item.total), 1)
                 )
               })}
 
-              {excluded.size > 0 && (
-                <button
-                  onClick={() => setExcluded(new Set())}
-                  className="mt-1 text-xs text-[var(--accent)] hover:opacity-75 text-left"
-                >
-                  {t('resetExclusions')}
-                </button>
-              )}
+              <button
+                onClick={() => setExcluded(new Set())}
+                disabled={excluded.size === 0}
+                className="mt-1 text-xs text-[var(--accent)] hover:opacity-75 text-left disabled:opacity-30 disabled:cursor-default"
+              >
+                {t('resetExclusions')}
+              </button>
             </div>
           </div>
 
