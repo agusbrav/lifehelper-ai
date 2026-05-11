@@ -236,8 +236,12 @@ const maxItem = Math.max(...viewItems.map(item => item.total), 1)
               <tbody>
                 {viewItems.map(item => {
                   const isExcluded = excluded.has(item.key)
-                  const pct3 = (item.avg3 ?? 0) > 0
+                  const hasAvg = (item.avg3 ?? 0) > 0
+                  const pct3 = hasAvg
                     ? Math.round(((item.total - item.avg3!) / item.avg3!) * 100)
+                    : 0
+                  const pctOfTotal = !isExcluded && includedSum > 0
+                    ? Math.round((item.total / includedSum) * 100)
                     : 0
                   return (
                     <ClickableRow
@@ -281,8 +285,8 @@ const maxItem = Math.max(...viewItems.map(item => item.total), 1)
                             />
                           </div>
                           {showAvgCols && (
-                            <span className={`text-xs font-medium w-10 text-right ${(item.avg3 ?? 0) > 0 ? pctColor(pct3) : 'text-[var(--muted-fg)]'}`}>
-                              {(item.avg3 ?? 0) > 0 ? `${pct3 > 0 ? '+' : ''}${pct3}%` : '—'}
+                            <span className={`text-xs font-medium w-10 text-right ${hasAvg ? pctColor(pct3) : 'text-[var(--muted-fg)]'}`}>
+                              {hasAvg ? `${pct3 > 0 ? '+' : ''}${pct3}%` : `${pctOfTotal}%`}
                             </span>
                           )}
                         </div>
