@@ -30,7 +30,7 @@ export function DonutChart({ segments, total, centerLabel, onToggle }: Props) {
   })
 
   return (
-    <svg viewBox="0 0 42 42" className="w-full h-auto" aria-hidden="true">
+    <svg viewBox="0 0 42 42" className="w-full max-w-[200px] h-auto" aria-hidden="true">
       {/* Background ring */}
       <circle
         cx="21" cy="21" r={R}
