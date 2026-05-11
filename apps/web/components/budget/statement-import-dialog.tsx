@@ -109,7 +109,8 @@ export function StatementImportDialog({ cardName, year, month, typeMap = {}, onC
       await bulkImportStatementAction(toImport, cardName, year, month, dueDate)
       localStorage.setItem(`budget:import:${cardName}:${year}-${month}`, 'true')
       setPhase('done')
-    } catch {
+    } catch (err) {
+      console.error('[bulkImport]', err)
       setError(t('importError'))
       setPhase('preview')
     }
@@ -158,6 +159,7 @@ export function StatementImportDialog({ cardName, year, month, typeMap = {}, onC
 
           {(phase === 'preview' || phase === 'importing') && (
             <div className="space-y-3">
+              {error && <p className="text-sm text-rose-400">{error}</p>}
               <div className="flex items-center justify-between">
                 <p className="text-sm font-medium text-[var(--fg)]">{t('importPreviewTitle')}</p>
                 <button onClick={toggleAll} className="text-xs text-[var(--accent)] hover:opacity-80 transition-opacity">
