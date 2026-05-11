@@ -49,11 +49,10 @@ export function ExpenseForm({
 }: Props) {
   const t = useTranslations('budget')
   const types = withInstallment ? [...BASE_TYPES, 'installment' as ItemType] : BASE_TYPES
-  const todayStr = new Date().toISOString().split('T')[0]!
   const [itemType, setItemType] = useState<ItemType>('one_time')
   const [currency, setCurrency] = useState<'ARS' | 'USD'>(defaultCurrency)
   const [category, setCategory] = useState('')
-  const [dateValue, setDateValue] = useState(todayStr)
+  const [dateValue, setDateValue] = useState(() => new Date().toISOString().split('T')[0]!)
   const [calendarOpen, setCalendarOpen] = useState(false)
   const dateButtonRef = useRef<HTMLButtonElement>(null)
   const categoryRef = useRef('')
@@ -176,7 +175,7 @@ export function ExpenseForm({
           className={`${inputCls} w-20 flex-shrink-0`}
         />
       )}
-      <div className="relative flex-shrink-0">
+      <div className="flex-shrink-0">
         <button
           ref={dateButtonRef}
           type="button"
