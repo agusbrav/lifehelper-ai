@@ -2,6 +2,7 @@
 import { useState, useRef, useTransition, useId } from 'react'
 import { useTranslations } from 'next-intl'
 import { addExpenseAction, addInstallmentAction } from '@/app/(app)/m/budget/actions'
+import { CalendarPicker } from '@/components/calendar-picker'
 
 type ItemType = 'one_time' | 'recurring' | 'subscription' | 'installment'
 
@@ -53,6 +54,8 @@ export function ExpenseForm({
   const [currency, setCurrency] = useState<'ARS' | 'USD'>(defaultCurrency)
   const [category, setCategory] = useState('')
   const [dateValue, setDateValue] = useState(todayStr)
+  const [calendarOpen, setCalendarOpen] = useState(false)
+  const dateButtonRef = useRef<HTMLButtonElement>(null)
   const categoryRef = useRef('')
   const wasAutoFilled = useRef(false)
   const [totalPayments, setTotalPayments] = useState('')
@@ -173,13 +176,32 @@ export function ExpenseForm({
           className={`${inputCls} w-20 flex-shrink-0`}
         />
       )}
-      <input
-        name="expenseDate"
-        type="date"
-        value={dateValue}
-        onChange={e => setDateValue(e.target.value)}
-        className={`${inputCls} flex-shrink-0`}
-      />
+      <div className="relative flex-shrink-0">
+        <button
+          ref={dateButtonRef}
+          type="button"
+          onClick={() => setCalendarOpen(o => !o)}
+          className={`${inputCls} tabular-nums`}
+        >
+          {dateValue
+            ? `${dateValue.slice(8, 10)}/${dateValue.slice(5, 7)}`
+            : t('date')}
+        </button>
+        {calendarOpen && (
+          <CalendarPicker
+            anchorEl={dateButtonRef.current}
+            value={dateValue ? new Date(dateValue + 'T00:00:00Z') : null}
+            onChange={date => {
+              const y = date.getUTCFullYear()
+              const m = String(date.getUTCMonth() + 1).padStart(2, '0')
+              const d = String(date.getUTCDate()).padStart(2, '0')
+              setDateValue(`${y}-${m}-${d}`)
+            }}
+            onClose={() => setCalendarOpen(false)}
+          />
+        )}
+      </div>
+      <input type="hidden" name="expenseDate" value={dateValue} />
       <div className={`inline-flex rounded-lg border overflow-hidden text-xs flex-shrink-0 ${
         isPurple ? 'border-purple-500/40' : 'border-[var(--border)]'
       }`}>

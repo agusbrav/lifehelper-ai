@@ -6,6 +6,7 @@ const useIsomorphicLayoutEffect = typeof window !== 'undefined' ? useLayoutEffec
 import { useTranslations, useFormatter } from 'next-intl'
 import type { ResolvedLink } from '@lifehelper/budget'
 import { setAmountAction, setAmountNextMonthAction, deleteItemAction, deleteLinkAction, setItemTypeAction, setCategoryAction, setExpenseDateAction } from '@/app/(app)/m/budget/actions'
+import { CalendarPicker } from '@/components/calendar-picker'
 import { ExpenseForm } from './expense-form'
 import { LinkPicker } from './link-picker'
 import { ConfirmDialog } from '@/components/confirm-dialog'
@@ -83,37 +84,19 @@ export function ExpenseRow({ item, depth = 0, monthId, keywordMap, categories, y
   const [editingCategory, setEditingCategory] = useState(false)
   const [categoryValue, setCategoryValue] = useState(item.category ?? '')
   const categoryInputRef = useRef<HTMLInputElement>(null)
-  const [editingDate, setEditingDate] = useState(false)
-  const [dateValue, setDateValue] = useState('')
-  const dateInputRef = useRef<HTMLInputElement>(null)
+  const [calendarOpen, setCalendarOpen] = useState(false)
+  const dateButtonRef = useRef<HTMLButtonElement>(null)
 
   const dateLabel = item.expenseDate
     ? `${String(new Date(item.expenseDate).getUTCDate()).padStart(2, '0')}/${String(new Date(item.expenseDate).getUTCMonth() + 1).padStart(2, '0')}`
     : null
-  const dateInputStr = item.expenseDate
-    ? `${new Date(item.expenseDate).getUTCFullYear()}-${String(new Date(item.expenseDate).getUTCMonth() + 1).padStart(2, '0')}-${String(new Date(item.expenseDate).getUTCDate()).padStart(2, '0')}`
-    : ''
   const dueDateLabel = item.dueDate
     ? `${String(new Date(item.dueDate).getUTCDate()).padStart(2, '0')}/${String(new Date(item.dueDate).getUTCMonth() + 1).padStart(2, '0')}`
     : null
 
   function handleDateClick() {
     if (isCard && !isSubItem) return
-    setDateValue(dateInputStr)
-    setEditingDate(true)
-    setTimeout(() => dateInputRef.current?.focus(), 0)
-  }
-
-  function handleDateChange(e: React.ChangeEvent<HTMLInputElement>) {
-    const val = e.target.value
-    setDateValue(val)
-    const date = val ? new Date(val + 'T00:00:00Z') : null
-    startTransition(() => setExpenseDateAction(item.id, date))
-    setEditingDate(false)
-  }
-
-  function handleDateKeyDown(e: React.KeyboardEvent) {
-    if (e.key === 'Escape') setEditingDate(false)
+    setCalendarOpen(true)
   }
 
   const isCard = item.isCard
@@ -377,25 +360,26 @@ export function ExpenseRow({ item, depth = 0, monthId, keywordMap, categories, y
             <span className="text-[var(--muted-fg)] text-xs tabular-nums" title={t('dueDateTitle')}>
               {dueDateLabel ?? '—'}
             </span>
-          ) : editingDate ? (
-            <input
-              ref={dateInputRef}
-              type="date"
-              value={dateValue}
-              onChange={handleDateChange}
-              onBlur={() => setEditingDate(false)}
-              onKeyDown={handleDateKeyDown}
-              className="w-full text-center rounded border border-[var(--border)] bg-[var(--bg)] text-[var(--fg)] text-xs px-1 outline-none"
-            />
           ) : (
-            <button
-              onClick={handleDateClick}
-              disabled={isCard && !isSubItem}
-              title={t('setDate')}
-              className="text-xs tabular-nums w-full text-center text-[var(--muted-fg)] hover:text-[var(--fg)] transition-colors disabled:cursor-default"
-            >
-              {dateLabel ?? '—'}
-            </button>
+            <>
+              <button
+                ref={dateButtonRef}
+                onClick={handleDateClick}
+                title={t('setDate')}
+                className="text-xs tabular-nums w-full text-center text-[var(--muted-fg)] hover:text-[var(--fg)] transition-colors"
+              >
+                {dateLabel ?? '—'}
+              </button>
+              {calendarOpen && (
+                <CalendarPicker
+                  anchorEl={dateButtonRef.current}
+                  value={item.expenseDate}
+                  onChange={date => startTransition(() => setExpenseDateAction(item.id, date))}
+                  onClear={() => startTransition(() => setExpenseDateAction(item.id, null))}
+                  onClose={() => setCalendarOpen(false)}
+                />
+              )}
+            </>
           )}
         </td>
 
