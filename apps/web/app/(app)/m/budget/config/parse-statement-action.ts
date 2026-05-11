@@ -10,6 +10,7 @@ export type ParsedTransaction = {
   currency: 'ARS' | 'USD'
   installmentCurrent: number | null
   installmentTotal: number | null
+  date: string | null
 }
 
 const PARSE_PROMPT = `You are parsing an Argentine credit card statement (resumen de tarjeta de credito).
@@ -30,6 +31,8 @@ Argentine number format: "88.000,00" = 88000.00 (dots are thousands separators, 
 
 For installments, look for patterns like "C.10/12" meaning installment 10 of 12.
 
+For dates: look for patterns like "12/03", "12-MAR", "12/03/2026". The statement year is the current year unless explicitly shown otherwise.
+
 Return ONLY a valid JSON array, no markdown fences, no explanation:
 [
   {
@@ -38,7 +41,8 @@ Return ONLY a valid JSON array, no markdown fences, no explanation:
     "amountUSD": <number or null>,
     "currency": "ARS" or "USD",
     "installmentCurrent": <number or null>,
-    "installmentTotal": <number or null>
+    "installmentTotal": <number or null>,
+    "date": "YYYY-MM-DD" or null
   }
 ]
 
