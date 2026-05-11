@@ -48,9 +48,11 @@ export function ExpenseForm({
 }: Props) {
   const t = useTranslations('budget')
   const types = withInstallment ? [...BASE_TYPES, 'installment' as ItemType] : BASE_TYPES
+  const todayStr = new Date().toISOString().split('T')[0]!
   const [itemType, setItemType] = useState<ItemType>('one_time')
   const [currency, setCurrency] = useState<'ARS' | 'USD'>(defaultCurrency)
   const [category, setCategory] = useState('')
+  const [dateValue, setDateValue] = useState(todayStr)
   const categoryRef = useRef('')
   const wasAutoFilled = useRef(false)
   const [totalPayments, setTotalPayments] = useState('')
@@ -94,6 +96,7 @@ export function ExpenseForm({
     categoryRef.current = ''
     wasAutoFilled.current = false
     setTotalPayments('')
+    setDateValue(new Date().toISOString().split('T')[0]!)
   }
 
   function handleSubmit(e: React.FormEvent<HTMLFormElement>) {
@@ -170,6 +173,13 @@ export function ExpenseForm({
           className={`${inputCls} w-20 flex-shrink-0`}
         />
       )}
+      <input
+        name="expenseDate"
+        type="date"
+        value={dateValue}
+        onChange={e => setDateValue(e.target.value)}
+        className={`${inputCls} flex-shrink-0`}
+      />
       <div className={`inline-flex rounded-lg border overflow-hidden text-xs flex-shrink-0 ${
         isPurple ? 'border-purple-500/40' : 'border-[var(--border)]'
       }`}>

@@ -29,7 +29,9 @@ export async function addExpenseAction(formData: FormData) {
   const rawAmount = formData.get('amount') as string
   const amount = rawAmount ? Math.round(parseFloat(rawAmount) * 100) : undefined
   const currency = (formData.get('currency') as string) || 'ARS'
-  await addExpense({ userId, monthId, name, category, recurring, itemType, parentId, amount, currency })
+  const expenseDateStr = formData.get('expenseDate') as string | null
+  const expenseDate = expenseDateStr ? new Date(expenseDateStr + 'T00:00:00Z') : undefined
+  await addExpense({ userId, monthId, name, category, recurring, itemType, parentId, amount, currency, expenseDate })
   revalidatePath('/m/budget')
 }
 
@@ -42,7 +44,9 @@ export async function addInstallmentAction(formData: FormData) {
   const category = (formData.get('category') as string) || undefined
   const parentId = (formData.get('parentId') as string) || undefined
   const currency = (formData.get('currency') as string) || 'ARS'
-  await addInstallment({ userId, monthId, name, amountCents, totalPayments, category, parentId, currency })
+  const expenseDateStr = formData.get('expenseDate') as string | null
+  const expenseDate = expenseDateStr ? new Date(expenseDateStr + 'T00:00:00Z') : undefined
+  await addInstallment({ userId, monthId, name, amountCents, totalPayments, category, parentId, currency, expenseDate })
   revalidatePath('/m/budget')
 }
 

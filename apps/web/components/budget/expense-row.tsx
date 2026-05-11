@@ -87,34 +87,32 @@ export function ExpenseRow({ item, depth = 0, monthId, keywordMap, categories, y
   const [dateValue, setDateValue] = useState('')
   const dateInputRef = useRef<HTMLInputElement>(null)
 
-  const dateDay = item.expenseDate ? new Date(item.expenseDate).getUTCDate() : null
   const dateLabel = item.expenseDate
     ? `${String(new Date(item.expenseDate).getUTCDate()).padStart(2, '0')}/${String(new Date(item.expenseDate).getUTCMonth() + 1).padStart(2, '0')}`
     : null
+  const dateInputStr = item.expenseDate
+    ? `${new Date(item.expenseDate).getUTCFullYear()}-${String(new Date(item.expenseDate).getUTCMonth() + 1).padStart(2, '0')}-${String(new Date(item.expenseDate).getUTCDate()).padStart(2, '0')}`
+    : ''
   const dueDateLabel = item.dueDate
     ? `${String(new Date(item.dueDate).getUTCDate()).padStart(2, '0')}/${String(new Date(item.dueDate).getUTCMonth() + 1).padStart(2, '0')}`
     : null
 
   function handleDateClick() {
     if (isCard && !isSubItem) return
-    setDateValue(dateDay != null ? String(dateDay) : '')
+    setDateValue(dateInputStr)
     setEditingDate(true)
-    setTimeout(() => { dateInputRef.current?.focus(); dateInputRef.current?.select() }, 0)
+    setTimeout(() => dateInputRef.current?.focus(), 0)
   }
 
-  function saveDateEdit() {
-    const val = parseInt(dateValue, 10)
-    if (!isNaN(val) && val >= 1 && val <= 31) {
-      const date = new Date(Date.UTC(year, month - 1, val))
-      startTransition(() => setExpenseDateAction(item.id, date))
-    } else if (dateValue.trim() === '') {
-      startTransition(() => setExpenseDateAction(item.id, null))
-    }
+  function handleDateChange(e: React.ChangeEvent<HTMLInputElement>) {
+    const val = e.target.value
+    setDateValue(val)
+    const date = val ? new Date(val + 'T00:00:00Z') : null
+    startTransition(() => setExpenseDateAction(item.id, date))
     setEditingDate(false)
   }
 
   function handleDateKeyDown(e: React.KeyboardEvent) {
-    if (e.key === 'Enter') saveDateEdit()
     if (e.key === 'Escape') setEditingDate(false)
   }
 
@@ -382,14 +380,12 @@ export function ExpenseRow({ item, depth = 0, monthId, keywordMap, categories, y
           ) : editingDate ? (
             <input
               ref={dateInputRef}
-              type="number"
-              min={1}
-              max={31}
+              type="date"
               value={dateValue}
-              onChange={e => setDateValue(e.target.value)}
-              onBlur={saveDateEdit}
+              onChange={handleDateChange}
+              onBlur={() => setEditingDate(false)}
               onKeyDown={handleDateKeyDown}
-              className="w-8 text-center rounded border border-[var(--border)] bg-[var(--bg)] text-[var(--fg)] text-xs px-1 tabular-nums outline-none"
+              className="w-full text-center rounded border border-[var(--border)] bg-[var(--bg)] text-[var(--fg)] text-xs px-1 outline-none"
             />
           ) : (
             <button
