@@ -11,7 +11,10 @@ const root = join(dirname(fileURLToPath(import.meta.url)), '..')
 const coreSchema = join(root, 'packages/core/prisma/schema.prisma')
 const modulesDir = join(root, 'packages/modules')
 
-const base = readFileSync(coreSchema, 'utf8')
+const rawBase = readFileSync(coreSchema, 'utf8')
+// Strip any previously merged fragments so the script is idempotent.
+const fragmentMarkerIndex = rawBase.indexOf('\n// Fragment')
+const base = fragmentMarkerIndex !== -1 ? rawBase.slice(0, fragmentMarkerIndex).trimEnd() + '\n' : rawBase
 
 const fragments = readdirSync(modulesDir, { withFileTypes: true })
   .filter(d => d.isDirectory() && !d.name.startsWith('_'))
