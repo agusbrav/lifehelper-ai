@@ -9,6 +9,7 @@ import { setAmountAction, setAmountNextMonthAction, deleteItemAction, deleteLink
 import { ExpenseForm } from './expense-form'
 import { LinkPicker } from './link-picker'
 import { ConfirmDialog } from '@/components/confirm-dialog'
+import { StatementImportDialog } from './statement-import-dialog'
 
 type Item = {
   id: string
@@ -38,9 +39,10 @@ type Props = {
   monthContext: 'current' | 'next' | 'past'
   links: ResolvedLink[]
   linksMap?: Record<string, ResolvedLink[]>
+  typeMap?: Record<string, string>
 }
 
-export function ExpenseRow({ item, depth = 0, monthId, keywordMap, categories, year, month, monthContext, links, linksMap }: Props) {
+export function ExpenseRow({ item, depth = 0, monthId, keywordMap, categories, year, month, monthContext, links, linksMap, typeMap = {} }: Props) {
   const t = useTranslations('budget')
   const format = useFormatter()
   const fmtArs = (cents: number) =>
@@ -52,11 +54,15 @@ export function ExpenseRow({ item, depth = 0, monthId, keywordMap, categories, y
   const [editing, setEditing] = useState(false)
   const [collapsed, setCollapsed] = useState(item.isCard)
   const [showImportWarning, setShowImportWarning] = useState(false)
+  const [importDialogOpen, setImportDialogOpen] = useState(false)
+  const [showReimportWarning, setShowReimportWarning] = useState(false)
+  const [statementImported, setStatementImported] = useState(false)
   useIsomorphicLayoutEffect(() => {
     if (!item.isCard) return
     const stored = localStorage.getItem(`budget:card:${item.name}:collapsed`)
     if (stored !== null) setCollapsed(stored === 'true')
-  }, [item.isCard, item.name])
+    setStatementImported(localStorage.getItem(`budget:import:${item.name}:${year}-${month}`) === 'true')
+  }, [item.isCard, item.name, year, month])
 
   function toggleCollapsed() {
     const next = !collapsed
@@ -435,9 +441,27 @@ export function ExpenseRow({ item, depth = 0, monthId, keywordMap, categories, y
           )}
         </td>
 
-        {/* Delete */}
+        {/* Delete / Import */}
         <td className="py-2.5 pr-3 text-center w-8">
-          {!isCard && (
+          {isCard && !isSubItem ? (
+            <button
+              onClick={() => {
+                if (statementImported) {
+                  setShowReimportWarning(true)
+                } else {
+                  setImportDialogOpen(true)
+                }
+              }}
+              title={t('importStatement')}
+              className={`opacity-0 group-hover:opacity-100 transition-all ${statementImported ? 'text-amber-400 hover:text-amber-300' : 'text-[var(--muted-fg)] hover:text-[var(--accent)]'}`}
+            >
+              <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/>
+                <polyline points="17 8 12 3 7 8"/>
+                <line x1="12" y1="3" x2="12" y2="15"/>
+              </svg>
+            </button>
+          ) : !isCard ? (
             <button
               onClick={() => startTransition(() => deleteItemAction(item.id))}
               className="opacity-0 group-hover:opacity-100 text-[var(--muted-fg)] hover:text-rose-400 transition-all text-xs"
@@ -445,7 +469,7 @@ export function ExpenseRow({ item, depth = 0, monthId, keywordMap, categories, y
             >
               ✕
             </button>
-          )}
+          ) : null}
         </td>
       </tr>
 
@@ -570,7 +594,7 @@ export function ExpenseRow({ item, depth = 0, monthId, keywordMap, categories, y
 
       {/* Children rows */}
       {!collapsed && children.map(child => (
-        <ExpenseRow key={child.id} item={child} depth={depth + 1} monthId={monthId} keywordMap={keywordMap} categories={categories} year={year} month={month} monthContext={monthContext} links={linksMap?.[child.id] ?? []} linksMap={linksMap} />
+        <ExpenseRow key={child.id} item={child} depth={depth + 1} monthId={monthId} keywordMap={keywordMap} categories={categories} year={year} month={month} monthContext={monthContext} links={linksMap?.[child.id] ?? []} linksMap={linksMap} typeMap={typeMap} />
       ))}
 
       {showImportWarning && createPortal(
@@ -587,6 +611,34 @@ export function ExpenseRow({ item, depth = 0, monthId, keywordMap, categories, y
           onCancel={() => setShowImportWarning(false)}
         />,
         document.body
+      )}
+
+      {showReimportWarning && createPortal(
+        <ConfirmDialog
+          message={`"${item.name}" ya tiene un resumen importado este mes.`}
+          detail="¿Querés importar otro resumen de todas formas?"
+          confirmLabel="Reimportar"
+          cancelLabel="Cancelar"
+          onConfirm={() => {
+            setShowReimportWarning(false)
+            setImportDialogOpen(true)
+          }}
+          onCancel={() => setShowReimportWarning(false)}
+        />,
+        document.body
+      )}
+
+      {importDialogOpen && (
+        <StatementImportDialog
+          cardName={item.name}
+          year={year}
+          month={month}
+          typeMap={typeMap}
+          onClose={() => {
+            setImportDialogOpen(false)
+            setStatementImported(localStorage.getItem(`budget:import:${item.name}:${year}-${month}`) === 'true')
+          }}
+        />
       )}
     </>
   )

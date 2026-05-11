@@ -2,7 +2,7 @@
 import { useState, useMemo, useRef, useEffect } from 'react'
 import { useTranslations } from 'next-intl'
 import type { ResolvedLink } from '@lifehelper/budget'
-import { matchCategory } from '@lifehelper/budget'
+import { matchCategory, buildTypeMap } from '@lifehelper/budget'
 import { ExpenseRow } from './expense-row'
 import { AddExpenseRow } from './add-expense-row'
 
@@ -55,6 +55,7 @@ function SortArrow({ col, sortCol, sortDir }: { col: SortCol; sortCol: SortCol |
 export function ExpenseTable({ items, monthId, keywordMap, categories, year, month, monthContext, userKeywords, linksMap }: Props) {
   const t = useTranslations('budget')
 
+  const typeMap = buildTypeMap(userKeywords)
   const [sortCol, setSortCol] = useState<SortCol | null>(null)
   const [sortDir, setSortDir] = useState<SortDir>('asc')
   const [filterCats, setFilterCats] = useState<Set<string>>(new Set())
@@ -142,7 +143,7 @@ export function ExpenseTable({ items, monthId, keywordMap, categories, year, mon
 
   const inactiveCls = 'bg-transparent text-[var(--muted-fg)] border-[var(--border)] hover:text-[var(--fg)]'
 
-  const sharedRowProps = { monthId, keywordMap, categories, year, month, monthContext }
+  const sharedRowProps = { monthId, keywordMap, categories, year, month, monthContext, typeMap }
   const totalVisible = (showCards ? cardItems.length : 0) + visibleExpenses.length
 
   return (
@@ -153,7 +154,7 @@ export function ExpenseTable({ items, monthId, keywordMap, categories, year, mon
           <thead>
             <tr className="bg-[var(--muted)]">
               <th className="text-left py-2.5 pl-4 pr-3 text-xs font-medium text-[var(--muted-fg)] uppercase tracking-wide">
-                <button onClick={() => toggleSort('name')} className="flex items-center hover:text-[var(--fg)] transition-colors">
+                <button onClick={() => toggleSort('name')} className="flex items-center hover:text-[var(--fg)] transition-colors uppercase tracking-wide">
                   {t('expense')}
                   <SortArrow col="name" sortCol={sortCol} sortDir={sortDir} />
                 </button>
@@ -162,7 +163,7 @@ export function ExpenseTable({ items, monthId, keywordMap, categories, year, mon
                 <div className="relative flex justify-center" ref={catDropdownRef}>
                   <button
                     onClick={() => setCatDropdownOpen(o => !o)}
-                    className={`flex items-center gap-1 hover:text-[var(--fg)] transition-colors ${filterCats.size > 0 ? 'text-[var(--accent)]' : ''}`}
+                    className={`flex items-center gap-1 hover:text-[var(--fg)] transition-colors uppercase tracking-wide ${filterCats.size > 0 ? 'text-[var(--accent)]' : ''}`}
                   >
                     {t('category')}
                     {filterCats.size > 0 && <span className="text-[10px]">({filterCats.size})</span>}
@@ -230,7 +231,7 @@ export function ExpenseTable({ items, monthId, keywordMap, categories, year, mon
                 {t('date')}
               </th>
               <th className="text-right py-2.5 px-3 text-xs font-medium text-[var(--muted-fg)] uppercase tracking-wide w-28">
-                <button onClick={() => toggleSort('amount')} className="flex items-center justify-end w-full hover:text-[var(--fg)] transition-colors">
+                <button onClick={() => toggleSort('amount')} className="flex items-center justify-end w-full hover:text-[var(--fg)] transition-colors uppercase tracking-wide">
                   {t('amount')}
                   <SortArrow col="amount" sortCol={sortCol} sortDir={sortDir} />
                 </button>
