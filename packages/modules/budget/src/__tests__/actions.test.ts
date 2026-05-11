@@ -37,11 +37,11 @@ vi.mock('@lifehelper/integrations', () => ({
 }))
 
 import { assertOwnsMonth, assertOwnsItem } from '../ownership'
-import { getOrCreateMonth, addExpense, togglePaid, setAmount, fetchCategoryHistory } from '../actions'
+import { getOrCreateMonth, addExpense, togglePaid, setAmount, fetchCategoryHistory, setExpenseDate } from '../actions'
 import { db } from '@lifehelper/core'
 
 const MONTH = { id: 'm1', userId: 'u1', year: 2025, month: 5, compacted: false, compactedSummary: null, createdAt: new Date() }
-const ITEM = { id: 'i1', userId: 'u1', monthId: 'm1', parentId: null, name: 'Rent', category: null, amount: null, amountCarried: false, paid: false, paidAt: null, recurring: true, installmentTotal: null, installmentNumber: null, installmentGroupId: null, notes: null, linkedPocketId: null, createdAt: new Date() }
+const ITEM = { id: 'i1', userId: 'u1', monthId: 'm1', parentId: null, name: 'Rent', category: null, amount: null, amountCarried: false, paid: false, paidAt: null, recurring: true, installmentTotal: null, installmentNumber: null, installmentGroupId: null, notes: null, linkedPocketId: null, expenseDate: null, createdAt: new Date() }
 
 describe('assertOwnsMonth', () => {
   beforeEach(() => vi.clearAllMocks())
@@ -183,5 +183,64 @@ describe('getOrCreateMonth - card sync', () => {
     await getOrCreateMonth('u1', 2025, 5)
 
     expect(db.budgetItem.create).not.toHaveBeenCalled()
+  })
+})
+
+describe('addExpense with expenseDate', () => {
+  beforeEach(() => vi.clearAllMocks())
+
+  it('saves expenseDate when provided', async () => {
+    vi.mocked(db.budgetMonth.findUnique).mockResolvedValue({ ...MONTH, userId: 'u1' } as never)
+    vi.mocked(db.budgetMonth.update).mockResolvedValue(MONTH as never)
+    vi.mocked(db.budgetItem.create).mockResolvedValue({ ...ITEM, expenseDate: new Date('2026-05-15') } as never)
+    vi.mocked(db.card.findMany).mockResolvedValue([])
+
+    const date = new Date('2026-05-15')
+    await addExpense({ userId: 'u1', monthId: 'm1', name: 'Coffee', expenseDate: date })
+
+    expect(db.budgetItem.create).toHaveBeenCalledWith(
+      expect.objectContaining({ data: expect.objectContaining({ expenseDate: date }) })
+    )
+  })
+
+  it('stores null expenseDate when not provided', async () => {
+    vi.mocked(db.budgetMonth.findUnique).mockResolvedValue({ ...MONTH, userId: 'u1' } as never)
+    vi.mocked(db.budgetMonth.update).mockResolvedValue(MONTH as never)
+    vi.mocked(db.budgetItem.create).mockResolvedValue({ ...ITEM } as never)
+    vi.mocked(db.card.findMany).mockResolvedValue([])
+
+    await addExpense({ userId: 'u1', monthId: 'm1', name: 'Coffee' })
+
+    const createCall = vi.mocked(db.budgetItem.create).mock.calls[0]![0]
+    expect(createCall.data).not.toHaveProperty('expenseDate')
+  })
+})
+
+describe('setExpenseDate', () => {
+  beforeEach(() => vi.clearAllMocks())
+
+  it('updates expenseDate on the item', async () => {
+    vi.mocked(db.budgetItem.findUnique).mockResolvedValue({ ...ITEM, userId: 'u1' } as never)
+    vi.mocked(db.budgetItem.update).mockResolvedValue({ ...ITEM, expenseDate: new Date('2026-05-10') } as never)
+
+    const date = new Date('2026-05-10')
+    await setExpenseDate({ userId: 'u1', itemId: 'i1', expenseDate: date })
+
+    expect(db.budgetItem.update).toHaveBeenCalledWith({
+      where: { id: 'i1' },
+      data: { expenseDate: date },
+    })
+  })
+
+  it('clears expenseDate when null is passed', async () => {
+    vi.mocked(db.budgetItem.findUnique).mockResolvedValue({ ...ITEM, userId: 'u1' } as never)
+    vi.mocked(db.budgetItem.update).mockResolvedValue({ ...ITEM, expenseDate: null } as never)
+
+    await setExpenseDate({ userId: 'u1', itemId: 'i1', expenseDate: null })
+
+    expect(db.budgetItem.update).toHaveBeenCalledWith({
+      where: { id: 'i1' },
+      data: { expenseDate: null },
+    })
   })
 })

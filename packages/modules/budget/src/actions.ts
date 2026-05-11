@@ -213,6 +213,7 @@ type AddExpenseInput = {
   recurring?: boolean
   itemType?: string
   parentId?: string
+  expenseDate?: Date
 }
 
 type CarryableItem = {
@@ -316,6 +317,7 @@ export async function addExpense(input: AddExpenseInput) {
       amount: input.amount ?? null,
       recurring,
       itemType,
+      ...(input.expenseDate !== undefined ? { expenseDate: input.expenseDate } : {}),
     },
   })
   if (item.recurring) {
@@ -333,6 +335,7 @@ type AddInstallmentInput = {
   totalPayments: number
   parentId?: string
   currency?: string
+  expenseDate?: Date
 }
 
 export async function addInstallment(input: AddInstallmentInput) {
@@ -352,6 +355,7 @@ export async function addInstallment(input: AddInstallmentInput) {
       installmentNumber: 1,
       installmentGroupId,
       currency: input.currency ?? 'ARS',
+      ...(input.expenseDate !== undefined ? { expenseDate: input.expenseDate } : {}),
     },
   })
   await propagateToNextMonth(input.userId, input.monthId, item)
@@ -363,6 +367,14 @@ export async function setAmount(input: { userId: string; itemId: string; amountC
   return db.budgetItem.update({
     where: { id: input.itemId },
     data: { amount: input.amountCents, amountCarried: false },
+  })
+}
+
+export async function setExpenseDate(input: { userId: string; itemId: string; expenseDate: Date | null }) {
+  await assertOwnsItem(input.userId, input.itemId)
+  return db.budgetItem.update({
+    where: { id: input.itemId },
+    data: { expenseDate: input.expenseDate },
   })
 }
 
