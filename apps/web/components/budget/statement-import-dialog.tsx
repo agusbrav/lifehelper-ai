@@ -1,6 +1,6 @@
 // apps/web/components/budget/statement-import-dialog.tsx
 'use client'
-import { useState, useRef } from 'react'
+import { useState, useRef, useEffect } from 'react'
 import { useTranslations } from 'next-intl'
 import { parseStatementAction, type ParsedTransaction } from '@/app/(app)/m/budget/config/parse-statement-action'
 import { bulkImportStatementAction } from '@/app/(app)/m/budget/config/bulk-import-action'
@@ -26,6 +26,15 @@ export function StatementImportDialog({ cardName, year, month, typeMap = {}, onC
   const fileRef = useRef<HTMLInputElement>(null)
 
   const [phase, setPhase] = useState<Phase>('idle')
+
+  useEffect(() => {
+    const input = fileRef.current
+    if (!input) return
+    input.click()
+    function handleCancel() { onClose() }
+    input.addEventListener('cancel', handleCancel)
+    return () => input.removeEventListener('cancel', handleCancel)
+  }, [onClose])
   const [transactions, setTransactions] = useState<ParsedTransaction[]>([])
   const [dueDate, setDueDate] = useState<string | null>(null)
   const [selected, setSelected] = useState<Set<number>>(new Set())
@@ -129,26 +138,13 @@ export function StatementImportDialog({ cardName, year, month, typeMap = {}, onC
 
         {/* Body */}
         <div className="flex-1 overflow-y-auto px-5 py-4">
-
-          {phase === 'idle' && (
-            <div className="flex flex-col items-center gap-4 py-6">
-              {error && <p className="text-sm text-rose-400">{error}</p>}
-              <input
-                ref={fileRef}
-                type="file"
-                accept="application/pdf"
-                className="hidden"
-                onChange={handleFileChange}
-              />
-              <button
-                onClick={() => fileRef.current?.click()}
-                className="px-5 py-2.5 rounded-xl bg-[var(--accent)] text-[var(--accent-fg)] text-sm font-medium hover:opacity-90 transition-opacity"
-              >
-                {t('importStatement')}
-              </button>
-              <p className="text-xs text-[var(--muted-fg)]">PDF</p>
-            </div>
-          )}
+          <input
+            ref={fileRef}
+            type="file"
+            accept="application/pdf"
+            className="hidden"
+            onChange={handleFileChange}
+          />
 
           {phase === 'parsing' && (
             <div className="py-10 flex flex-col items-center gap-3">
