@@ -86,8 +86,9 @@ export function ExpenseRow({ item, depth = 0, monthId, keywordMap, categories, y
   const [dateValue, setDateValue] = useState('')
   const dateInputRef = useRef<HTMLInputElement>(null)
 
-  const dateDay = item.expenseDate
-    ? new Date(item.expenseDate).getUTCDate()
+  const dateDay = item.expenseDate ? new Date(item.expenseDate).getUTCDate() : null
+  const dateLabel = item.expenseDate
+    ? `${String(new Date(item.expenseDate).getUTCDate()).padStart(2, '0')}/${String(new Date(item.expenseDate).getUTCMonth() + 1).padStart(2, '0')}`
     : null
 
   function handleDateClick() {
@@ -369,7 +370,7 @@ export function ExpenseRow({ item, depth = 0, monthId, keywordMap, categories, y
         </td>
 
         {/* Date */}
-        <td className="hidden md:table-cell text-center py-2.5 px-3 w-10">
+        <td className="hidden md:table-cell text-center py-2.5 px-3 w-16">
           {isCard && !isSubItem ? (
             <span className="text-[var(--muted-fg)] text-xs">-</span>
           ) : editingDate ? (
@@ -391,7 +392,7 @@ export function ExpenseRow({ item, depth = 0, monthId, keywordMap, categories, y
               title={t('setDate')}
               className="text-xs tabular-nums w-full text-center text-[var(--muted-fg)] hover:text-[var(--fg)] transition-colors disabled:cursor-default"
             >
-              {dateDay ?? '-'}
+              {dateLabel ?? '—'}
             </button>
           )}
         </td>

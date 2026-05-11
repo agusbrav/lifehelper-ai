@@ -227,7 +227,7 @@ export function ExpenseTable({ items, monthId, keywordMap, categories, year, mon
                   )}
                 </div>
               </th>
-              <th className="hidden md:table-cell text-center py-2.5 px-3 text-xs font-medium text-[var(--muted-fg)] uppercase tracking-wide w-10">
+              <th className="hidden md:table-cell text-center py-2.5 px-3 text-xs font-medium text-[var(--muted-fg)] uppercase tracking-wide w-16">
                 {t('date')}
               </th>
               <th className="text-right py-2.5 px-3 text-xs font-medium text-[var(--muted-fg)] uppercase tracking-wide w-28">

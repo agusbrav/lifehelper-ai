@@ -90,7 +90,7 @@ export function ChatReceiptPanel({ items, year, month, onDone, onCancel }: Props
             />
             {item.date && (
               <span className="text-[var(--muted-fg)] flex-shrink-0 tabular-nums">
-                {new Date(item.date).getUTCDate()}
+                {`${String(new Date(item.date).getUTCDate()).padStart(2, '0')}/${String(new Date(item.date).getUTCMonth() + 1).padStart(2, '0')}`}
               </span>
             )}
             {item.category && (
