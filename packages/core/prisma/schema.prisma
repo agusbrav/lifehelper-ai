@@ -102,7 +102,6 @@ model ModuleLink {
 }
 
 
-
 // Fragment — NO datasource or generator blocks.
 
 model BudgetMonth {
@@ -140,6 +139,7 @@ model BudgetItem {
   installmentGroupId String?
   notes              String?
   linkedPocketId     String?
+  expenseDate        DateTime?
   createdAt          DateTime     @default(now())
   month              BudgetMonth  @relation(fields: [monthId], references: [id], onDelete: Cascade)
   parent             BudgetItem?  @relation("SubItems", fields: [parentId], references: [id])
