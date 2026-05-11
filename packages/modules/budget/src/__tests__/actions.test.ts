@@ -212,7 +212,7 @@ describe('addExpense with expenseDate', () => {
     await addExpense({ userId: 'u1', monthId: 'm1', name: 'Coffee' })
 
     const createCall = vi.mocked(db.budgetItem.create).mock.calls[0]![0]
-    expect(createCall.data).not.toHaveProperty('expenseDate')
+    expect(createCall.data).toHaveProperty('expenseDate', null)
   })
 })
 

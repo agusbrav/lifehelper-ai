@@ -317,7 +317,7 @@ export async function addExpense(input: AddExpenseInput) {
       amount: input.amount ?? null,
       recurring,
       itemType,
-      ...(input.expenseDate !== undefined ? { expenseDate: input.expenseDate } : {}),
+      expenseDate: input.expenseDate ?? null,
     },
   })
   if (item.recurring) {
@@ -355,7 +355,7 @@ export async function addInstallment(input: AddInstallmentInput) {
       installmentNumber: 1,
       installmentGroupId,
       currency: input.currency ?? 'ARS',
-      ...(input.expenseDate !== undefined ? { expenseDate: input.expenseDate } : {}),
+      expenseDate: input.expenseDate ?? null,
     },
   })
   await propagateToNextMonth(input.userId, input.monthId, item)
