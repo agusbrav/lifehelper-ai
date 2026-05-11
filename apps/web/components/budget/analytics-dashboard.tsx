@@ -280,9 +280,9 @@ const maxItem = Math.max(...viewItems.map(item => item.total), 1)
                               }}
                             />
                           </div>
-                          {showAvgCols && (item.avg3 ?? 0) > 0 && (
-                            <span className={`text-xs font-medium w-10 text-right ${pctColor(pct3)}`}>
-                              {pct3 > 0 ? '+' : ''}{pct3}%
+                          {showAvgCols && (
+                            <span className={`text-xs font-medium w-10 text-right ${(item.avg3 ?? 0) > 0 ? pctColor(pct3) : 'text-[var(--muted-fg)]'}`}>
+                              {(item.avg3 ?? 0) > 0 ? `${pct3 > 0 ? '+' : ''}${pct3}%` : '—'}
                             </span>
                           )}
                         </div>
@@ -519,9 +519,9 @@ const maxItem = Math.max(...viewItems.map(item => item.total), 1)
                               <div className="flex-1 bg-[var(--muted)] rounded-full h-1.5">
                                 <div className="h-1.5 rounded-full bg-blue-400" style={{ width: `${Math.round((c.total / usdMax) * 100)}%` }} />
                               </div>
-                              {showUsdAvgCols && avg3 > 0 && (
-                                <span className={`text-xs font-medium w-10 text-right ${pctColor(pct3)}`}>
-                                  {pct3 > 0 ? '+' : ''}{pct3}%
+                              {showUsdAvgCols && (
+                                <span className={`text-xs font-medium w-10 text-right ${avg3 > 0 ? pctColor(pct3) : 'text-[var(--muted-fg)]'}`}>
+                                  {avg3 > 0 ? `${pct3 > 0 ? '+' : ''}${pct3}%` : '—'}
                                 </span>
                               )}
                             </div>
