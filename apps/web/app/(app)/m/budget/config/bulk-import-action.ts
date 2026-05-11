@@ -63,6 +63,7 @@ export async function bulkImportStatementAction(
       ? Math.round((tx.amountARS ?? 0) * 100)
       : Math.round((tx.amountUSD ?? 0) * 100)
     const category = matchCategory(tx.description, keywordMap) ?? undefined
+    const expenseDate = tx.date ? new Date(tx.date) : undefined
 
     if (tx.remainingPayments && tx.remainingPayments > 1) {
       await addInstallment({
@@ -74,6 +75,7 @@ export async function bulkImportStatementAction(
         totalPayments: tx.remainingPayments,
         currency: tx.currency,
         category,
+        expenseDate,
       })
     } else {
       await addExpense({
@@ -85,6 +87,7 @@ export async function bulkImportStatementAction(
         currency: tx.currency,
         itemType: tx.itemType ?? matchItemType(tx.description, typeMapFromKeywords) ?? 'one_time',
         category,
+        expenseDate,
       })
     }
     imported++
