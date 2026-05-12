@@ -51,7 +51,7 @@ export default function LoginPage() {
           <input
             id="email"
             name="email"
-            type="email"
+            type="text"
             required
             className="w-full rounded-xl border border-[var(--border)] bg-[var(--muted)] text-[var(--fg)] px-3.5 py-2.5 text-sm outline-none focus:ring-2 focus:ring-[var(--accent)] placeholder:text-[var(--muted-fg)] transition-shadow"
           />
