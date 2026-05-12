@@ -19,34 +19,39 @@ export async function POST(req: NextRequest) {
   // Dev-only shortcut: admin/admin maps to DEV_ADMIN_EMAIL account
   const devEmail = process.env.DEV_ADMIN_EMAIL
   if (devEmail && email === 'admin' && password === 'admin') {
+    console.log('[login] dev bypass: looking up', devEmail)
     const devUser = await db.user.findUnique({ where: { email: devEmail } })
     if (devUser) {
       const token = await createSession(devUser.id)
+      console.log('[login] dev session created, token prefix:', token.slice(0, 8))
       const response = NextResponse.json({ ok: true })
       response.cookies.set('session', token, {
         httpOnly: true,
         secure: process.env.NODE_ENV === 'production',
-        sameSite: 'strict',
+        sameSite: 'lax',
         maxAge: 60 * 60 * 24 * 7,
         path: '/',
       })
       return response
     }
+    console.log('[login] dev bypass: user not found for', devEmail)
   }
 
   const user = await db.user.findUnique({ where: { email } })
   const passwordMatch = await verifyPassword(password, user?.hashedPassword ?? DUMMY_HASH)
   if (!user || !passwordMatch) {
+    console.log('[login] invalid credentials for', email)
     return NextResponse.json({ error: 'Invalid credentials' }, { status: 401 })
   }
 
   const token = await createSession(user.id)
+  console.log('[login] session created for', email)
 
   const response = NextResponse.json({ ok: true })
   response.cookies.set('session', token, {
     httpOnly: true,
     secure: process.env.NODE_ENV === 'production',
-    sameSite: 'strict',
+    sameSite: 'lax',
     maxAge: 60 * 60 * 24 * 7,
     path: '/',
   })
