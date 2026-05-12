@@ -202,7 +202,7 @@ export function ExpenseRow({ item, depth = 0, monthId, keywordMap, categories, y
     <>
       <tr className={`border-t border-[var(--border)] group transition-colors duration-200 ease-out hover:bg-[var(--accent-muted)]/70 ${isSubItem ? 'bg-[var(--muted)]' : ''}`}>
         {/* Name */}
-        <td className={`py-2.5 ${depth === 0 ? 'pl-4' : 'pl-10'} pr-3`}>
+        <td className={`py-2.5 ${depth === 0 ? 'pl-3 md:pl-4' : 'pl-8 md:pl-10'} pr-2 md:pr-3`}>
           <div className="flex items-center gap-2 min-w-0">
             <span className={`w-2 h-2 rounded-full flex-shrink-0 ${dotColor}`} />
 
@@ -246,7 +246,7 @@ export function ExpenseRow({ item, depth = 0, monthId, keywordMap, categories, y
               </button>
             )}
             {itemCurrency === 'USD' && (
-              <span className="text-xs px-1.5 py-0.5 rounded-full bg-blue-500/15 text-blue-400 font-medium flex-shrink-0">
+              <span className="hidden md:inline text-xs px-1.5 py-0.5 rounded-full bg-blue-500/15 text-blue-400 font-medium flex-shrink-0">
                 {t('usdBadge')}
               </span>
             )}
@@ -384,7 +384,7 @@ export function ExpenseRow({ item, depth = 0, monthId, keywordMap, categories, y
         </td>
 
         {/* Amount */}
-        <td className="py-2.5 px-3 text-right text-sm w-28">
+        <td className="py-2.5 px-2 md:px-3 text-right text-sm w-24 md:w-28">
           {editing ? (
             <input
               ref={inputRef}
@@ -429,7 +429,7 @@ export function ExpenseRow({ item, depth = 0, monthId, keywordMap, categories, y
         </td>
 
         {/* Delete / Import */}
-        <td className="py-2.5 pr-3 text-center w-8">
+        <td className="py-2.5 pr-2 md:pr-3 text-center w-8">
           {isCard && !isSubItem ? (
             <button
               onClick={() => {

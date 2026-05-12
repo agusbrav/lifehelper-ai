@@ -23,16 +23,19 @@ export default async function AppLayout({ children }: { children: React.ReactNod
   }))
 
   return (
-    <div className="flex h-screen bg-[var(--bg)] text-[var(--fg)] overflow-hidden">
-      <Sidebar pockets={pockets} userName={session.user.name ?? session.user.email} />
-      <div className="flex flex-col flex-1 min-w-0">
-        <ChatContextProvider>
-          <main className="flex-1 overflow-y-auto">
+    <ChatContextProvider>
+      <div className="flex h-screen bg-[var(--bg)] text-[var(--fg)] overflow-hidden">
+        <Sidebar pockets={pockets} userName={session.user.name ?? session.user.email} />
+        <div className="flex flex-col flex-1 min-w-0">
+          <main className="flex-1 overflow-y-auto pb-16 md:pb-0">
             {children}
           </main>
-          <ChatRail />
-        </ChatContextProvider>
+          <div className="hidden md:block">
+            <ChatRail />
+          </div>
+        </div>
       </div>
-    </div>
+      <ChatRail mobile />
+    </ChatContextProvider>
   )
 }

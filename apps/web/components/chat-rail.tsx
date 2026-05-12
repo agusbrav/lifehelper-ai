@@ -1,5 +1,6 @@
 'use client'
 import { useState, useEffect, useRef } from 'react'
+import { createPortal } from 'react-dom'
 import { useRouter } from 'next/navigation'
 import { useTranslations } from 'next-intl'
 import { useChatContext } from '@/components/chat/chat-context'
@@ -33,8 +34,8 @@ function getSpinnerKey(text: string): SpinnerKey {
   return 'spinnerThinking'
 }
 
-export function ChatRail() {
-  const { context } = useChatContext()
+export function ChatRail({ mobile = false }: { mobile?: boolean }) {
+  const { context, mobileChatOpen, setMobileChatOpen } = useChatContext()
   const router = useRouter()
   const t = useTranslations('chat')
 
@@ -196,6 +197,158 @@ export function ChatRail() {
     send(text)
   }
 
+  const messagesArea = (
+    <div className="flex-1 overflow-y-auto px-4 py-2 flex flex-col gap-2">
+      {messages.map((m, i) => (
+        <div
+          key={i}
+          className={`text-xs px-3 py-1.5 rounded-xl max-w-[80%] ${
+            m.role === 'user'
+              ? 'ml-auto bg-[var(--accent)] text-[var(--accent-fg)]'
+              : 'bg-[var(--accent-muted)] text-[var(--fg)]'
+          }`}
+        >
+          <div className="prose prose-xs max-w-none [&_p]:mb-1 [&_p:last-child]:mb-0 [&_strong]:font-semibold [&_ul]:list-disc [&_ul]:pl-4 [&_ol]:list-decimal [&_ol]:pl-4">
+            <Markdown>{m.content}</Markdown>
+          </div>
+        </div>
+      ))}
+      {importFlow?.type === 'statement' && (
+        <div ref={importPanelRef}>
+          <ChatImportPanel
+            transactions={importFlow.transactions}
+            dueDate={importFlow.dueDate}
+            cards={importFlow.cards}
+            typeMap={importFlow.typeMap}
+            year={meta.year!}
+            month={meta.month!}
+            hint={importFlow.hint}
+            onDone={(cardName, imported) => {
+              setImportFlow(null)
+              setMessages(prev => [...prev, {
+                role: 'assistant',
+                content: t('importSuccess', { count: imported, card: cardName }),
+              }])
+              router.refresh()
+            }}
+            onCancel={() => setImportFlow(null)}
+          />
+        </div>
+      )}
+      {importFlow?.type === 'receipt' && (
+        <div ref={importPanelRef}>
+          <ChatReceiptPanel
+            items={importFlow.items}
+            year={meta.year!}
+            month={meta.month!}
+            onDone={added => {
+              setImportFlow(null)
+              setMessages(prev => [...prev, {
+                role: 'assistant',
+                content: t('receiptImportSuccess', { count: added }),
+              }])
+              router.refresh()
+            }}
+            onCancel={() => setImportFlow(null)}
+          />
+        </div>
+      )}
+      {loading && (
+        <div className="text-xs px-3 py-1.5 rounded-xl max-w-[80%] bg-[var(--accent-muted)] text-[var(--muted-fg)] flex items-center gap-2">
+          <span className="inline-block w-3 h-3 border-2 border-[var(--accent)] border-t-transparent rounded-full animate-spin" />
+          {t(spinnerKey)}
+        </div>
+      )}
+      <div ref={messagesEndRef} />
+    </div>
+  )
+
+  const inputArea = (
+    <div className="border-t border-[var(--border)]">
+      <input
+        ref={fileInputRef}
+        type="file"
+        accept="image/*,.pdf"
+        onChange={handleFileChange}
+        className="sr-only"
+      />
+      {attachedFile && (
+        <div className="flex items-center gap-1.5 px-3 pt-2">
+          <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="text-[var(--muted-fg)] flex-shrink-0">
+            <path d="M21.44 11.05l-9.19 9.19a6 6 0 0 1-8.49-8.49l9.19-9.19a4 4 0 0 1 5.66 5.66l-9.2 9.19a2 2 0 0 1-2.83-2.83l8.49-8.48"/>
+          </svg>
+          <span className="text-xs text-[var(--muted-fg)] truncate flex-1 max-w-[200px]">{attachedFile.name}</span>
+          <button
+            onClick={() => setAttachedFile(null)}
+            className="text-[var(--muted-fg)] hover:text-rose-400 transition-colors text-xs leading-none flex-shrink-0"
+          >
+            ✕
+          </button>
+        </div>
+      )}
+      <div className="flex items-center gap-2 px-3 py-2">
+        <button
+          onClick={() => fileInputRef.current?.click()}
+          disabled={loading}
+          aria-label={t('attachLabel')}
+          className="text-[var(--muted-fg)] hover:text-[var(--fg)] disabled:opacity-30 transition-colors flex-shrink-0"
+        >
+          <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+            <path d="M21.44 11.05l-9.19 9.19a6 6 0 0 1-8.49-8.49l9.19-9.19a4 4 0 0 1 5.66 5.66l-9.2 9.19a2 2 0 0 1-2.83-2.83l8.49-8.48"/>
+          </svg>
+        </button>
+        <input
+          type="text"
+          aria-label={t('inputLabel')}
+          value={input}
+          onChange={e => setInput(e.target.value)}
+          onKeyDown={e => e.key === 'Enter' && handleSend()}
+          placeholder={isBudget ? t('placeholder') : t('dashboardHint')}
+          disabled={!isBudget || loading}
+          className="flex-1 text-sm bg-transparent outline-none text-[var(--fg)] placeholder:text-[var(--muted-fg)] disabled:opacity-50"
+        />
+        <button
+          onClick={handleSend}
+          disabled={(!input.trim() && !attachedFile) || !isBudget || loading}
+          aria-label={t('sendLabel')}
+          className="text-[var(--accent)] hover:opacity-80 disabled:opacity-30 transition-opacity"
+        >
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+            <line x1="22" y1="2" x2="11" y2="13"/>
+            <polygon points="22 2 15 22 11 13 2 9 22 2"/>
+          </svg>
+        </button>
+      </div>
+    </div>
+  )
+
+  // Mobile: full-screen overlay via portal
+  if (mobile) {
+    if (!mobileChatOpen) return null
+    return createPortal(
+      <div className="fixed inset-0 z-50 flex flex-col bg-[var(--card-bg)]">
+        <div className="flex items-center justify-between px-4 py-3 border-b border-[var(--border)] shrink-0">
+          <span className="text-sm font-semibold text-[var(--fg)]">
+            {monthLabel ? `Assistant · ${monthLabel}` : 'Assistant'}
+          </span>
+          <button
+            onClick={() => setMobileChatOpen(false)}
+            className="text-[var(--muted-fg)] hover:text-[var(--fg)] transition-colors"
+            aria-label={t('collapseChat')}
+          >
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+              <line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/>
+            </svg>
+          </button>
+        </div>
+        {messagesArea}
+        {inputArea}
+      </div>,
+      document.body,
+    )
+  }
+
+  // Desktop: collapsible bottom bar
   return (
     <div className="border-t border-[var(--border)] bg-[var(--card-bg)]">
       <button
@@ -217,127 +370,8 @@ export function ChatRail() {
               </span>
             </div>
           )}
-
-          <div className="flex-1 overflow-y-auto px-4 py-2 flex flex-col gap-2">
-            {messages.map((m, i) => (
-              <div
-                key={i}
-                className={`text-xs px-3 py-1.5 rounded-xl max-w-[80%] ${
-                  m.role === 'user'
-                    ? 'ml-auto bg-[var(--accent)] text-[var(--accent-fg)]'
-                    : 'bg-[var(--accent-muted)] text-[var(--fg)]'
-                }`}
-              >
-                <div className="prose prose-xs max-w-none [&_p]:mb-1 [&_p:last-child]:mb-0 [&_strong]:font-semibold [&_ul]:list-disc [&_ul]:pl-4 [&_ol]:list-decimal [&_ol]:pl-4">
-                  <Markdown>{m.content}</Markdown>
-                </div>
-              </div>
-            ))}
-            {importFlow?.type === 'statement' && (
-              <div ref={importPanelRef}>
-                <ChatImportPanel
-                  transactions={importFlow.transactions}
-                  dueDate={importFlow.dueDate}
-                  cards={importFlow.cards}
-                  typeMap={importFlow.typeMap}
-                  year={meta.year!}
-                  month={meta.month!}
-                  hint={importFlow.hint}
-                  onDone={(cardName, imported) => {
-                    setImportFlow(null)
-                    setMessages(prev => [...prev, {
-                      role: 'assistant',
-                      content: t('importSuccess', { count: imported, card: cardName }),
-                    }])
-                    router.refresh()
-                  }}
-                  onCancel={() => setImportFlow(null)}
-                />
-              </div>
-            )}
-            {importFlow?.type === 'receipt' && (
-              <div ref={importPanelRef}>
-                <ChatReceiptPanel
-                  items={importFlow.items}
-                  year={meta.year!}
-                  month={meta.month!}
-                  onDone={added => {
-                    setImportFlow(null)
-                    setMessages(prev => [...prev, {
-                      role: 'assistant',
-                      content: t('receiptImportSuccess', { count: added }),
-                    }])
-                    router.refresh()
-                  }}
-                  onCancel={() => setImportFlow(null)}
-                />
-              </div>
-            )}
-            {loading && (
-              <div className="text-xs px-3 py-1.5 rounded-xl max-w-[80%] bg-[var(--accent-muted)] text-[var(--muted-fg)] flex items-center gap-2">
-                <span className="inline-block w-3 h-3 border-2 border-[var(--accent)] border-t-transparent rounded-full animate-spin" />
-                {t(spinnerKey)}
-              </div>
-            )}
-            <div ref={messagesEndRef} />
-          </div>
-
-          <div className="border-t border-[var(--border)]">
-            <input
-              ref={fileInputRef}
-              type="file"
-              accept="image/*,.pdf"
-              onChange={handleFileChange}
-              className="sr-only"
-            />
-            {attachedFile && (
-              <div className="flex items-center gap-1.5 px-3 pt-2">
-                <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="text-[var(--muted-fg)] flex-shrink-0">
-                  <path d="M21.44 11.05l-9.19 9.19a6 6 0 0 1-8.49-8.49l9.19-9.19a4 4 0 0 1 5.66 5.66l-9.2 9.19a2 2 0 0 1-2.83-2.83l8.49-8.48"/>
-                </svg>
-                <span className="text-xs text-[var(--muted-fg)] truncate flex-1 max-w-[200px]">{attachedFile.name}</span>
-                <button
-                  onClick={() => setAttachedFile(null)}
-                  className="text-[var(--muted-fg)] hover:text-rose-400 transition-colors text-xs leading-none flex-shrink-0"
-                >
-                  ✕
-                </button>
-              </div>
-            )}
-            <div className="flex items-center gap-2 px-3 py-2">
-              <button
-                onClick={() => fileInputRef.current?.click()}
-                disabled={loading}
-                aria-label={t('attachLabel')}
-                className="text-[var(--muted-fg)] hover:text-[var(--fg)] disabled:opacity-30 transition-colors flex-shrink-0"
-              >
-                <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                  <path d="M21.44 11.05l-9.19 9.19a6 6 0 0 1-8.49-8.49l9.19-9.19a4 4 0 0 1 5.66 5.66l-9.2 9.19a2 2 0 0 1-2.83-2.83l8.49-8.48"/>
-                </svg>
-              </button>
-              <input
-                type="text"
-                aria-label={t('inputLabel')}
-                value={input}
-                onChange={e => setInput(e.target.value)}
-                onKeyDown={e => e.key === 'Enter' && handleSend()}
-                placeholder={isBudget ? t('placeholder') : t('dashboardHint')}
-                disabled={!isBudget || loading}
-                className="flex-1 text-sm bg-transparent outline-none text-[var(--fg)] placeholder:text-[var(--muted-fg)] disabled:opacity-50"
-              />
-              <button
-                onClick={handleSend}
-                disabled={(!input.trim() && !attachedFile) || !isBudget || loading}
-                aria-label={t('sendLabel')}
-                className="text-[var(--accent)] hover:opacity-80 disabled:opacity-30 transition-opacity"
-              >
-                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                  <line x1="22" y1="2" x2="11" y2="13"/>
-                  <polygon points="22 2 15 22 11 13 2 9 22 2"/>
-                </svg>
-              </button>
-            </div>
-          </div>
+          {messagesArea}
+          {inputArea}
         </div>
       )}
     </div>

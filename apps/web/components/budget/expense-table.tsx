@@ -150,7 +150,7 @@ export function ExpenseTable({ items, monthId, keywordMap, categories, year, mon
   return (
     <div className="rounded-2xl border border-[var(--border)] bg-[var(--card-bg)] overflow-hidden">
 
-      <div className="overflow-x-auto">
+      <div>
         <table className="w-full border-collapse text-sm">
           <thead>
             <tr className="bg-[var(--muted)]">
@@ -231,13 +231,13 @@ export function ExpenseTable({ items, monthId, keywordMap, categories, year, mon
               <th className="hidden md:table-cell text-center py-2.5 px-3 text-xs font-medium text-[var(--muted-fg)] uppercase tracking-wide w-16">
                 {t('date')}
               </th>
-              <th className="text-right py-2.5 px-3 text-xs font-medium text-[var(--muted-fg)] uppercase tracking-wide w-28">
+              <th className="text-right py-2.5 px-2 md:px-3 text-xs font-medium text-[var(--muted-fg)] uppercase tracking-wide w-24 md:w-28">
                 <button onClick={() => toggleSort('amount')} className="flex items-center justify-end w-full hover:text-[var(--fg)] transition-colors uppercase tracking-wide">
                   {t('amount')}
                   <SortArrow col="amount" sortCol={sortCol} sortDir={sortDir} />
                 </button>
               </th>
-              <th className="py-2.5 pr-3 w-10" />
+              <th className="py-2.5 pr-2 md:pr-3 w-8" />
             </tr>
           </thead>
           <tbody>
