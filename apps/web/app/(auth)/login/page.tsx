@@ -1,43 +1,28 @@
 'use client'
-import { useState, useEffect } from 'react'
-import { useRouter } from 'next/navigation'
+import { useActionState } from 'react'
+import { useFormStatus } from 'react-dom'
 import { useTranslations } from 'next-intl'
 import Link from 'next/link'
 import { PasswordInput } from '@/components/password-input'
+import { loginAction } from './actions'
+
+function SubmitButton() {
+  const t = useTranslations('auth')
+  const { pending } = useFormStatus()
+  return (
+    <button
+      type="submit"
+      disabled={pending}
+      className="w-full rounded-xl bg-[var(--accent)] text-[var(--accent-fg)] py-2.5 text-sm font-semibold hover:opacity-90 disabled:opacity-50 transition-opacity mt-1"
+    >
+      {pending ? t('signingIn') : t('signIn')}
+    </button>
+  )
+}
 
 export default function LoginPage() {
-  const router = useRouter()
   const t = useTranslations('auth')
-  const [error, setError] = useState('')
-  const [loading, setLoading] = useState(false)
-  const [mounted, setMounted] = useState(false)
-  useEffect(() => setMounted(true), [])
-
-  async function handleSubmit(e: React.FormEvent<HTMLFormElement>) {
-    e.preventDefault()
-    setError('')
-    setLoading(true)
-    const form = e.currentTarget
-    const formEntries = new FormData(form)
-    const email = formEntries.get('email') as string
-    const password = formEntries.get('password') as string
-    try {
-      const res = await fetch('/api/auth/login', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ email, password }),
-      })
-      if (res.ok) {
-        window.location.href = '/dashboard'
-        return
-      }
-      const body = await res.json() as { error?: string }
-      setError(body.error ?? 'Login failed')
-    } catch {
-      setError('Network error — check your connection')
-    }
-    setLoading(false)
-  }
+  const [state, action] = useActionState(loginAction, null)
 
   return (
     <div>
@@ -49,7 +34,7 @@ export default function LoginPage() {
         <p className="text-sm text-[var(--muted-fg)] mt-1">{t('loginSubtitle')}</p>
       </div>
 
-      <form onSubmit={handleSubmit} className="flex flex-col gap-4">
+      <form action={action} className="flex flex-col gap-4">
         <div>
           <label className="block text-sm font-medium mb-1.5 text-[var(--fg)]" htmlFor="email">
             {t('email')}
@@ -68,18 +53,12 @@ export default function LoginPage() {
           </label>
           <PasswordInput id="password" name="password" required />
         </div>
-        {error && (
+        {state?.error && (
           <p className="text-sm text-[var(--error-fg)] bg-[var(--error-bg)] border border-[var(--error-fg)] border-opacity-20 rounded-lg px-3 py-2">
-            {error}
+            {state.error}
           </p>
         )}
-        <button
-          type="submit"
-          disabled={!mounted || loading}
-          className="w-full rounded-xl bg-[var(--accent)] text-[var(--accent-fg)] py-2.5 text-sm font-semibold hover:opacity-90 disabled:opacity-50 transition-opacity mt-1"
-        >
-          {loading ? t('signingIn') : t('signIn')}
-        </button>
+        <SubmitButton />
       </form>
       <p className="mt-6 text-sm text-center text-[var(--muted-fg)]">
         {t('noAccount')}{' '}
