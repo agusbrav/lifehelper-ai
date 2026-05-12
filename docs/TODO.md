@@ -11,10 +11,10 @@ Format: `- [ ] **Feature Name**: description` — check off when done, delete wh
 - [ ] **Installment Duplication**: Installments imported from the current month appear duplicated in the next month — investigate carry-forward logic for installments created via PDF import
 
 ### Table / UX
-- [ ] **Dates per Expense**: Allow tagging an expense with a specific date within the month
+- [x] **Dates per Expense**: Allow tagging an expense with a specific date within the month
 - [ ] **Sticky Headers**: Sticky column headers and filter/sort tags in the expense table — keep visible while scrolling
 - [ ] **Simplified View**: Mobile-first condensed row layout with a toggle to switch to the full view
-- [ ] **PDF Import Button Placement**: Move import button to the monthly view instead of the config panel
+- [x] **PDF Import Button Placement**: Move import button to the monthly view instead of the config panel
 
 ### Analytics
 - [ ] **Analytics Per-Card**: Spending totals and charge history per credit card

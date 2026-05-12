@@ -2,13 +2,12 @@
 import { useState, useTransition, useRef } from 'react'
 import { useTranslations } from 'next-intl'
 import { useRouter } from 'next/navigation'
-import { addCardAction, removeCardAction, renameCardAction, setCardCurrencyAction } from '@/app/(app)/m/budget/settings/actions'
+import { addCardAction, renameCardAction, setCardCurrencyAction } from '@/app/(app)/m/budget/settings/actions'
 import { addCategoryKeywordAction, removeCategoryKeywordAction, addTypeKeywordAction, setKeywordItemTypeAction } from '@/app/(app)/m/budget/config/actions'
 import { resetMonthAction, deletePastMonthsAction } from '@/app/(app)/m/budget/actions'
 import { RenameCardInput } from '@/app/(app)/m/budget/settings/rename-card-input'
 import { CATEGORY_SEEDS } from '@lifehelper/budget'
 import { StatementImportDialog } from './statement-import-dialog'
-import { ConfirmDialog } from '@/components/confirm-dialog'
 
 type Card = { id: string; name: string; currency: string }
 type KeywordRecord = { id: string; keyword: string; category: string | null; itemType: string | null }
@@ -34,7 +33,6 @@ export function BudgetConfigPanel({ year, month, cards, userKeywords }: Props) {
   const [deletePastConfirming, setDeletePastConfirming] = useState(false)
   const [deletePastPending, startDeletePastTransition] = useTransition()
   const [importingCard, setImportingCard] = useState<string | null>(null)
-  const [removingCard, setRemovingCard] = useState<Card | null>(null)
 
   // Add card state
   const [newCardName, setNewCardName] = useState('')
@@ -77,10 +75,6 @@ export function BudgetConfigPanel({ year, month, cards, userKeywords }: Props) {
     fd.append('name', name)
     setNewCardName('')
     startTransition(() => addCardAction(fd))
-  }
-
-  function handleRemoveCard(card: Card) {
-    setRemovingCard(card)
   }
 
   function handleToggleCurrency(cardId: string, current: string) {
@@ -291,12 +285,6 @@ export function BudgetConfigPanel({ year, month, cards, userKeywords }: Props) {
                                   >
                                     {t('importStatement')}
                                   </button>
-                                  <button
-                                    onClick={() => handleRemoveCard(card)}
-                                    className="text-xs text-[var(--muted-fg)] hover:text-rose-400 transition-colors opacity-0 group-hover:opacity-100"
-                                  >
-                                    {t('delete')}
-                                  </button>
                                 </div>
                               </td>
                             </tr>
@@ -321,7 +309,6 @@ export function BudgetConfigPanel({ year, month, cards, userKeywords }: Props) {
                       {t('add')}
                     </button>
                   </form>
-                  <p className="text-xs text-[var(--muted-fg)]">{t('settingsRemoveHint')}</p>
                 </div>
               )}
 
@@ -514,20 +501,6 @@ export function BudgetConfigPanel({ year, month, cards, userKeywords }: Props) {
         />
       )}
 
-      {removingCard && (
-        <ConfirmDialog
-          message={t('removeCardConfirm', { name: removingCard.name })}
-          detail={t('settingsRemoveHint')}
-          confirmLabel={t('delete')}
-          cancelLabel={t('cancel')}
-          danger
-          onConfirm={() => {
-            startTransition(() => removeCardAction(removingCard.id))
-            setRemovingCard(null)
-          }}
-          onCancel={() => setRemovingCard(null)}
-        />
-      )}
     </>
   )
 }

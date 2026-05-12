@@ -273,7 +273,7 @@ export function ExpenseRow({ item, depth = 0, monthId, keywordMap, categories, y
               </span>
             ))}
 
-            <span className="ml-auto flex-shrink-0 flex items-center gap-2">
+            <span className="hidden md:flex ml-auto flex-shrink-0 items-center gap-2">
               {item.amountCarried && !isCard && (
                 <span className="text-[var(--muted-fg)] text-xs opacity-0 group-hover:opacity-100 transition-opacity" title={t('carriedTitle')}>
                   {t('carriedIndicator')}
@@ -440,7 +440,7 @@ export function ExpenseRow({ item, depth = 0, monthId, keywordMap, categories, y
                 }
               }}
               title={t('importStatement')}
-              className={`opacity-0 group-hover:opacity-100 transition-all ${statementImported ? 'text-amber-400 hover:text-amber-300' : 'text-[var(--muted-fg)] hover:text-[var(--accent)]'}`}
+              className={`transition-all md:opacity-0 md:group-hover:opacity-100 ${statementImported ? 'text-amber-400 hover:text-amber-300' : 'text-[var(--muted-fg)] hover:text-[var(--accent)]'}`}
             >
               <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
                 <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/>
@@ -451,7 +451,7 @@ export function ExpenseRow({ item, depth = 0, monthId, keywordMap, categories, y
           ) : !isCard ? (
             <button
               onClick={() => startTransition(() => deleteItemAction(item.id))}
-              className="opacity-0 group-hover:opacity-100 text-[var(--muted-fg)] hover:text-rose-400 transition-all text-xs"
+              className="md:opacity-0 md:group-hover:opacity-100 text-[var(--muted-fg)] hover:text-rose-400 transition-all text-xs"
               aria-label={t('delete')}
             >
               ✕
