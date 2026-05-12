@@ -16,6 +16,24 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ error: 'Email and password required' }, { status: 400 })
   }
 
+  // Dev-only shortcut: admin/admin maps to DEV_ADMIN_EMAIL account
+  const devEmail = process.env.DEV_ADMIN_EMAIL
+  if (devEmail && email === 'admin' && password === 'admin') {
+    const devUser = await db.user.findUnique({ where: { email: devEmail } })
+    if (devUser) {
+      const token = await createSession(devUser.id)
+      const response = NextResponse.json({ ok: true })
+      response.cookies.set('session', token, {
+        httpOnly: true,
+        secure: process.env.NODE_ENV === 'production',
+        sameSite: 'strict',
+        maxAge: 60 * 60 * 24 * 7,
+        path: '/',
+      })
+      return response
+    }
+  }
+
   const user = await db.user.findUnique({ where: { email } })
   const passwordMatch = await verifyPassword(password, user?.hashedPassword ?? DUMMY_HASH)
   if (!user || !passwordMatch) {
