@@ -9,3 +9,4 @@ dist
 *.tsbuildinfo
 generated
 prisma/generated
+.claude/settings.local.json

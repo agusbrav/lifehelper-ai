@@ -209,3 +209,42 @@ After every fix, ask: *"Is there another page, component, or action that uses th
 - Before adding any new control, setting, or action, ask: *where does this conceptually belong?* If it doesn't belong in the current view, find or create the right tab/section.
 - Tabs separate orthogonal concerns (e.g. General / Tarjetas / Categorías). Do not add a setting to a tab it doesn't belong to just because it's convenient.
 - When a feature request comes in, explicitly reason about placement before writing any code. If the right home isn't obvious, ask before implementing.
+
+---
+
+## 16. Current Module State
+
+Quick reference for session ramp-up. Keep this table updated whenever a module ships or a new one is scaffolded.
+
+| Module | Status | Package | Key entry points |
+|--------|--------|---------|-----------------|
+| `budget` | Active | `packages/modules/budget` | `src/actions.ts`, `src/types.ts`, `src/analytics.ts`, `src/chat-prompt.ts`, `prisma/schema.prisma`, `manifest.ts` |
+
+**Active integrations:** none yet (bridges stub in `packages/modules/_integrations/src/index.ts`)
+
+**Planned modules (from `docs/TODO.md`):** Investments, Trip Planner, Shared Expenses, Shopping List, Date/Plans, Nutrition
+
+### TODO convention
+
+- **Module TODOs** live at `packages/modules/{id}/TODO.md` — scoped to that module only.
+- **Global TODO** lives at `docs/TODO.md` — architecture, cross-module concerns, and future module ideas. Contains a Module Status table linking to each module's TODO.
+- Never put module-specific items in `docs/TODO.md` or global items in a module TODO.
+
+### Session start convention
+
+When starting work on a specific module, run `/project:init-{module}` before touching any code. Each command reads the module's key files and prints a context brief so exploration is unnecessary.
+
+Available init commands:
+- `/project:init-budget` — loads full budget module context
+
+When a new module is scaffolded, create `.claude/commands/init-{module}.md` as part of the module checklist (step 1 in §3 above).
+
+### Adding a new module: updated checklist
+
+1. `packages/modules/{id}/` — schema fragment, src, manifest, vitest config, `TODO.md`
+2. **`.claude/commands/init-{id}.md`** — module init command (see existing `init-budget.md` as template)
+3. Add fragment path to `scripts/merge-schemas.js`
+4. Run `pnpm merge-schemas && pnpm db:migrate`
+5. Register in `packages/modules/_registry/src/index.ts`
+6. If it contributes to another module, add a bridge in `_integrations/src/index.ts`
+7. Add a row to the Current Module State table above and to the Module Status table in `docs/TODO.md`
