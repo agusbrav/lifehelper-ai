@@ -22,13 +22,15 @@ export const manifest: ModuleManifest = {
   name: 'Monthly Budget',
   icon: 'wallet',
   exposesContext: true,
-  accepts: [],   // future: ['shared_expenses', 'trips'] — add as those modules are built
+  accepts: [],   // future: ['shared_expenses', 'trips'] - add as those modules are built
   interactionTier: 1,
   tools: [
     { id: 'add_expense', consumesContext: [] },
     { id: 'add_installment', consumesContext: [] },
+    { id: 'add_card_expense', consumesContext: [] },
     { id: 'set_amount', consumesContext: [] },
-    { id: 'mark_paid', consumesContext: [] },
+    { id: 'remove_expense', consumesContext: [] },
+    { id: 'change_type', consumesContext: [] },
     { id: 'add_month', consumesContext: [] },
     { id: 'get_summary', consumesContext: [] },
     { id: 'get_inflation_report', consumesContext: [] },
