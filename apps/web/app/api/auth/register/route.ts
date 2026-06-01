@@ -27,10 +27,10 @@ export async function POST(req: NextRequest) {
 
   const response = NextResponse.json({ ok: true })
   response.cookies.set('session', token, {
-    httpOnly: true,
+    httpOnly: false,
     secure: process.env.NODE_ENV === 'production',
-    sameSite: 'strict',
-    maxAge: 60 * 60 * 24 * 7,
+    sameSite: 'lax',
+    maxAge: 60 * 60 * 24 * 90,
     path: '/',
   })
   return response

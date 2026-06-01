@@ -54,7 +54,7 @@ describe('createSession', () => {
     expect(token).toBe('abc-token')
     const call = vi.mocked(db.session.create).mock.calls[0]![0]!
     expect(call.data.userId).toBe('user-1')
-    const expectedExpiry = Date.now() + 7 * 24 * 60 * 60 * 1000
+    const expectedExpiry = Date.now() + 365 * 24 * 60 * 60 * 1000
     const expiresAt = call.data.expiresAt as Date
     expect(expiresAt.getTime()).toBeGreaterThan(expectedExpiry - 5000)
     expect(expiresAt.getTime()).toBeLessThan(expectedExpiry + 5000)

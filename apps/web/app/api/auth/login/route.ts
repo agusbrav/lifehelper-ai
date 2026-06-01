@@ -26,10 +26,10 @@ export async function POST(req: NextRequest) {
       console.log('[login] dev session created, token prefix:', token.slice(0, 8))
       const response = NextResponse.json({ ok: true })
       response.cookies.set('session', token, {
-        httpOnly: true,
+        httpOnly: false,
         secure: process.env.NODE_ENV === 'production',
         sameSite: 'lax',
-        maxAge: 60 * 60 * 24 * 7,
+        maxAge: 60 * 60 * 24 * 90,
         path: '/',
       })
       return response
@@ -49,10 +49,10 @@ export async function POST(req: NextRequest) {
 
   const response = NextResponse.json({ ok: true })
   response.cookies.set('session', token, {
-    httpOnly: true,
+    httpOnly: false,
     secure: process.env.NODE_ENV === 'production',
     sameSite: 'lax',
-    maxAge: 60 * 60 * 24 * 7,
+    maxAge: 60 * 60 * 24 * 90,
     path: '/',
   })
   return response

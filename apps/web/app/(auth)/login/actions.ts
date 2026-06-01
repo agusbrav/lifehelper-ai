@@ -1,14 +1,13 @@
 'use server'
-import { redirect } from 'next/navigation'
 import { cookies } from 'next/headers'
 import { db, verifyPassword, createSession } from '@lifehelper/core'
 
 const DUMMY_HASH = '$2b$12$invalidhashfortimingprotectionnnnnnnnnnnnnnnnnnnnnnnnnn'
 
 export async function loginAction(
-  _prev: { error: string } | null,
+  _prev: { error: string } | { token: string } | null,
   formData: FormData,
-): Promise<{ error: string }> {
+): Promise<{ error: string } | { token: string }> {
   const email = formData.get('email')
   const password = formData.get('password')
 
@@ -25,13 +24,13 @@ export async function loginAction(
       console.log('[login] dev session created, token prefix:', token.slice(0, 8))
       const cookieStore = await cookies()
       cookieStore.set('session', token, {
-        httpOnly: true,
+        httpOnly: false,
         secure: process.env.NODE_ENV === 'production',
         sameSite: 'lax',
-        maxAge: 60 * 60 * 24 * 7,
+        maxAge: 60 * 60 * 24 * 90,
         path: '/',
       })
-      redirect('/dashboard')
+      return { token }
     }
     console.log('[login] dev bypass: user not found for', devEmail)
   }
@@ -47,11 +46,11 @@ export async function loginAction(
   console.log('[login] session created for', email)
   const cookieStore = await cookies()
   cookieStore.set('session', token, {
-    httpOnly: true,
+    httpOnly: false,
     secure: process.env.NODE_ENV === 'production',
     sameSite: 'lax',
-    maxAge: 60 * 60 * 24 * 7,
+    maxAge: 60 * 60 * 24 * 90,
     path: '/',
   })
-  redirect('/dashboard')
+  return { token }
 }
