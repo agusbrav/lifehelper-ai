@@ -18,7 +18,7 @@
     "@lifehelper/integrations": "workspace:*",
     "@lifehelper/registry": "workspace:*",
     "@lifehelper/ui": "workspace:*",
-    "@prisma/client": "^6.19.3",
+    "@prisma/client": "^7.8.0",
     "next": "^16.2.4",
     "next-intl": "^4.11.0",
     "pdf-parse": "^2.4.5",

@@ -6,14 +6,17 @@
     "lint": "turbo lint",
     "type-check": "turbo type-check",
     "merge-schemas": "node scripts/merge-schemas.js",
-    "db:generate": "prisma generate --schema packages/core/prisma/schema.prisma",
-    "db:migrate": "prisma migrate dev --schema packages/core/prisma/schema.prisma",
-    "db:studio": "prisma studio --schema packages/core/prisma/schema.prisma"
+    "db:generate": "prisma generate",
+    "db:migrate": "prisma migrate dev",
+    "db:studio": "prisma studio"
   },
   "devDependencies": {
+    "prisma": "^7.8.0",
     "turbo": "^2.9.9",
-    "typescript": "^6.0.3",
-    "prisma": "^6.19.3"
+    "typescript": "^6.0.3"
   },
-  "packageManager": "pnpm@9.15.4"
+  "packageManager": "pnpm@9.15.4",
+  "dependencies": {
+    "@prisma/client": "^7.8.0"
+  }
 }

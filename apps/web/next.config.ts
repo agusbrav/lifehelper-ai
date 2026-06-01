@@ -6,7 +6,7 @@ const withNextIntl = createNextIntlPlugin('./i18n/request.ts')
 
 const nextConfig: NextConfig = {
   transpilePackages: ['@lifehelper/core', '@lifehelper/ui', '@lifehelper/registry'],
-  serverExternalPackages: ['@prisma/client', '.prisma/client', 'pdf-parse'],
+  serverExternalPackages: ['@prisma/client', '.prisma/client', '@prisma/adapter-pg', 'pg', 'pdf-parse', '@anthropic-ai/sdk', 'pdfjs-dist'],
   turbopack: {
     root: path.resolve(__dirname, '../..'),
   },

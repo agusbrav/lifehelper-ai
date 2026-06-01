@@ -10,7 +10,7 @@ Personal life-management platform built as a modular monorepo. Each "pocket" is 
 |-------|-----------|
 | Frontend | Next.js 16 (App Router, Turbopack), TypeScript 6, Tailwind 4 |
 | Packages | Turborepo + pnpm workspaces |
-| Database | PostgreSQL + Prisma 6 (NOT 7 — v7 has a breaking schema change) |
+| Database | PostgreSQL + Prisma 7 |
 | Auth | Custom JWT-like sessions via `@lifehelper/core` |
 | AI | Anthropic SDK (`@lifehelper/core` skills-runner) |
 | Node | v22 (`.nvmrc` at root and `apps/web`) |
@@ -74,8 +74,8 @@ Budget (or any target) calls resolveContributions() → receives contributions p
   npx prisma db push --schema packages/core/prisma/schema.prisma   # push without migration history (dev only)
   ```
 - **Double-merge prevention**: `merge-schemas` is idempotent — it strips any previously merged fragments before appending, so running it multiple times is safe. No manual restore step needed.
-- **Migration history drift**: This project has used `db push` for some schema changes, which bypasses migration history. If `pnpm db:migrate` fails with "drift detected", use `npx prisma db push --schema packages/core/prisma/schema.prisma` instead — it syncs the DB to the current schema without caring about migration history. Only use this in dev.
-- Prisma is pinned to **6.x**. Do not upgrade to 7.x without a dedicated migration (datasource url moved to prisma.config.ts in v7).
+- **Migration history drift**: This project has used `db push` for some schema changes, which bypasses migration history. If `pnpm db:migrate` fails with "drift detected", use `npx prisma db push` instead - it syncs the DB to the current schema without caring about migration history. Only use this in dev.
+- Prisma **7.x**. Schema path is declared in `prisma.config.ts` at the workspace root, so CLI commands need no `--schema` flag. Datasource block stays in `schema.prisma` (Prisma 7's `env()` in config is eager and breaks `prisma generate` without a live DB URL).
 - `@prisma/client` must be in `apps/web` dependencies (not just `packages/core`) for `serverExternalPackages` to resolve the native binary.
 
 ---
