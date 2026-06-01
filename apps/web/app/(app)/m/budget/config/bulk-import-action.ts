@@ -1,7 +1,7 @@
 'use server'
 import { cookies } from 'next/headers'
 import { getSession, db } from '@lifehelper/core'
-import { addExpense, addInstallment, getOrCreateMonth, getCategoryKeywords, fetchCategoryHistory, buildKeywordMap, buildTypeMap, matchCategory, matchItemType, setDueDate } from '@lifehelper/budget'
+import { addExpense, addInstallment, getOrCreateMonth, getCategoryKeywords, fetchCategoryHistory, buildKeywordMap, buildTypeMap, matchCategory, matchItemType, setDueDate, purgeForwardInstallments } from '@lifehelper/budget'
 import { revalidatePath } from 'next/cache'
 import type { ParsedTransaction } from './parse-statement-action'
 
@@ -38,6 +38,11 @@ export async function bulkImportStatementAction(
     select: { id: true, currency: true },
   })
   if (!card) throw new Error(`Card "${cardName}" not found in month ${year}-${month}`)
+
+  // Purge forward-propagated copies of this card's existing installment series BEFORE clearing the
+  // current month. Re-import recreates them with new groupIds, so stale forward copies would
+  // otherwise survive the groupId-based dedup and duplicate in future months.
+  await purgeForwardInstallments({ userId, monthId: budgetMonth.id, cardId: card.id })
 
   await db.budgetItem.deleteMany({
     where: { userId, monthId: budgetMonth.id, parentId: card.id },

@@ -362,6 +362,39 @@ export async function addInstallment(input: AddInstallmentInput) {
   return item
 }
 
+// Re-importing a statement recreates this card's installments with fresh installmentGroupIds.
+// Their previously-propagated copies in future months keep the OLD groupId, so the groupId-based
+// dedup in propagateToNextMonth can't recognize them and would create duplicates. Purge those
+// forward copies before recreating. Scoped to future months only; a prior month's series origin
+// (and the current month, which the caller's own deleteMany handles) must stay intact.
+export async function purgeForwardInstallments(input: { userId: string; monthId: string; cardId: string }) {
+  const existing = await db.budgetItem.findMany({
+    where: { userId: input.userId, monthId: input.monthId, parentId: input.cardId, installmentGroupId: { not: null } },
+    select: { installmentGroupId: true },
+  })
+  const groupIds = [...new Set(existing.map(e => e.installmentGroupId).filter((g): g is string => g !== null))]
+  if (groupIds.length === 0) return
+
+  const month = await db.budgetMonth.findUnique({
+    where: { id: input.monthId },
+    select: { year: true, month: true },
+  })
+  if (!month) return
+
+  await db.budgetItem.deleteMany({
+    where: {
+      userId: input.userId,
+      installmentGroupId: { in: groupIds },
+      month: {
+        OR: [
+          { year: { gt: month.year } },
+          { year: month.year, month: { gt: month.month } },
+        ],
+      },
+    },
+  })
+}
+
 export async function setAmount(input: { userId: string; itemId: string; amountCents: number }) {
   await assertOwnsItem(input.userId, input.itemId)
   return db.budgetItem.update({

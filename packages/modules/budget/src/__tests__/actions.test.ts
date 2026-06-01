@@ -37,7 +37,7 @@ vi.mock('@lifehelper/integrations', () => ({
 }))
 
 import { assertOwnsMonth, assertOwnsItem } from '../ownership'
-import { getOrCreateMonth, addExpense, togglePaid, setAmount, fetchCategoryHistory, setExpenseDate } from '../actions'
+import { getOrCreateMonth, addExpense, togglePaid, setAmount, fetchCategoryHistory, setExpenseDate, purgeForwardInstallments } from '../actions'
 import { db } from '@lifehelper/core'
 
 const MONTH = { id: 'm1', userId: 'u1', year: 2025, month: 5, compacted: false, compactedSummary: null, createdAt: new Date() }
@@ -242,5 +242,44 @@ describe('setExpenseDate', () => {
       where: { id: 'i1' },
       data: { expenseDate: null },
     })
+  })
+})
+
+describe('purgeForwardInstallments', () => {
+  beforeEach(() => vi.clearAllMocks())
+
+  it('deletes forward-propagated copies of the card installment series, scoped to future months', async () => {
+    // Two distinct installment series under the card this month (g1 appears twice → must dedupe).
+    vi.mocked(db.budgetItem.findMany).mockResolvedValue([
+      { installmentGroupId: 'g1' },
+      { installmentGroupId: 'g2' },
+      { installmentGroupId: 'g1' },
+    ] as never)
+    vi.mocked(db.budgetMonth.findUnique).mockResolvedValue({ year: 2026, month: 5 } as never)
+    vi.mocked(db.budgetItem.deleteMany).mockResolvedValue({ count: 2 } as never)
+
+    await purgeForwardInstallments({ userId: 'u1', monthId: 'm1', cardId: 'card1' })
+
+    expect(db.budgetItem.deleteMany).toHaveBeenCalledWith({
+      where: {
+        userId: 'u1',
+        installmentGroupId: { in: ['g1', 'g2'] },
+        month: {
+          OR: [
+            { year: { gt: 2026 } },
+            { year: 2026, month: { gt: 5 } },
+          ],
+        },
+      },
+    })
+  })
+
+  it('does nothing when the card has no installment series this month', async () => {
+    vi.mocked(db.budgetItem.findMany).mockResolvedValue([] as never)
+
+    await purgeForwardInstallments({ userId: 'u1', monthId: 'm1', cardId: 'card1' })
+
+    expect(db.budgetMonth.findUnique).not.toHaveBeenCalled()
+    expect(db.budgetItem.deleteMany).not.toHaveBeenCalled()
   })
 })
