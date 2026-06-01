@@ -37,7 +37,7 @@ vi.mock('@lifehelper/integrations', () => ({
 }))
 
 import { assertOwnsMonth, assertOwnsItem } from '../ownership'
-import { getOrCreateMonth, addExpense, addInstallment, togglePaid, setAmount, fetchCategoryHistory, setExpenseDate, purgeForwardInstallments } from '../actions'
+import { getOrCreateMonth, addExpense, addInstallment, togglePaid, setAmount, fetchCategoryHistory, setExpenseDate, purgeForwardInstallments, getFirstMonth } from '../actions'
 import { db } from '@lifehelper/core'
 
 const MONTH = { id: 'm1', userId: 'u1', year: 2025, month: 5, compacted: false, compactedSummary: null, createdAt: new Date() }
@@ -278,6 +278,28 @@ describe('addInstallment', () => {
     expect(db.budgetItem.create).toHaveBeenCalledWith(expect.objectContaining({
       data: expect.objectContaining({ installmentNumber: 1, installmentTotal: 6 }),
     }))
+  })
+})
+
+describe('getFirstMonth', () => {
+  beforeEach(() => vi.clearAllMocks())
+
+  it('returns the earliest calendar month with real data, ordered by month and counting card charges', async () => {
+    vi.mocked(db.budgetMonth.findFirst).mockResolvedValue({ year: 2026, month: 5 } as never)
+
+    const result = await getFirstMonth('u1')
+
+    expect(result).toEqual({ year: 2026, month: 5 })
+    expect(db.budgetMonth.findFirst).toHaveBeenCalledWith(expect.objectContaining({
+      where: { userId: 'u1', items: { some: { isCard: false } } },
+      orderBy: [{ year: 'asc' }, { month: 'asc' }],
+    }))
+  })
+
+  it('returns null when the user has no non-card data anywhere', async () => {
+    vi.mocked(db.budgetMonth.findFirst).mockResolvedValue(null as never)
+    const result = await getFirstMonth('u1')
+    expect(result).toBeNull()
   })
 })
 

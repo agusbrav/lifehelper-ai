@@ -489,17 +489,14 @@ export async function getMonthsForUser(userId: string) {
 }
 
 export async function getFirstMonth(userId: string): Promise<{ year: number; month: number } | null> {
-  // Card items are auto-synced into every month the user visits — they are not a signal
-  // that the user has started tracking data in that month. Only non-card items anchor the
-  // navigation floor so that accidental past-month visits don't shift the lower bound back.
-  const oldest = await db.budgetItem.findFirst({
-    where: { userId, parentId: null, isCard: false },
-    orderBy: { createdAt: 'asc' },
-    select: { monthId: true },
-  })
-  if (!oldest) return null
-  return db.budgetMonth.findUnique({
-    where: { id: oldest.monthId },
+  // Earliest CALENDAR month that holds real data; anchors how far back the user can navigate.
+  // Order by month, not createdAt: a statement for an old month can be imported after newer
+  // months already exist, so the oldest-created item is not necessarily in the oldest month.
+  // Card containers (isCard true) are auto-synced into every visited month, so they don't count;
+  // any non-card item (a top-level expense or a card charge) does. Matches the analytics floor.
+  return db.budgetMonth.findFirst({
+    where: { userId, items: { some: { isCard: false } } },
+    orderBy: [{ year: 'asc' }, { month: 'asc' }],
     select: { year: true, month: true },
   })
 }
