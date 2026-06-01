@@ -1,11 +1,13 @@
 import { cookies } from 'next/headers'
 import { redirect } from 'next/navigation'
 import { getSession } from '@lifehelper/core'
-import { getOrCreateMonth, fetchCategoryHistory, buildKeywordMap, buildTypeMap, knownCategories, getFirstMonth, getCardsForUser, getCategoryKeywords, getLinksForItems } from '@lifehelper/budget'
+import { getOrCreateMonth, fetchCategoryHistory, buildKeywordMap, buildTypeMap, knownCategories, getFirstMonth, getCardsForUser, getCategoryKeywords, getLinksForItems, computeCategoryTotals, computeTypeTotals, computeUsdCategoryTotals, type ItemSlim } from '@lifehelper/budget'
 import { getTranslations } from 'next-intl/server'
 import { MonthNav } from '@/components/budget/month-nav'
 import { SummaryBar } from '@/components/budget/summary-bar'
 import { ExpenseTable } from '@/components/budget/expense-table'
+import { MobileSummary } from '@/components/budget/mobile-summary'
+import { MobileAddButton } from '@/components/budget/mobile-add-button'
 import { BudgetConfigPanel } from '@/components/budget/budget-config-panel'
 import Link from 'next/link'
 
@@ -90,6 +92,12 @@ export default async function BudgetPage({ searchParams }: Props) {
   const totalArsCents = totalByCurrency('ARS')
   const totalUsdCents = totalByCurrency('USD')
 
+  // Flatten top-level items + their children for analytics functions.
+  const flatItems = [...items, ...items.flatMap(i => i.children ?? [])] as unknown as ItemSlim[]
+  const categoryTotals = computeCategoryTotals(flatItems).sort((a, b) => b.total - a.total)
+  const typeTotals = computeTypeTotals(flatItems)
+  const usdCategoryTotals = computeUsdCategoryTotals(flatItems).sort((a, b) => b.total - a.total)
+
   // Children from the DB query are one level deep and never have sub-children;
   // cast to satisfy the recursive Item type expected by ExpenseTable.
   type TableItem = Omit<DbItem, 'children'> & { children: TableItem[] }
@@ -99,7 +107,8 @@ export default async function BudgetPage({ searchParams }: Props) {
     <div className="p-4 sm:p-6 w-full">
       <div className="flex flex-wrap items-center gap-x-4 gap-y-3 mb-6">
         <MonthNav year={year} month={month} firstYear={floorYear} firstMonth={floorMonth} />
-        <div className="flex flex-wrap items-center gap-x-4 gap-y-2 ml-auto">
+        {/* Desktop only: summary totals + analytics shortcut */}
+        <div className="hidden md:flex flex-wrap items-center gap-x-4 gap-y-2 ml-auto">
           <SummaryBar
             totalArsCents={totalArsCents}
             totalUsdCents={totalUsdCents}
@@ -113,22 +122,37 @@ export default async function BudgetPage({ searchParams }: Props) {
               <line x1="18" y1="20" x2="18" y2="10"/><line x1="12" y1="20" x2="12" y2="4"/><line x1="6" y1="20" x2="6" y2="14"/>
             </svg>
           </Link>
-          <BudgetConfigPanel year={year} month={month} cards={cards} userKeywords={userKeywordRecords} />
         </div>
+        {/* Always in DOM so its fixed modal renders when triggered from the bottom nav */}
+        <BudgetConfigPanel year={year} month={month} cards={cards} userKeywords={userKeywordRecords} />
       </div>
 
-      <ExpenseTable
-        items={tableItems}
-        monthId={budgetMonth?.id ?? ''}
-        userId={session.user.id}
-        keywordMap={keywordMap}
-        categories={categories}
-        year={year}
-        month={month}
-        monthContext={monthContext}
-        userKeywords={userKeywordRecords}
-        linksMap={linksMap}
-      />
+      <div className="md:hidden">
+        <MobileSummary
+          categoryTotals={categoryTotals}
+          typeTotals={typeTotals}
+          usdCategoryTotals={usdCategoryTotals}
+        />
+        <MobileAddButton
+          monthId={budgetMonth?.id ?? ''}
+          keywordMap={keywordMap}
+          categories={categories}
+        />
+      </div>
+      <div className="hidden md:block">
+        <ExpenseTable
+          items={tableItems}
+          monthId={budgetMonth?.id ?? ''}
+          userId={session.user.id}
+          keywordMap={keywordMap}
+          categories={categories}
+          year={year}
+          month={month}
+          monthContext={monthContext}
+          userKeywords={userKeywordRecords}
+          linksMap={linksMap}
+        />
+      </div>
     </div>
   )
 }

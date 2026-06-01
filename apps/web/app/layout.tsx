@@ -1,4 +1,4 @@
-import type { Metadata } from 'next'
+import type { Metadata, Viewport } from 'next'
 import { NextIntlClientProvider } from 'next-intl'
 import { getLocale, getMessages } from 'next-intl/server'
 import { ThemeProvider } from '@/components/theme-provider'
@@ -8,9 +8,21 @@ import './globals.css'
 
 registerLinkableModule(budgetLinkableModule)
 
+export const viewport: Viewport = {
+  width: 'device-width',
+  initialScale: 1,
+  viewportFit: 'cover',
+}
+
 export const metadata: Metadata = {
   title: 'LifeHelper',
   description: 'Your personal life management platform',
+  manifest: '/manifest.webmanifest',
+  appleWebApp: {
+    capable: true,
+    title: 'LifeHelper',
+    statusBarStyle: 'default',
+  },
 }
 
 export default async function RootLayout({ children }: { children: React.ReactNode }) {

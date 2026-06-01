@@ -4,6 +4,8 @@ import { getSession, db } from '@lifehelper/core'
 import { Sidebar } from '@/components/sidebar'
 import { ChatRail } from '@/components/chat-rail'
 import { ChatContextProvider } from '@/components/chat/chat-context'
+import { BudgetContextProvider } from '@/components/budget/budget-context'
+import { SessionSync } from '@/components/session-sync'
 
 export default async function AppLayout({ children }: { children: React.ReactNode }) {
   const cookieStore = await cookies()
@@ -24,10 +26,12 @@ export default async function AppLayout({ children }: { children: React.ReactNod
 
   return (
     <ChatContextProvider>
+    <BudgetContextProvider>
       <div className="flex h-screen bg-[var(--bg)] text-[var(--fg)] overflow-hidden">
+        <SessionSync />
         <Sidebar pockets={pockets} userName={session.user.name ?? session.user.email} />
         <div className="flex flex-col flex-1 min-w-0">
-          <main className="flex-1 overflow-y-auto pb-16 md:pb-0">
+          <main className="flex-1 overflow-y-auto md:pb-0" style={{ paddingBottom: 'calc(4rem + env(safe-area-inset-bottom, 0px) + 0.75rem)' }}>
             {children}
           </main>
           <div className="hidden md:block">
@@ -36,6 +40,7 @@ export default async function AppLayout({ children }: { children: React.ReactNod
         </div>
       </div>
       <ChatRail mobile />
+    </BudgetContextProvider>
     </ChatContextProvider>
   )
 }

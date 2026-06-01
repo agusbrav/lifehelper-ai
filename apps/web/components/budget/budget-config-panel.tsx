@@ -2,11 +2,12 @@
 import { useState, useTransition, useRef } from 'react'
 import { useTranslations } from 'next-intl'
 import { useRouter } from 'next/navigation'
+import { useBudgetContext } from './budget-context'
 import { addCardAction, renameCardAction, setCardCurrencyAction } from '@/app/(app)/m/budget/settings/actions'
 import { addCategoryKeywordAction, removeCategoryKeywordAction, addTypeKeywordAction, setKeywordItemTypeAction } from '@/app/(app)/m/budget/config/actions'
 import { resetMonthAction, deletePastMonthsAction } from '@/app/(app)/m/budget/actions'
 import { RenameCardInput } from '@/app/(app)/m/budget/settings/rename-card-input'
-import { CATEGORY_SEEDS } from '@lifehelper/budget'
+import { CATEGORY_SEEDS } from '@lifehelper/budget/client'
 import { StatementImportDialog } from './statement-import-dialog'
 
 type Card = { id: string; name: string; currency: string }
@@ -25,7 +26,7 @@ type TxType = 'one_time' | 'subscription' | 'recurring'
 export function BudgetConfigPanel({ year, month, cards, userKeywords }: Props) {
   const t = useTranslations('budget')
   const router = useRouter()
-  const [open, setOpen] = useState(false)
+  const { configOpen: open, setConfigOpen: setOpen } = useBudgetContext()
   const [tab, setTab] = useState<Tab>('tarjetas')
   const [, startTransition] = useTransition()
   const [resetConfirming, setResetConfirming] = useState(false)
@@ -132,10 +133,10 @@ export function BudgetConfigPanel({ year, month, cards, userKeywords }: Props) {
 
   return (
     <>
-      {/* Gear button */}
+      {/* Gear button - hidden on mobile (bottom nav provides the trigger there) */}
       <button
         onClick={() => setOpen(true)}
-        className="p-1.5 rounded-lg text-[var(--muted-fg)] hover:text-[var(--fg)] hover:bg-[var(--border)] transition-colors"
+        className="hidden md:inline-flex p-1.5 rounded-lg text-[var(--muted-fg)] hover:text-[var(--fg)] hover:bg-[var(--border)] transition-colors"
         title={t('configTitle')}
       >
         <svg width="15" height="15" viewBox="0 0 16 16" fill="currentColor">

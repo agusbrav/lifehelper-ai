@@ -130,7 +130,10 @@
     "addTypeRule": "Agregar regla",
     "date": "Fecha",
     "setDate": "Establecer fecha",
-    "dueDateTitle": "Fecha de vencimiento"
+    "dueDateTitle": "Fecha de vencimiento",
+    "summaryCategories": "Por categoría",
+    "summaryTypes": "Por tipo",
+    "summaryUsdCategories": "USD por categoría"
   },
   "analytics": {
     "title": "Análisis de Presupuesto",

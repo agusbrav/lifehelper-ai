@@ -34,9 +34,17 @@
   --success-fg:   oklch(0.72 0.18 140);
 }
 
+@utility pb-safe {
+  padding-bottom: env(safe-area-inset-bottom, 0px);
+}
+
 body {
   background-color: var(--bg);
   color: var(--fg);
+}
+
+a, button {
+  touch-action: manipulation;
 }
 
 input[type=number] {

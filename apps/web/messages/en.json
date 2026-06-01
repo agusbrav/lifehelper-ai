@@ -130,7 +130,10 @@
     "addTypeRule": "Add rule",
     "date": "Date",
     "setDate": "Set date",
-    "dueDateTitle": "Payment due date"
+    "dueDateTitle": "Payment due date",
+    "summaryCategories": "By category",
+    "summaryTypes": "By type",
+    "summaryUsdCategories": "By category (USD)"
   },
   "analytics": {
     "title": "Budget Analytics",

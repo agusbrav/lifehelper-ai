@@ -2,7 +2,7 @@
 import { useState, useMemo, useRef, useEffect } from 'react'
 import { useTranslations } from 'next-intl'
 import type { ResolvedLink } from '@lifehelper/budget'
-import { matchCategory, buildTypeMap } from '@lifehelper/budget'
+import { matchCategory, buildTypeMap } from '@lifehelper/budget/client'
 import { ExpenseRow } from './expense-row'
 import { AddExpenseRow } from './add-expense-row'
 

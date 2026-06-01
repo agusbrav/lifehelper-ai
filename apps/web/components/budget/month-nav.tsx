@@ -32,9 +32,9 @@ export function MonthNav({ year, month, firstYear, firstMonth }: Props) {
   const btnCls = 'border border-[var(--border)] rounded-lg px-3 py-1.5 text-sm text-[var(--muted-fg)] hover:text-[var(--fg)] hover:bg-[var(--accent-muted)] transition-colors disabled:opacity-30 disabled:cursor-not-allowed disabled:hover:bg-transparent disabled:hover:text-[var(--muted-fg)]'
 
   return (
-    <div className="flex items-center gap-2">
+    <div className="flex items-center gap-2 w-full md:w-auto">
       <button onClick={() => navigate(-1)} disabled={isFirstMonth} className={btnCls}>←</button>
-      <span className="text-base font-semibold text-[var(--fg)] min-w-[160px] text-center capitalize">
+      <span className="flex-1 text-base font-semibold text-[var(--fg)] text-center capitalize md:min-w-[160px] md:flex-none">
         {monthLabel} {year}
       </span>
       <button onClick={() => navigate(1)} disabled={isMaxMonth} className={btnCls}>→</button>
