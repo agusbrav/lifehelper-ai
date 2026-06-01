@@ -333,6 +333,10 @@ type AddInstallmentInput = {
   category?: string
   amountCents: number
   totalPayments: number
+  // The payment number this import starts at. Imports pass the statement's real current
+  // payment (e.g. 5 for "5/12") so the expense shows true progress; manual/AI adds omit it
+  // and start at 1.
+  startNumber?: number
   parentId?: string
   currency?: string
   expenseDate?: Date
@@ -352,7 +356,7 @@ export async function addInstallment(input: AddInstallmentInput) {
       amount: input.amountCents,
       recurring: false,
       installmentTotal: input.totalPayments,
-      installmentNumber: 1,
+      installmentNumber: input.startNumber ?? 1,
       installmentGroupId,
       currency: input.currency ?? 'ARS',
       expenseDate: input.expenseDate ?? null,

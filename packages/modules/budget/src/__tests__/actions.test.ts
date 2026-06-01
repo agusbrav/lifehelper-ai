@@ -37,7 +37,7 @@ vi.mock('@lifehelper/integrations', () => ({
 }))
 
 import { assertOwnsMonth, assertOwnsItem } from '../ownership'
-import { getOrCreateMonth, addExpense, togglePaid, setAmount, fetchCategoryHistory, setExpenseDate, purgeForwardInstallments } from '../actions'
+import { getOrCreateMonth, addExpense, addInstallment, togglePaid, setAmount, fetchCategoryHistory, setExpenseDate, purgeForwardInstallments } from '../actions'
 import { db } from '@lifehelper/core'
 
 const MONTH = { id: 'm1', userId: 'u1', year: 2025, month: 5, compacted: false, compactedSummary: null, createdAt: new Date() }
@@ -242,6 +242,42 @@ describe('setExpenseDate', () => {
       where: { id: 'i1' },
       data: { expenseDate: null },
     })
+  })
+})
+
+describe('addInstallment', () => {
+  beforeEach(() => vi.clearAllMocks())
+
+  it('creates the installment at the given startNumber with the statement total (e.g. 5/12)', async () => {
+    vi.mocked(db.budgetMonth.findUnique)
+      .mockResolvedValueOnce(MONTH as never) // assertOwnsMonth
+      .mockResolvedValue(null as never)      // propagateToNextMonth: no current month -> stop
+    vi.mocked(db.budgetItem.create).mockResolvedValue({ id: 'inst1' } as never)
+
+    await addInstallment({
+      userId: 'u1', monthId: 'm1', name: 'ASSIST CARD',
+      amountCents: 100000, totalPayments: 12, startNumber: 5,
+    })
+
+    expect(db.budgetItem.create).toHaveBeenCalledWith(expect.objectContaining({
+      data: expect.objectContaining({ installmentNumber: 5, installmentTotal: 12 }),
+    }))
+  })
+
+  it('defaults to installmentNumber 1 when no startNumber is given', async () => {
+    vi.mocked(db.budgetMonth.findUnique)
+      .mockResolvedValueOnce(MONTH as never)
+      .mockResolvedValue(null as never)
+    vi.mocked(db.budgetItem.create).mockResolvedValue({ id: 'inst1' } as never)
+
+    await addInstallment({
+      userId: 'u1', monthId: 'm1', name: 'Phone',
+      amountCents: 100000, totalPayments: 6,
+    })
+
+    expect(db.budgetItem.create).toHaveBeenCalledWith(expect.objectContaining({
+      data: expect.objectContaining({ installmentNumber: 1, installmentTotal: 6 }),
+    }))
   })
 })
 

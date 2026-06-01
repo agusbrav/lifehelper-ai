@@ -13,7 +13,7 @@ async function getAuthedSession() {
   return session
 }
 
-type TransactionWithMeta = ParsedTransaction & { remainingPayments?: number; itemType?: string }
+type TransactionWithMeta = ParsedTransaction & { itemType?: string }
 
 export async function bulkImportStatementAction(
   transactions: TransactionWithMeta[],
@@ -71,14 +71,22 @@ export async function bulkImportStatementAction(
     const category = matchCategory(tx.description, keywordMap) ?? undefined
     const expenseDate = tx.date ? new Date(tx.date) : undefined
 
-    if (tx.remainingPayments && tx.remainingPayments > 1) {
+    // An installment with payments still ahead of it. The last payment (current === total)
+    // falls through to a one-time charge, since there is nothing left to carry forward.
+    const isInstallment =
+      tx.installmentCurrent != null &&
+      tx.installmentTotal != null &&
+      tx.installmentTotal > 1 &&
+      tx.installmentCurrent < tx.installmentTotal
+    if (isInstallment) {
       await addInstallment({
         userId,
         monthId: budgetMonth.id,
         parentId: card.id,
         name: tx.description,
         amountCents,
-        totalPayments: tx.remainingPayments,
+        totalPayments: tx.installmentTotal!,
+        startNumber: tx.installmentCurrent!,
         currency: tx.currency,
         category,
         expenseDate,

@@ -1,7 +1,7 @@
 'use client'
 import { useState } from 'react'
 import { useTranslations } from 'next-intl'
-import { matchItemType } from '@lifehelper/budget'
+import { matchItemType } from '@lifehelper/budget/client'
 import { bulkImportStatementAction } from '@/app/(app)/m/budget/config/bulk-import-action'
 import type { ParsedTransaction } from '@/app/(app)/m/budget/config/parse-statement-action'
 
@@ -46,11 +46,11 @@ export function ChatImportPanel({ transactions, dueDate, cards, typeMap, year, m
     return m
   })
 
-  const [remainingPayments, setRemainingPayments] = useState<Map<number, number>>(() => {
+  const [totalPayments, setTotalPayments] = useState<Map<number, number>>(() => {
     const m = new Map<number, number>()
     transactions.forEach((tx, i) => {
       if (tx.installmentCurrent != null && tx.installmentTotal != null) {
-        m.set(i, tx.installmentTotal - tx.installmentCurrent + 1)
+        m.set(i, tx.installmentTotal)
       }
     })
     return m
@@ -93,7 +93,11 @@ export function ChatImportPanel({ transactions, dueDate, cards, typeMap, year, m
         const tx = transactions[i]
         if (!tx) return []
         const isInstallment = tx.installmentCurrent != null && tx.installmentTotal != null
-        return [{ ...tx, remainingPayments: remainingPayments.get(i), itemType: isInstallment ? undefined : (typeOverrideState.get(i) ?? 'one_time') }]
+        return [{
+          ...tx,
+          installmentTotal: isInstallment ? (totalPayments.get(i) ?? tx.installmentTotal) : tx.installmentTotal,
+          itemType: isInstallment ? undefined : (typeOverrideState.get(i) ?? 'one_time'),
+        }]
       })
       const { imported } = await bulkImportStatementAction(toImport, selectedCard, year, month, dueDate)
       onDone(selectedCard, imported)
@@ -149,14 +153,14 @@ export function ChatImportPanel({ transactions, dueDate, cards, typeMap, year, m
             <span className="flex-1 min-w-0 truncate text-[var(--fg)]">{tx.description}</span>
             {tx.installmentCurrent != null && tx.installmentTotal != null ? (
               <span className="flex items-center gap-1 flex-shrink-0" onClick={e => e.preventDefault()}>
-                <span className="text-[var(--muted-fg)]">{tx.installmentCurrent}/{tx.installmentTotal}</span>
+                <span className="text-[var(--muted-fg)] tabular-nums">{tx.installmentCurrent}/</span>
                 <input
                   type="number"
-                  min={1}
-                  value={remainingPayments.get(i) ?? (tx.installmentTotal - tx.installmentCurrent + 1)}
+                  min={tx.installmentCurrent}
+                  value={totalPayments.get(i) ?? tx.installmentTotal}
                   onChange={e => {
                     const v = parseInt(e.target.value, 10)
-                    if (!isNaN(v) && v >= 1) setRemainingPayments(prev => new Map(prev).set(i, v))
+                    if (!isNaN(v) && v >= (tx.installmentCurrent ?? 1)) setTotalPayments(prev => new Map(prev).set(i, v))
                   }}
                   className="w-10 text-center rounded border border-[var(--border)] bg-[var(--bg)] text-[var(--fg)] px-1 tabular-nums"
                 />

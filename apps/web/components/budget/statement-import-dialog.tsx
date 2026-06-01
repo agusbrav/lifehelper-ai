@@ -4,7 +4,7 @@ import { useState, useRef, useEffect } from 'react'
 import { useTranslations } from 'next-intl'
 import { parseStatementAction, type ParsedTransaction } from '@/app/(app)/m/budget/config/parse-statement-action'
 import { bulkImportStatementAction } from '@/app/(app)/m/budget/config/bulk-import-action'
-import { matchItemType } from '@lifehelper/budget'
+import { matchItemType } from '@lifehelper/budget/client'
 
 type Phase = 'idle' | 'parsing' | 'preview' | 'importing' | 'done'
 
@@ -42,7 +42,7 @@ export function StatementImportDialog({ cardName, year, month, typeMap = {}, onC
   const [transactions, setTransactions] = useState<ParsedTransaction[]>([])
   const [dueDate, setDueDate] = useState<string | null>(null)
   const [selected, setSelected] = useState<Set<number>>(new Set())
-  const [remainingPayments, setRemainingPayments] = useState<Map<number, number>>(new Map())
+  const [totalPayments, setTotalPayments] = useState<Map<number, number>>(new Map())
   const [typeOverrides, setTypeOverrides] = useState<Map<number, string>>(new Map())
   const [error, setError] = useState<string | null>(null)
 
@@ -76,13 +76,13 @@ export function StatementImportDialog({ cardName, year, month, typeMap = {}, onC
       setTransactions(parsed)
       setDueDate(parsedDueDate)
       setSelected(new Set(parsed.map((_, i) => i)))
-      const initRemaining = new Map<number, number>()
+      const initTotals = new Map<number, number>()
       parsed.forEach((tx, i) => {
         if (tx.installmentCurrent != null && tx.installmentTotal != null) {
-          initRemaining.set(i, tx.installmentTotal - tx.installmentCurrent + 1)
+          initTotals.set(i, tx.installmentTotal)
         }
       })
-      setRemainingPayments(initRemaining)
+      setTotalPayments(initTotals)
       const initTypes = new Map<number, string>()
       parsed.forEach((tx, i) => {
         const detected = matchItemType(tx.description, typeMap)
@@ -117,7 +117,11 @@ export function StatementImportDialog({ cardName, year, month, typeMap = {}, onC
         const tx = transactions[i]
         if (!tx) return []
         const isInstallment = tx.installmentCurrent != null && tx.installmentTotal != null
-        return [{ ...tx, remainingPayments: remainingPayments.get(i), itemType: isInstallment ? undefined : (typeOverrides.get(i) ?? 'one_time') }]
+        return [{
+          ...tx,
+          installmentTotal: isInstallment ? (totalPayments.get(i) ?? tx.installmentTotal) : tx.installmentTotal,
+          itemType: isInstallment ? undefined : (typeOverrides.get(i) ?? 'one_time'),
+        }]
       })
       await bulkImportStatementAction(toImport, cardName, year, month, dueDate)
       localStorage.setItem(`budget:import:${cardName}:${year}-${month}`, 'true')
@@ -179,20 +183,19 @@ export function StatementImportDialog({ cardName, year, month, typeMap = {}, onC
                     <span className="flex-1 text-sm text-[var(--fg)] min-w-0 truncate">{tx.description}</span>
                     {tx.installmentCurrent != null && tx.installmentTotal != null ? (
                       <span className="flex items-center gap-1 flex-shrink-0" onClick={e => e.preventDefault()}>
-                        <span className="text-xs text-[var(--muted-fg)]">{tx.installmentCurrent}/{tx.installmentTotal}</span>
+                        <span className="text-xs text-[var(--muted-fg)] tabular-nums">{tx.installmentCurrent}/</span>
                         <input
                           type="number"
-                          min={1}
-                          max={tx.installmentTotal}
-                          value={remainingPayments.get(i) ?? (tx.installmentTotal - tx.installmentCurrent + 1)}
+                          min={tx.installmentCurrent}
+                          value={totalPayments.get(i) ?? tx.installmentTotal}
                           onChange={e => {
                             const v = parseInt(e.target.value, 10)
-                            if (!isNaN(v) && v >= 1) {
-                              setRemainingPayments(prev => new Map(prev).set(i, v))
+                            if (!isNaN(v) && v >= (tx.installmentCurrent ?? 1)) {
+                              setTotalPayments(prev => new Map(prev).set(i, v))
                             }
                           }}
                           className="w-12 text-xs text-center rounded border border-[var(--border)] bg-[var(--bg)] text-[var(--fg)] px-1 py-0.5 tabular-nums"
-                          title="Remaining payments"
+                          title="Total payments"
                         />
                       </span>
                     ) : (
