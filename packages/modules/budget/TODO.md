@@ -7,7 +7,8 @@ Format: `- [ ] **Feature Name**: description` — check off when done, delete wh
 
 ## Bugs
 
-- [ ] **Installment Duplication**: Installments imported from the current month appear duplicated in the next month — investigate carry-forward logic for installments created via PDF import
+- [x] **Installment Duplication**: Fixed. Re-import minted new installmentGroupIds and only cleared the current month, so forward copies duplicated. Now purged before recreating (`purgeForwardInstallments`). Existing duplicate rows also cleaned from the DB.
+- [ ] **Installment Under-Propagation**: Card-child installments do not carry into months created AFTER their import. `getOrCreateMonth` -> `computeCarryItems` skips card children, so only `propagateToNextMonth` pushes them, and only into months that already exist at import time. Later-opened months miss the installment.
 
 ---
 

@@ -21,6 +21,12 @@ Format: `- [ ] **Feature Name**: description` — check off when done, delete wh
 
 ---
 
+## Platform
+
+- [ ] **Auth Session Lifetime + Test**: `packages/core/src/__tests__/auth.test.ts` fails because `SESSION_MS` in `packages/core/src/auth.ts` was raised from 7 days to 365 days (session-restore / mobile WIP) without updating the test's expected window. Deferred on purpose: when the auth/session flow is reworked, decide the intended session lifetime, then update or rethink the test expectation and re-run the full `@lifehelper/core` suite.
+
+---
+
 ## Future Modules
 
 - [ ] **Investments**: Investment table to manage and track capital, investment and liquid assets
